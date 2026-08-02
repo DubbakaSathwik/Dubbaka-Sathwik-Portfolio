@@ -144,7 +144,7 @@ export function GallerySection() {
   };
 
   return (
-    <section id="gallery" className="py-24 bg-[#08080a] relative overflow-hidden border-t border-zinc-900 scroll-mt-24">
+    <section id="gallery" className="pt-8 pb-16 sm:pt-8 sm:pb-20 bg-[#08080a] relative overflow-hidden border-t border-zinc-900 scroll-mt-16 sm:scroll-mt-20">
       {/* Background Glow Effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-emerald-500/5 blur-[160px] rounded-full pointer-events-none" />
 
@@ -483,12 +483,12 @@ export function GallerySection() {
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d12] via-transparent to-transparent pointer-events-none" />
 
                   {/* Badges on Modal Image */}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-900/90 text-emerald-400 border border-emerald-500/30">
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-900/90 text-emerald-400 border border-emerald-500/30 whitespace-nowrap shrink-0">
                       {activeItem.category}
                     </span>
                     {activeItem.featured && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-600 text-white shadow-md">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-600 text-white shadow-md whitespace-nowrap shrink-0">
                         ★ Featured
                       </span>
                     )}

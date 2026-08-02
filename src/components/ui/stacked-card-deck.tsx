@@ -46,9 +46,9 @@ export function StackedCardDeck<T>({
   };
 
   const handleDragEnd = (_: any, info: PanInfo) => {
-    if (info.offset.x < -40 || info.velocity.x < -300) {
+    if (info.offset.x < -30 || info.velocity.x < -200) {
       handleNext();
-    } else if (info.offset.x > 40 || info.velocity.x > 300) {
+    } else if (info.offset.x > 30 || info.velocity.x > 200) {
       handlePrev();
     }
   };
@@ -70,7 +70,7 @@ export function StackedCardDeck<T>({
           {/* Card-3 (Back card - Purple/Pink accent) */}
           {item3 && total > 2 && (
             <motion.div
-              key={`card3-${keyExtractor(item3)}`}
+              key={`card3-pos-${activeIndex}-${keyExtractor(item3)}`}
               initial={{ opacity: 0, x: 45, scale: 0.85 }}
               animate={{ opacity: 0.75, x: 28, scale: 0.9 }}
               exit={{ opacity: 0, x: 50, scale: 0.82 }}
@@ -93,7 +93,7 @@ export function StackedCardDeck<T>({
           {/* Card-2 (Middle card - Blue/Cyan accent) */}
           {item2 && total > 1 && (
             <motion.div
-              key={`card2-${keyExtractor(item2)}`}
+              key={`card2-pos-${activeIndex}-${keyExtractor(item2)}`}
               initial={{ opacity: 0, x: 30, scale: 0.9 }}
               animate={{ opacity: 0.9, x: 14, scale: 0.95 }}
               exit={{ opacity: 0, x: 35, scale: 0.88 }}
@@ -116,26 +116,25 @@ export function StackedCardDeck<T>({
           {/* Card-1 (Front card - Emerald Focus) */}
           {item1 && (
             <motion.div
-              key={`card1-${keyExtractor(item1)}`}
+              key={`card1-pos-${activeIndex}-${keyExtractor(item1)}`}
               initial={{
                 opacity: 0,
-                x: direction === 'left' ? 80 : -80,
+                x: direction === 'left' ? 70 : -70,
                 scale: 0.92,
               }}
               animate={{ opacity: 1, x: 0, scale: 1 }}
               exit={{
                 opacity: 0,
-                x: direction === 'left' ? -100 : 100,
+                x: direction === 'left' ? -90 : 90,
                 scale: 0.88,
               }}
               transition={{ type: 'spring', stiffness: 320, damping: 30 }}
               drag="x"
               dragConstraints={{ left: 0, right: 0 }}
-              dragElastic={0.2}
+              dragSnapToOrigin={true}
+              dragElastic={0.15}
               onDragEnd={handleDragEnd}
-              onClick={() => {
-                onCardClick?.(item1);
-              }}
+              onClick={() => onCardClick?.(item1)}
               className="absolute left-2 top-0 bottom-0 w-[84%] sm:w-[85%] cursor-grab active:cursor-grabbing touch-pan-y"
               style={{ zIndex: 30 }}
             >

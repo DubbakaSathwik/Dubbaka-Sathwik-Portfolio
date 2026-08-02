@@ -14,9 +14,9 @@ export function Footer() {
 
   return (
     <footer className="bg-[#030303] border-t border-zinc-900 py-10 text-zinc-400 text-xs">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col md:flex-row items-center justify-between gap-6 text-center md:text-left">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-left">
         {/* Brand */}
-        <div className="flex flex-col sm:flex-row items-center gap-1.5 sm:gap-3 text-center sm:text-left">
+        <div className="flex flex-col items-center gap-1.5 text-center lg:flex-row lg:text-left lg:gap-3">
           <div>
             <p className="text-white font-bold text-sm">Dubbaka Sathwik</p>
             <p className="text-[10px] sm:text-xs text-zinc-500 font-mono mt-0.5">Full-Stack Engineer & Senior Video Editor</p>
@@ -25,7 +25,7 @@ export function Footer() {
 
         {/* Copyright */}
         <div className="text-zinc-400 font-mono text-[11px] leading-relaxed text-center">
-          © 2026 Dubbaka Sathwik. All rights reserved. <span className="block sm:inline mt-0.5 sm:mt-0 text-zinc-500">Built with Google AI Studio</span>
+          © 2026 Dubbaka Sathwik. All rights reserved. <span className="block lg:inline mt-0.5 lg:mt-0 text-zinc-500">Built with Google AI Studio</span>
         </div>
 
         {/* Action Buttons */}

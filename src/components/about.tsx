@@ -34,7 +34,7 @@ export function AboutSection() {
     'https://linkedin.com/in/dubbakasathwik';
 
   return (
-    <section id="about" className="py-24 bg-[#080808] relative overflow-hidden border-t border-zinc-900 scroll-mt-24">
+    <section id="about" className="pt-8 pb-16 sm:pt-8 sm:pb-20 bg-[#080808] relative overflow-hidden border-t border-zinc-900 scroll-mt-16 sm:scroll-mt-20">
       {/* Background Subtle Green Accents */}
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-950/20 blur-[150px] pointer-events-none rounded-full" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-900/10 blur-[150px] pointer-events-none rounded-full" />
@@ -341,7 +341,7 @@ export function AboutSection() {
 
         {/* Skills Section */}
         {about.showSkills !== false && (
-          <div id="skills" className="space-y-8 pt-8 border-t border-zinc-800/80 scroll-mt-24">
+          <div id="skills" className="space-y-8 pt-8 border-t border-zinc-800/80 scroll-mt-16 sm:scroll-mt-20">
             {/* Centered Header */}
             <div className="text-center max-w-xl mx-auto space-y-2.5">
               <div className="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-emerald-950/60 border border-emerald-500/30 text-white text-xs font-mono font-medium shadow-[0_0_15px_rgba(16,185,129,0.15)]">

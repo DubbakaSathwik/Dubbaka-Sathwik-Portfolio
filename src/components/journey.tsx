@@ -19,7 +19,7 @@ export function JourneySection() {
       : items.filter((item) => item.category === activeCategory);
 
   return (
-    <section id="journey" className="py-24 bg-[#050505] relative overflow-hidden border-t border-zinc-900 scroll-mt-24">
+    <section id="journey" className="pt-8 pb-16 sm:pt-8 sm:pb-20 bg-[#050505] relative overflow-hidden border-t border-zinc-900 scroll-mt-16 sm:scroll-mt-20">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
@@ -81,12 +81,12 @@ export function JourneySection() {
                   {/* Card Column */}
                   <div
                     className={`w-full md:w-1/2 pl-8 ${
-                      isEven ? 'md:pl-0 md:pr-8' : 'md:pl-8 md:pr-0'
+                      isEven ? 'md:pl-0 md:pr-6 lg:pr-8' : 'md:pl-6 lg:pl-8 md:pr-0'
                     }`}
                   >
                     <div
                       onClick={() => setSelectedJourneyItem(item)}
-                      className="p-6 rounded-2xl bg-zinc-900/60 hover:bg-zinc-900/95 border border-zinc-800 hover:border-emerald-500/50 transition-all duration-300 shadow-xl space-y-3 cursor-pointer group hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]"
+                      className="p-4 sm:p-5 md:p-6 rounded-2xl bg-zinc-900/60 hover:bg-zinc-900/95 border border-zinc-800 hover:border-emerald-500/50 transition-all duration-300 shadow-xl space-y-3 cursor-pointer group hover:shadow-[0_0_20px_rgba(16,185,129,0.12)]"
                     >
                       <div className="flex items-center justify-between gap-2">
                         <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-950/60 px-3 py-1 rounded-lg border border-emerald-500/30 flex items-center gap-1.5">
@@ -103,10 +103,10 @@ export function JourneySection() {
                         <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors flex items-center gap-2">
                           <span>{item.title}</span>
                         </h3>
-                        <p className="text-xs font-mono text-emerald-400/90 mt-1 flex items-center gap-1.5">
+                        <p className="text-xs font-mono text-emerald-400/90 mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
                           <NeonIcon name={item.organization || item.title} className="w-3.5 h-3.5 shrink-0" />
-                          <span>{item.organization}</span>
-                          {item.role && <span className="text-zinc-300">• {item.role}</span>}
+                          <span className="font-semibold min-w-0">{item.organization}</span>
+                          {item.role && <span className="text-zinc-300 font-normal whitespace-nowrap shrink-0">• {item.role}</span>}
                         </p>
                       </div>
 
@@ -188,10 +188,16 @@ export function JourneySection() {
 
               {/* Modal Content Scrollable Container */}
               <div className="space-y-4 overflow-y-auto pr-1 flex-1 relative z-10">
-                <div className="flex items-center gap-2 text-xs sm:text-sm font-mono text-emerald-400 bg-zinc-900/80 p-2.5 sm:p-3 rounded-xl border border-zinc-800/80">
-                  <NeonIcon name={selectedJourneyItem.organization} className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
-                  <span className="font-semibold">{selectedJourneyItem.organization}</span>
-                  {selectedJourneyItem.role && <span className="text-zinc-300 font-normal">• {selectedJourneyItem.role}</span>}
+                <div className="flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-2 text-xs sm:text-sm font-mono text-emerald-400 bg-zinc-900/80 p-2.5 sm:p-3 rounded-xl border border-zinc-800/80">
+                  <div className="flex items-start sm:items-center gap-2 min-w-0 flex-1">
+                    <NeonIcon name={selectedJourneyItem.organization} className="w-3.5 h-3.5 mt-0.5 sm:mt-0 shrink-0 text-emerald-400" />
+                    <span className="font-semibold leading-snug break-words">{selectedJourneyItem.organization}</span>
+                  </div>
+                  {selectedJourneyItem.role && (
+                    <span className="text-zinc-300 font-normal whitespace-nowrap shrink-0">
+                      • {selectedJourneyItem.role}
+                    </span>
+                  )}
                 </div>
 
                 {/* Milestone Photos Large Slideshow */}

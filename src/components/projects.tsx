@@ -131,7 +131,7 @@ export function ProjectsSection() {
   };
 
   return (
-    <section id="projects" className="py-24 bg-[#050505] relative overflow-hidden">
+    <section id="projects" className="pt-8 pb-16 sm:pt-8 sm:pb-20 bg-[#050505] relative overflow-hidden scroll-mt-16 sm:scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
@@ -419,11 +419,11 @@ export function ProjectsSection() {
                 {/* Header */}
                 <div className="pr-10 shrink-0">
                   <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-950/90 border border-emerald-500/40 text-emerald-300">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 whitespace-nowrap shrink-0">
                       {selectedProject.category}
                     </span>
                     {selectedProject.featured && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-sm">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-sm whitespace-nowrap shrink-0">
                         <Sparkles className="w-3 h-3" /> Featured
                       </span>
                     )}

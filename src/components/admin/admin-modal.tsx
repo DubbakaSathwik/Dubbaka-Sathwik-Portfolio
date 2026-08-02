@@ -988,8 +988,8 @@ export function AdminPortalModal() {
               </AnimatePresence>
 
               {/* Header */}
-              <div className="px-4 py-3 sm:px-8 sm:py-4 border-b border-zinc-800 bg-zinc-950 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                <div className="flex items-center justify-between md:justify-start gap-2.5">
+              <div className="px-4 py-3 sm:px-8 sm:py-4 border-b border-zinc-800 bg-zinc-950 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+                <div className="flex items-center justify-between lg:justify-start gap-2.5">
                   <div className="flex items-center gap-2.5 min-w-0">
                     <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-950 border border-emerald-500/40 text-emerald-400 shrink-0">
                       <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -1005,18 +1005,18 @@ export function AdminPortalModal() {
                       <p className="text-[10px] sm:text-xs text-zinc-400 font-mono truncate hidden sm:block">Dynamic Content Management for Dubbaka Sathwik</p>
                     </div>
                   </div>
-                  {/* Mobile Close Button */}
+                  {/* Mobile & Tablet Close Button */}
                   <button
                     onClick={handleClose}
-                    className="md:hidden p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white shrink-0 cursor-pointer"
+                    className="lg:hidden p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white shrink-0 cursor-pointer"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex items-center justify-between md:justify-end gap-2 shrink-0 border-t md:border-t-0 border-zinc-800/60 pt-2.5 md:pt-0">
+                <div className="flex items-center justify-between lg:justify-end gap-2 shrink-0 border-t lg:border-t-0 border-zinc-800/60 pt-2.5 lg:pt-0">
                   <button
                     onClick={() => showSaveToast('All Portfolio Data')}
-                    className="flex-1 md:flex-none px-3 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 hover:text-white text-[11px] sm:text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
+                    className="flex-1 lg:flex-none px-3 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 hover:text-white text-[11px] sm:text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
                   >
                     <Save className="w-3.5 h-3.5" /> Sync MongoDB
                   </button>
@@ -1028,7 +1028,7 @@ export function AdminPortalModal() {
                   </button>
                   <button
                     onClick={handleClose}
-                    className="hidden md:flex p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white cursor-pointer"
+                    className="hidden lg:flex p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
@@ -1036,9 +1036,9 @@ export function AdminPortalModal() {
               </div>
 
               {/* Main Content Area */}
-              <div className="flex flex-col md:grid md:grid-cols-12 flex-1 overflow-hidden">
+              <div className="flex flex-col lg:grid lg:grid-cols-12 flex-1 overflow-hidden">
                 {/* Desktop Left Sidebar */}
-                <div className="hidden md:block md:col-span-3 bg-zinc-950/90 border-r border-zinc-800 p-4 space-y-1 overflow-y-auto">
+                <div className="hidden lg:block lg:col-span-3 bg-zinc-950/90 border-r border-zinc-800 p-4 space-y-1 overflow-y-auto">
                   {[
                     { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
                     { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
@@ -1072,8 +1072,8 @@ export function AdminPortalModal() {
                   })}
                 </div>
 
-                {/* Mobile CMS Navigation Bar */}
-                <div className="md:hidden border-b border-zinc-800 bg-zinc-950 p-3 space-y-2 shrink-0 z-30">
+                {/* Mobile & Tablet CMS Navigation Bar */}
+                <div className="lg:hidden border-b border-zinc-800 bg-zinc-950 p-3 space-y-2 shrink-0 z-30">
                   <div className="relative">
                     <button
                       type="button"
@@ -1213,7 +1213,7 @@ export function AdminPortalModal() {
                 </div>
 
                 {/* Right Content Editor View */}
-                <div className="md:col-span-9 p-3.5 sm:p-8 overflow-y-auto space-y-6 sm:space-y-8 bg-[#0a0a0d] flex-1 min-w-0">
+                <div className="lg:col-span-9 p-3.5 sm:p-8 overflow-y-auto space-y-6 sm:space-y-8 bg-[#0a0a0d] flex-1 min-w-0">
                   {/* JOURNEY TAB */}
                   {activeTab === 'journey' && (
                     <div className="space-y-6">

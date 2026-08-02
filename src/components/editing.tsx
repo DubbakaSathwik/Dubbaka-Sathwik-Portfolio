@@ -52,7 +52,7 @@ export function EditingSection() {
   };
 
   return (
-    <section id="editing" className="py-24 bg-[#08080a] relative overflow-hidden border-t border-zinc-900 scroll-mt-24">
+    <section id="editing" className="pt-8 pb-16 sm:pt-8 sm:pb-20 bg-[#08080a] relative overflow-hidden border-t border-zinc-900 scroll-mt-16 sm:scroll-mt-20">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-emerald-600/10 blur-[160px] pointer-events-none rounded-full" />
 

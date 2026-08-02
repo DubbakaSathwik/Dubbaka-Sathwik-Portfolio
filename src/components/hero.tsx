@@ -16,7 +16,7 @@ export function HeroSection() {
   };
 
   return (
-    <section id="home" className="relative min-h-screen pt-28 pb-16 flex flex-col justify-center overflow-hidden bg-[#050505] text-white scroll-mt-24">
+    <section id="home" className="relative min-h-screen pt-20 pb-16 sm:pt-28 flex flex-col justify-center overflow-hidden bg-[#050505] text-white scroll-mt-16 sm:scroll-mt-20">
       {/* Green Ambient Background Lighting */}
       <Spotlight className="-top-40 left-0 md:left-60 md:-top-20" fill="rgba(16, 185, 129, 0.25)" />
       

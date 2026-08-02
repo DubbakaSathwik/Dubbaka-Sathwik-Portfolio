@@ -48,15 +48,18 @@ export function Navbar() {
 
   const handleNavClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     e.preventDefault();
-    setIsMobileMenuOpen(false);
     const targetId = href.replace('#', '');
-    const element = document.getElementById(targetId);
-    if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      setActiveSection(targetId);
-    } else {
-      window.location.hash = href;
-    }
+    setIsMobileMenuOpen(false);
+
+    setTimeout(() => {
+      const element = document.getElementById(targetId);
+      if (element) {
+        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        setActiveSection(targetId);
+      } else {
+        window.location.hash = href;
+      }
+    }, 50);
   };
 
   return (
@@ -129,23 +132,20 @@ export function Navbar() {
           })}
         </nav>
 
-        {/* Action Button */}
-        <div className="hidden sm:flex lg:hidden items-center gap-3">
+        {/* Right side Tablet & Mobile Controls (Get In Touch + Hamburger Menu) */}
+        <div className="lg:hidden flex items-center gap-2.5 sm:gap-3">
           <a
             href="#contact"
             onClick={(e) => handleNavClick(e, '#contact')}
-            className="inline-flex items-center gap-2 h-9 px-4 text-xs font-bold text-white rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all transform hover:scale-[1.03]"
+            className="inline-flex items-center gap-1.5 h-9 px-3.5 sm:px-4 text-xs font-bold text-white rounded-full bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 border border-emerald-500/30 shadow-[0_0_15px_rgba(16,185,129,0.25)] hover:shadow-[0_0_20px_rgba(16,185,129,0.5)] transition-all transform hover:scale-[1.03]"
           >
-            <Sparkles className="w-3.5 h-3.5 text-amber-300" />
-            <span>Get In Touch</span>
+            <Sparkles className="w-3.5 h-3.5 text-amber-300 shrink-0" />
+            <span className="whitespace-nowrap">Get In Touch</span>
           </a>
-        </div>
 
-        {/* Mobile Menu Button */}
-        <div className="lg:hidden flex items-center">
           <button
             onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-            className="p-2 text-zinc-300 hover:text-white rounded-xl bg-zinc-900 border border-zinc-800 focus:outline-none cursor-pointer"
+            className="p-2 text-zinc-300 hover:text-white rounded-xl bg-zinc-900 border border-zinc-800 focus:outline-none cursor-pointer shrink-0"
             aria-label="Toggle menu"
           >
             {isMobileMenuOpen ? <X className="w-5 h-5 text-emerald-400" /> : <Menu className="w-5 h-5" />}
