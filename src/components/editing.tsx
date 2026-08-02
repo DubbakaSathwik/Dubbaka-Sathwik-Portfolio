@@ -1,8 +1,9 @@
 import { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Palette, Play, Eye, Sparkles, X, Video, Image as ImageIcon, ExternalLink, Calendar, Layers, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Palette, Play, Eye, Sparkles, X, Video, Image as ImageIcon, ExternalLink, Calendar, Layers, LayoutGrid, ChevronLeft, ChevronRight } from 'lucide-react';
 import { useCMS } from '../context/CMSContext';
 import { CreativeItem } from '../types';
+import { StackedCardDeck } from './ui/stacked-card-deck';
 
 export function EditingSection() {
   const { data } = useCMS();
@@ -10,6 +11,7 @@ export function EditingSection() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [activeItem, setActiveItem] = useState<CreativeItem | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('stack');
 
   const ITEMS_PER_PAGE = 6;
 
@@ -50,23 +52,23 @@ export function EditingSection() {
   };
 
   return (
-    <section id="editing" className="py-24 bg-[#08080a] relative overflow-hidden border-t border-zinc-900">
+    <section id="editing" className="py-24 bg-[#08080a] relative overflow-hidden border-t border-zinc-900 scroll-mt-24">
       {/* Background Glow */}
       <div className="absolute top-1/2 left-0 -translate-y-1/2 w-96 h-96 bg-emerald-600/10 blur-[160px] pointer-events-none rounded-full" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header with Swapped Position (Nav-bar on left, Text on right) */}
         <div className="flex flex-col-reverse lg:flex-row lg:items-end justify-between gap-6 mb-12">
-          {/* Compressed Category Filter Pills (Left side) */}
-          <div className="flex flex-wrap items-center gap-1.5 bg-zinc-950/80 p-2 rounded-2xl border border-zinc-800/80">
+          {/* Compressed Category Filter Pills (Left side) - Single line, scrollable, hidden scrollbar */}
+          <div className="flex flex-nowrap items-center gap-1.5 bg-zinc-950/80 p-1.5 rounded-2xl border border-zinc-800/80 shrink-0 max-w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {categories.map((cat) => (
               <button
                 key={cat}
                 type="button"
                 onClick={() => handleCategorySelect(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-mono font-medium whitespace-nowrap transition-all duration-200 cursor-pointer ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-mono font-medium whitespace-nowrap shrink-0 transition-all duration-200 cursor-pointer ${
                   selectedCategory === cat
-                    ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)]'
+                    ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.3)] font-bold'
                     : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
                 }`}
               >
@@ -90,8 +92,103 @@ export function EditingSection() {
           </div>
         </div>
 
+        {/* Mobile View Switcher (Stack Deck vs Grid) */}
+        <div className="md:hidden flex items-center justify-between mb-6 bg-zinc-900/90 p-2 rounded-2xl border border-zinc-800">
+          <span className="text-xs font-mono font-bold text-zinc-400 pl-2">Mobile Layout:</span>
+          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setMobileViewMode('stack')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                mobileViewMode === 'stack'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Stack Deck</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileViewMode('grid')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                mobileViewMode === 'grid'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Grid</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Stacked Cards Deck View */}
+        {mobileViewMode === 'stack' && (
+          <div className="md:hidden w-full my-2">
+            <StackedCardDeck
+              items={filteredItems}
+              keyExtractor={(item: any) => item.id}
+              onCardClick={(item: any) => setActiveItem(item)}
+              cardHeightClass="h-[420px]"
+              renderCard={(item: any) => (
+                <div className="w-full h-full p-4 flex flex-col justify-between bg-zinc-950 text-left">
+                  <div>
+                    <div className="relative h-40 w-full rounded-xl overflow-hidden bg-black mb-3">
+                      <img
+                        src={item.thumbnail}
+                        alt={item.title}
+                        className="w-full h-full object-cover"
+                      />
+                      <div className="absolute inset-0 bg-gradient-to-t from-black via-black/20 to-transparent" />
+
+                      {item.videoUrl ? (
+                        <div className="absolute inset-0 flex items-center justify-center">
+                          <div className="w-10 h-10 rounded-full bg-emerald-600/90 text-white flex items-center justify-center shadow-lg">
+                            <Play className="w-5 h-5 fill-white ml-0.5" />
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="absolute top-2 right-2 p-1.5 rounded-xl bg-black/60 backdrop-blur-md text-emerald-400 border border-white/10">
+                          <ImageIcon className="w-3.5 h-3.5" />
+                        </div>
+                      )}
+
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-black/80 text-emerald-400 border border-emerald-500/30">
+                        {item.category}
+                      </span>
+                    </div>
+
+                    <h3 className="text-base font-bold text-white hover:text-emerald-400 transition-colors line-clamp-1">
+                      {item.title}
+                    </h3>
+                    <p className="text-zinc-400 text-xs line-clamp-2 leading-relaxed mt-1">
+                      {item.shortDescription}
+                    </p>
+
+                    <div className="flex flex-wrap gap-1 pt-2">
+                      {item.softwareUsed.slice(0, 3).map((sw) => (
+                        <span key={sw} className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[9px] font-mono">
+                          {sw}
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-400 mt-2">
+                    <span className="font-mono text-[10px] text-emerald-400 font-bold">{item.category}</span>
+                    <span className="text-emerald-400 text-[11px] font-bold flex items-center gap-1">
+                      View Work &rarr;
+                    </span>
+                  </div>
+                </div>
+              )}
+            />
+          </div>
+        )}
+
         {/* Creative Cards Grid */}
-        <div className="flex flex-wrap justify-center gap-6">
+        <div className={`${mobileViewMode === 'stack' ? 'hidden md:flex' : 'flex'} flex-wrap justify-center gap-3 sm:gap-6`}>
           {currentItems.map((item, idx) => (
             <motion.div
               key={item.id}
@@ -100,10 +197,10 @@ export function EditingSection() {
               viewport={{ once: true }}
               transition={{ duration: 0.5, delay: idx * 0.08 }}
               onClick={() => setActiveItem(item)}
-              className="w-full md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] group cursor-pointer rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-emerald-500/40 shadow-2xl overflow-hidden transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
+              className="w-[calc(50%-0.375rem)] md:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] group cursor-pointer rounded-2xl bg-zinc-900/60 border border-zinc-800 hover:border-emerald-500/40 shadow-2xl overflow-hidden transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
             >
               {/* Thumbnail Container */}
-              <div className="relative h-56 w-full bg-black overflow-hidden">
+              <div className="relative h-32 sm:h-56 w-full bg-black overflow-hidden">
                 <img
                   src={item.thumbnail}
                   alt={item.title}
@@ -114,33 +211,33 @@ export function EditingSection() {
                 {/* Video Play or View Badge */}
                 {item.videoUrl ? (
                   <div className="absolute inset-0 flex items-center justify-center">
-                    <div className="w-14 h-14 rounded-full bg-emerald-600/90 text-white flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.8)] group-hover:scale-110 transition-all duration-300">
-                      <Play className="w-6 h-6 fill-white ml-0.5" />
+                    <div className="w-9 h-9 sm:w-14 sm:h-14 rounded-full bg-emerald-600/90 text-white flex items-center justify-center shadow-[0_0_25px_rgba(16,185,129,0.8)] group-hover:scale-110 transition-all duration-300">
+                      <Play className="w-4 h-4 sm:w-6 sm:h-6 fill-white ml-0.5" />
                     </div>
                   </div>
                 ) : (
-                  <div className="absolute top-3 right-3 p-2 rounded-xl bg-black/60 backdrop-blur-md text-emerald-400 border border-white/10">
-                    <ImageIcon className="w-4 h-4" />
+                  <div className="absolute top-2 right-2 sm:top-3 sm:right-3 p-1.5 sm:p-2 rounded-xl bg-black/60 backdrop-blur-md text-emerald-400 border border-white/10">
+                    <ImageIcon className="w-3 h-3 sm:w-4 sm:h-4" />
                   </div>
                 )}
 
                 {/* Top Category & Featured Badges */}
-                <div className="absolute top-3 left-3 flex items-center gap-1.5 flex-wrap">
-                  <span className="px-3 py-1 rounded-full text-[10px] font-mono font-semibold bg-black/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30">
+                <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1 sm:gap-1.5 flex-wrap">
+                  <span className="px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-mono font-semibold bg-black/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30">
                     {item.category}
                   </span>
                   {item.featured && (
-                    <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-600/90 text-white shadow-md">
-                      ★ Featured
+                    <span className="px-1.5 py-0.5 sm:px-2 sm:py-0.5 rounded-full text-[9px] sm:text-[10px] font-mono font-bold bg-emerald-600/90 text-white shadow-md">
+                      ★ <span className="hidden sm:inline">Featured</span>
                     </span>
                   )}
                 </div>
               </div>
 
               {/* Info Block */}
-              <div className="p-5 space-y-3 flex-1 flex flex-col justify-between">
-                <div className="space-y-1.5">
-                  <h3 className="text-base font-bold text-white group-hover:text-emerald-400 transition-colors">
+              <div className="p-3 sm:p-5 space-y-1.5 sm:space-y-3 flex-1 flex flex-col justify-between">
+                <div className="space-y-1 sm:space-y-1.5">
+                  <h3 className="text-xs sm:text-base font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-1">
                     {item.title}
                   </h3>
                   <p className="text-zinc-400 text-xs line-clamp-2 leading-relaxed">
@@ -243,39 +340,40 @@ export function EditingSection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-lg"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto"
             onClick={() => setActiveItem(null)}
           >
             <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-3xl bg-zinc-950 rounded-2xl border border-emerald-500/30 shadow-2xl overflow-hidden max-h-[90vh] flex flex-col"
+              className="relative w-full max-w-xl sm:max-w-2xl bg-[#0d0d12] rounded-2xl sm:rounded-3xl border border-emerald-500/40 shadow-2xl overflow-hidden max-h-[85vh] flex flex-col my-auto"
             >
               {/* Header */}
-              <div className="flex items-center justify-between px-6 py-4 border-b border-zinc-800 bg-zinc-900/80">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-950 border border-emerald-500/30 text-emerald-400">
+              <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-zinc-800 bg-zinc-900/90 shrink-0">
+                <div className="flex items-center gap-2.5 min-w-0 pr-6">
+                  <div className="p-2 rounded-xl bg-emerald-950 border border-emerald-500/30 text-emerald-400 shrink-0">
                     {activeItem.videoUrl ? <Video className="w-4 h-4" /> : <Palette className="w-4 h-4" />}
                   </div>
-                  <div>
-                    <h3 className="text-base font-bold text-white">{activeItem.title}</h3>
-                    <p className="text-xs text-zinc-400 font-mono">{activeItem.category}</p>
+                  <div className="min-w-0">
+                    <h3 className="text-sm sm:text-base font-bold text-white truncate">{activeItem.title}</h3>
+                    <p className="text-[10px] sm:text-xs text-zinc-400 font-mono truncate">{activeItem.category}</p>
                   </div>
                 </div>
                 <button
+                  type="button"
                   onClick={() => setActiveItem(null)}
-                  className="p-1.5 rounded-full bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white"
+                  className="p-1.5 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white transition-colors"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
               </div>
 
-              {/* Media Preview Container */}
-              <div className="overflow-y-auto p-6 space-y-6">
+              {/* Media Preview & Details Container */}
+              <div className="overflow-y-auto p-4 sm:p-6 space-y-4 flex-1">
                 {activeItem.videoUrl ? (
-                  <div className="relative aspect-video w-full bg-black rounded-xl overflow-hidden border border-zinc-800">
+                  <div className="relative aspect-video w-full bg-black rounded-xl overflow-hidden border border-zinc-800 shrink-0">
                     <iframe
                       src={activeItem.videoUrl}
                       title={activeItem.title}
@@ -285,7 +383,7 @@ export function EditingSection() {
                     />
                   </div>
                 ) : (
-                  <div className="relative rounded-xl overflow-hidden border border-zinc-800 bg-black max-h-[400px]">
+                  <div className="relative rounded-xl overflow-hidden border border-zinc-800 bg-black max-h-[320px] shrink-0">
                     <img
                       src={activeItem.thumbnail}
                       alt={activeItem.title}
@@ -295,22 +393,22 @@ export function EditingSection() {
                 )}
 
                 {/* Description & Metadata */}
-                <div className="space-y-4">
+                <div className="space-y-3">
                   <div>
-                    <h4 className="text-sm font-bold text-white mb-1">About This Creative Work</h4>
+                    <h4 className="text-xs sm:text-sm font-bold text-white mb-1">About This Creative Work</h4>
                     <p className="text-xs text-zinc-300 leading-relaxed">
                       {activeItem.detailedDescription || activeItem.shortDescription}
                     </p>
                   </div>
 
-                  <div className="grid grid-cols-2 gap-4 p-4 rounded-xl bg-zinc-900/60 border border-zinc-800">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
                     <div>
-                      <span className="text-[10px] text-zinc-500 font-mono uppercase block mb-1">
+                      <span className="text-[10px] text-zinc-400 font-mono uppercase block mb-1 font-bold">
                         Tools / Software
                       </span>
                       <div className="flex flex-wrap gap-1">
                         {activeItem.softwareUsed.map((sw) => (
-                          <span key={sw} className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/20 text-[11px] font-mono">
+                          <span key={sw} className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/20 text-[10px] font-mono">
                             {sw}
                           </span>
                         ))}
@@ -318,12 +416,20 @@ export function EditingSection() {
                     </div>
 
                     <div>
-                      <span className="text-[10px] text-zinc-500 font-mono uppercase block mb-1">
+                      <span className="text-[10px] text-zinc-400 font-mono uppercase block mb-1 font-bold">
                         Tags & Category
                       </span>
                       <div className="flex flex-wrap gap-1">
-                        {activeItem.tags.map((tg) => (
-                          <span key={tg} className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[11px] font-mono">
+                        <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px] font-mono">
+                          {activeItem.category}
+                        </span>
+                        {activeItem.featured && (
+                          <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-mono font-bold">
+                            ★ Featured
+                          </span>
+                        )}
+                        {activeItem.tags && activeItem.tags.map((tg) => (
+                          <span key={tg} className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px] font-mono">
                             #{tg}
                           </span>
                         ))}
@@ -334,15 +440,15 @@ export function EditingSection() {
               </div>
 
               {/* Modal Footer */}
-              <div className="p-4 bg-zinc-900/80 border-t border-zinc-800 flex items-center justify-between gap-3">
+              <div className="p-3.5 sm:p-4 bg-zinc-900/90 border-t border-zinc-800 flex items-center justify-between gap-3 shrink-0">
                 {activeItem.platformUrl ? (
                   <a
                     href={activeItem.platformUrl}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-2 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all"
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all"
                   >
-                    <ExternalLink className="w-4 h-4" />
+                    <ExternalLink className="w-3.5 h-3.5" />
                     <span>View Post on Platform</span>
                   </a>
                 ) : (
@@ -350,8 +456,9 @@ export function EditingSection() {
                 )}
 
                 <button
+                  type="button"
                   onClick={() => setActiveItem(null)}
-                  className="px-5 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-semibold text-xs transition-all cursor-pointer"
+                  className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-semibold text-xs transition-all cursor-pointer"
                 >
                   Close
                 </button>

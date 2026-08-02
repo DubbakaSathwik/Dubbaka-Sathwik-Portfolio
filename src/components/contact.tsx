@@ -76,7 +76,7 @@ export function ContactSection() {
   };
 
   return (
-    <section id="contact" className="py-24 bg-[#050505] relative overflow-hidden border-t border-zinc-900">
+    <section id="contact" className="py-24 bg-[#050505] relative overflow-hidden border-t border-zinc-900 scroll-mt-24">
       {/* Background Emerald Ambient Glow */}
       <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-emerald-950/20 blur-[180px] pointer-events-none rounded-full" />
 

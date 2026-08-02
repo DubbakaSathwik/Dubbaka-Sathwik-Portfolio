@@ -16,7 +16,7 @@ export function HeroSection() {
   };
 
   return (
-    <section id="home" className="relative min-h-screen pt-28 pb-16 flex flex-col justify-center overflow-hidden bg-[#050505] text-white">
+    <section id="home" className="relative min-h-screen pt-28 pb-16 flex flex-col justify-center overflow-hidden bg-[#050505] text-white scroll-mt-24">
       {/* Green Ambient Background Lighting */}
       <Spotlight className="-top-40 left-0 md:left-60 md:-top-20" fill="rgba(16, 185, 129, 0.25)" />
       
@@ -119,7 +119,7 @@ export function HeroSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, delay: 0.3 }}
-            className="lg:col-span-6 relative flex items-center justify-center w-full min-h-[420px] sm:min-h-[500px] overflow-visible"
+            className="hidden md:flex lg:col-span-6 relative items-center justify-center w-full min-h-[420px] sm:min-h-[500px] overflow-visible"
           >
             <div className="relative w-full h-[420px] sm:h-[500px] lg:h-[560px] flex items-center justify-center pointer-events-auto overflow-visible">
               <div className="absolute inset-0 -left-[25%] -right-[25%] -top-[15%] -bottom-[15%] flex items-center justify-center -translate-x-10 sm:-translate-x-16 lg:-translate-x-20">

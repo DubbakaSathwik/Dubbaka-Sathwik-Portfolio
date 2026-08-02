@@ -1,9 +1,10 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ExternalLink, X, Calendar, MapPin, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Image as ImageIcon } from 'lucide-react';
+import { Award, ExternalLink, X, Calendar, MapPin, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Image as ImageIcon, Layers, LayoutGrid } from 'lucide-react';
 import { useCMS } from '../context/CMSContext';
 import { GalleryItem } from '../types';
 import { FormattedText } from '../lib/text-formatter';
+import { StackedCardDeck } from './ui/stacked-card-deck';
 
 // Mini card slideshow with 4-second auto shift & sliding motion effect
 function GalleryCardSlideshow({ images, title }: { images: string[]; title: string }) {
@@ -85,6 +86,7 @@ export function GallerySection() {
   const [activeItem, setActiveItem] = useState<GalleryItem | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
+  const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('stack');
 
   const ITEMS_PER_PAGE = 6;
 
@@ -142,7 +144,7 @@ export function GallerySection() {
   };
 
   return (
-    <section id="gallery" className="py-24 bg-[#08080a] relative overflow-hidden border-t border-zinc-900">
+    <section id="gallery" className="py-24 bg-[#08080a] relative overflow-hidden border-t border-zinc-900 scroll-mt-24">
       {/* Background Glow Effect */}
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-emerald-500/5 blur-[160px] rounded-full pointer-events-none" />
 
@@ -150,7 +152,7 @@ export function GallerySection() {
         {/* Section Header (Filter Navbar on Left, Title on Right) */}
         <div className="flex flex-col-reverse lg:flex-row lg:items-end justify-between gap-6 mb-12">
           {/* Category Filter Pills on the LEFT */}
-          <div className="flex flex-nowrap items-center gap-1.5 bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-800 shrink-0 max-w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
+          <div className="flex flex-nowrap items-center gap-1.5 bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-800 shrink-0 max-w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {categories.map((cat) => (
               <button
                 key={cat}
@@ -182,8 +184,99 @@ export function GallerySection() {
           </div>
         </div>
 
-        {/* Certificates Grid (Max 6 Cards per page) */}
-        <div className="flex flex-wrap justify-center gap-6 min-h-[500px]">
+        {/* Mobile View Switcher (Stack Deck vs Grid) */}
+        <div className="md:hidden flex items-center justify-between mb-6 bg-zinc-900/90 p-2 rounded-2xl border border-zinc-800">
+          <span className="text-xs font-mono font-bold text-zinc-400 pl-2">Mobile Layout:</span>
+          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+            <button
+              type="button"
+              onClick={() => setMobileViewMode('stack')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                mobileViewMode === 'stack'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <Layers className="w-3.5 h-3.5" />
+              <span>Stack Deck</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => setMobileViewMode('grid')}
+              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                mobileViewMode === 'grid'
+                  ? 'bg-emerald-600 text-white shadow-md'
+                  : 'text-zinc-400 hover:text-white'
+              }`}
+            >
+              <LayoutGrid className="w-3.5 h-3.5" />
+              <span>Grid</span>
+            </button>
+          </div>
+        </div>
+
+        {/* Mobile Stacked Cards Deck View */}
+        {mobileViewMode === 'stack' && (
+          <div className="md:hidden w-full my-2">
+            <StackedCardDeck
+              items={filteredItems}
+              keyExtractor={(item: any) => item.id}
+              onCardClick={(item: any) => handleOpenDetail(item)}
+              cardHeightClass="h-[430px]"
+              renderCard={(item: any) => {
+                const itemImageList = item.images && item.images.length > 0
+                  ? item.images
+                  : [item.image].filter(Boolean);
+
+                return (
+                  <div className="w-full h-full p-4 flex flex-col justify-between bg-zinc-950 text-left">
+                    <div>
+                      <div className="relative h-36 w-full rounded-xl overflow-hidden bg-zinc-900 mb-3">
+                        <div className="pointer-events-none w-full h-full">
+                          <GalleryCardSlideshow images={itemImageList} title={item.title} />
+                        </div>
+                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80 pointer-events-none" />
+                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-zinc-900/90 text-emerald-400 border border-emerald-500/30">
+                          {item.category}
+                        </span>
+                        {item.featured && (
+                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-bold bg-emerald-600 text-white flex items-center gap-1 shadow-sm">
+                            ★ Featured
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2 text-[10px] font-mono text-zinc-400 mb-1">
+                        <Calendar className="w-3 h-3 text-emerald-400" />
+                        <span>{item.date}</span>
+                      </div>
+
+                      <h3 className="text-base font-bold text-white hover:text-emerald-400 transition-colors line-clamp-2 leading-snug">
+                        {item.title}
+                      </h3>
+
+                      {item.issuer && (
+                        <p className="text-xs text-emerald-400/90 font-mono mt-1 font-medium truncate">
+                          Issued by {item.issuer}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="pt-2 border-t border-zinc-800/80 flex items-center justify-between text-xs text-zinc-400 mt-2">
+                      <span className="font-mono text-[10px] text-emerald-400 font-bold">{item.category}</span>
+                      <span className="text-emerald-400 text-[11px] font-bold flex items-center gap-1">
+                        View Certificate &rarr;
+                      </span>
+                    </div>
+                  </div>
+                );
+              }}
+            />
+          </div>
+        )}
+
+        {/* Certificates Grid (Laptop & Mobile Grid View) */}
+        <div className={`${mobileViewMode === 'stack' ? 'hidden md:flex' : 'flex'} flex-wrap justify-center gap-3 sm:gap-6 min-h-[500px]`}>
           {currentItems.map((item, idx) => {
             const itemImageList = item.images && item.images.length > 0
               ? item.images
@@ -196,7 +289,7 @@ export function GallerySection() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ duration: 0.4, delay: idx * 0.06 }}
-                className="w-full sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] group rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-emerald-500/40 overflow-hidden shadow-xl hover:shadow-emerald-950/20 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
+                className="w-[calc(50%-0.375rem)] sm:w-[calc(50%-0.75rem)] lg:w-[calc(33.333%-1rem)] group rounded-2xl bg-zinc-950 border border-zinc-800/80 hover:border-emerald-500/40 overflow-hidden shadow-xl hover:shadow-emerald-950/20 transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
               >
                 <div>
                   {/* Thumbnail Header Image with Slideshow support */}
@@ -208,38 +301,38 @@ export function GallerySection() {
                     <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-zinc-950/20 to-transparent opacity-80 pointer-events-none" />
 
                     {/* Category Badge */}
-                    <span className="absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-zinc-900/90 backdrop-blur-md text-emerald-400 border border-emerald-500/30 z-10">
+                    <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-mono font-bold bg-zinc-900/90 backdrop-blur-md text-emerald-400 border border-emerald-500/30 z-10">
                       {item.category}
                     </span>
 
                     {/* Featured Badge */}
                     {item.featured && (
-                      <span className="absolute top-3 right-3 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-emerald-600/90 text-white border border-emerald-400/40 shadow-sm flex items-center gap-1 z-10">
-                        ★ Featured
+                      <span className="absolute top-2 right-2 sm:top-3 sm:right-3 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-mono font-bold bg-emerald-600/90 text-white border border-emerald-400/40 shadow-sm flex items-center gap-1 z-10">
+                        ★ <span className="hidden sm:inline">Featured</span>
                       </span>
                     )}
 
                     {/* Hover Overlay Button */}
-                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-4 z-20">
+                    <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center p-2 sm:p-4 z-20">
                       <button
                         type="button"
-                        className="px-4 py-2 rounded-xl bg-emerald-600 text-white font-mono font-bold text-xs shadow-lg shadow-emerald-950/80 flex items-center gap-1.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
+                        className="px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-xl bg-emerald-600 text-white font-mono font-bold text-[10px] sm:text-xs shadow-lg shadow-emerald-950/80 flex items-center gap-1 sm:gap-1.5 transform translate-y-2 group-hover:translate-y-0 transition-all duration-300"
                       >
                         <span>View Certificate</span>
-                        <ExternalLink className="w-3.5 h-3.5" />
+                        <ExternalLink className="w-3 h-3 sm:w-3.5 sm:h-3.5" />
                       </button>
                     </div>
                   </div>
 
                   {/* Card Content Body */}
-                  <div className="p-5 space-y-3">
-                    <div className="flex items-center justify-between text-[11px] font-mono text-zinc-400">
+                  <div className="p-3 sm:p-5 space-y-2 sm:space-y-3">
+                    <div className="flex items-center justify-between text-[10px] sm:text-[11px] font-mono text-zinc-400">
                       <span className="flex items-center gap-1">
-                        <Calendar className="w-3.5 h-3.5 text-emerald-400" />
+                        <Calendar className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-emerald-400" />
                         <span>{item.date}</span>
                       </span>
                       {item.location && (
-                        <span className="flex items-center gap-1 text-zinc-500 truncate max-w-[140px]">
+                        <span className="hidden sm:flex items-center gap-1 text-zinc-500 truncate max-w-[140px]">
                           <MapPin className="w-3 h-3 text-emerald-400/70 shrink-0" />
                           <span className="truncate">{item.location}</span>
                         </span>
@@ -248,7 +341,7 @@ export function GallerySection() {
 
                     <h3
                       onClick={() => handleOpenDetail(item)}
-                      className="text-base sm:text-lg font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-2 cursor-pointer leading-snug"
+                      className="text-xs sm:text-lg font-bold text-white group-hover:text-emerald-400 transition-colors line-clamp-1 sm:line-clamp-2 cursor-pointer leading-snug"
                     >
                       {item.title}
                     </h3>
@@ -354,137 +447,145 @@ export function GallerySection() {
             onClick={() => setActiveItem(null)}
           >
             <motion.div
-              initial={{ scale: 0.95, opacity: 0, y: 10 }}
-              animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.95, opacity: 0, y: 10 }}
-              onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-3xl bg-zinc-950 rounded-2xl border border-zinc-800 shadow-2xl overflow-hidden my-auto"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto"
+              onClick={() => setActiveItem(null)}
             >
-              {/* Close Button */}
-              <button
-                type="button"
-                onClick={() => setActiveItem(null)}
-                className="absolute top-4 right-4 z-20 p-2 rounded-full bg-zinc-900/80 text-zinc-400 hover:text-white hover:bg-zinc-800 transition-colors border border-zinc-700/50 cursor-pointer"
+              <motion.div
+                initial={{ scale: 0.95, opacity: 0, y: 15 }}
+                animate={{ scale: 1, opacity: 1, y: 0 }}
+                exit={{ scale: 0.95, opacity: 0, y: 15 }}
+                onClick={(e) => e.stopPropagation()}
+                className="relative w-full max-w-xl sm:max-w-2xl bg-[#0d0d12] rounded-2xl sm:rounded-3xl border border-emerald-500/40 shadow-2xl overflow-hidden my-auto max-h-[85vh] flex flex-col"
               >
-                <X className="w-5 h-5" />
-              </button>
+                {/* Close Button */}
+                <button
+                  type="button"
+                  onClick={() => setActiveItem(null)}
+                  className="absolute top-3 right-3 z-30 p-2 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-colors cursor-pointer shadow-lg"
+                >
+                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
+                </button>
 
-              {/* Main Image Display */}
-              <div className="relative aspect-[16/9] w-full bg-zinc-900 overflow-hidden">
-                <img
-                  src={
-                    activeItem.images && activeItem.images.length > 0
-                      ? activeItem.images[activeImageIndex] || activeItem.image
-                      : activeItem.image
-                  }
-                  alt={activeItem.title}
-                  className="w-full h-full object-contain bg-black/90"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent" />
+                {/* Main Image Display */}
+                <div className="relative aspect-[16/9] w-full bg-zinc-950 overflow-hidden shrink-0">
+                  <img
+                    src={
+                      activeItem.images && activeItem.images.length > 0
+                        ? activeItem.images[activeImageIndex] || activeItem.image
+                        : activeItem.image
+                    }
+                    alt={activeItem.title}
+                    className="w-full h-full object-contain bg-black/90"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d12] via-transparent to-transparent pointer-events-none" />
 
-                {/* Badges on Modal Image */}
-                <div className="absolute top-4 left-4 flex items-center gap-2">
-                  <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-zinc-900/90 text-emerald-400 border border-emerald-500/30">
-                    {activeItem.category}
-                  </span>
-                  {activeItem.featured && (
-                    <span className="px-3 py-1 rounded-full text-xs font-mono font-bold bg-emerald-600 text-white shadow-md">
-                      ★ Featured
+                  {/* Badges on Modal Image */}
+                  <div className="absolute top-3 left-3 flex items-center gap-1.5">
+                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-900/90 text-emerald-400 border border-emerald-500/30">
+                      {activeItem.category}
                     </span>
-                  )}
-                </div>
-              </div>
-
-              {/* Multiple Photos Switcher Bar */}
-              {activeItem.images && activeItem.images.length > 1 && (
-                <div className="p-3 bg-zinc-900/80 border-t border-zinc-800 flex items-center gap-2 overflow-x-auto">
-                  {activeItem.images.map((imgUrl, i) => (
-                    <button
-                      key={i}
-                      type="button"
-                      onClick={() => setActiveImageIndex(i)}
-                      className={`relative aspect-[16/10] w-16 rounded-lg overflow-hidden border transition-all cursor-pointer ${
-                        activeImageIndex === i
-                          ? 'border-emerald-500 ring-2 ring-emerald-500/30'
-                          : 'border-zinc-800 opacity-60 hover:opacity-100'
-                      }`}
-                    >
-                      <img src={imgUrl} alt="" className="w-full h-full object-cover" />
-                    </button>
-                  ))}
-                </div>
-              )}
-
-              {/* Detail Content */}
-              <div className="p-6 sm:p-8 space-y-6">
-                <div>
-                  <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 mb-2">
-                    <span className="flex items-center gap-1 text-emerald-400">
-                      <Calendar className="w-3.5 h-3.5" />
-                      <span>{activeItem.date}</span>
-                    </span>
-                    {activeItem.location && (
-                      <span className="flex items-center gap-1">
-                        <MapPin className="w-3.5 h-3.5 text-zinc-500" />
-                        <span>{activeItem.location}</span>
+                    {activeItem.featured && (
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-600 text-white shadow-md">
+                        ★ Featured
                       </span>
                     )}
                   </div>
-
-                  <h3 className="text-xl sm:text-2xl font-black text-white leading-snug">
-                    {activeItem.title}
-                  </h3>
                 </div>
 
-                {/* Tech / Skills Tags */}
-                {activeItem.technologies && activeItem.technologies.length > 0 && (
-                  <div className="space-y-2">
-                    <h4 className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
-                      Technologies & Skills
-                    </h4>
-                    <div className="flex flex-wrap gap-2">
-                      {activeItem.technologies.map((tech, i) => (
-                        <span
-                          key={i}
-                          className="px-3 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-xs font-mono text-emerald-300 flex items-center gap-1"
-                        >
-                          <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                          {tech}
+                {/* Multiple Photos Switcher Bar */}
+                {activeItem.images && activeItem.images.length > 1 && (
+                  <div className="p-2 bg-zinc-900/90 border-t border-zinc-800 flex items-center gap-2 overflow-x-auto shrink-0">
+                    {activeItem.images.map((imgUrl, i) => (
+                      <button
+                        key={i}
+                        type="button"
+                        onClick={() => setActiveImageIndex(i)}
+                        className={`relative aspect-[16/10] w-14 rounded-lg overflow-hidden border transition-all cursor-pointer ${
+                          activeImageIndex === i
+                            ? 'border-emerald-500 ring-2 ring-emerald-500/30'
+                            : 'border-zinc-800 opacity-60 hover:opacity-100'
+                        }`}
+                      >
+                        <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Detail Content */}
+                <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
+                  <div>
+                    <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 mb-1.5">
+                      <span className="flex items-center gap-1 text-emerald-400">
+                        <Calendar className="w-3.5 h-3.5" />
+                        <span>{activeItem.date}</span>
+                      </span>
+                      {activeItem.location && (
+                        <span className="flex items-center gap-1">
+                          <MapPin className="w-3.5 h-3.5 text-zinc-500" />
+                          <span>{activeItem.location}</span>
                         </span>
-                      ))}
+                      )}
                     </div>
-                  </div>
-                )}
 
-                {/* Description Text */}
-                <div className="space-y-2">
-                  <h4 className="text-xs font-mono font-bold text-zinc-400 uppercase tracking-wider">
-                    Certificate Details
-                  </h4>
-                  <div
-                    className="text-sm text-zinc-300 leading-relaxed space-y-2 prose prose-invert max-w-none font-sans"
-                    dangerouslySetInnerHTML={{
-                      __html: activeItem.detailedDescription || activeItem.description,
-                    }}
-                  />
+                    <h3 className="text-lg sm:text-2xl font-black text-white leading-snug break-words">
+                      {activeItem.title}
+                    </h3>
+                  </div>
+
+                  {/* Tech / Skills Tags */}
+                  {activeItem.technologies && activeItem.technologies.length > 0 && (
+                    <div className="space-y-1.5">
+                      <h4 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
+                        Technologies & Skills
+                      </h4>
+                      <div className="flex flex-wrap gap-1.5">
+                        {activeItem.technologies.map((tech, i) => (
+                          <span
+                            key={i}
+                            className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-emerald-300 flex items-center gap-1"
+                          >
+                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                            {tech}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Description Text */}
+                  <div className="space-y-1.5">
+                    <h4 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
+                      Certificate Details
+                    </h4>
+                    <div
+                      className="text-xs sm:text-sm text-zinc-300 leading-relaxed space-y-2 font-sans"
+                      dangerouslySetInnerHTML={{
+                        __html: activeItem.detailedDescription || activeItem.description,
+                      }}
+                    />
+                  </div>
+
+                  {/* Credential / Verify Action Button */}
+                  {activeItem.credentialUrl && (
+                    <div className="pt-2">
+                      <a
+                        href={activeItem.credentialUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-lg shadow-emerald-950/60"
+                      >
+                        <Sparkles className="w-4 h-4 text-amber-300" />
+                        <span>Verify Credential Link</span>
+                        <ExternalLink className="w-3.5 h-3.5" />
+                      </a>
+                    </div>
+                  )}
                 </div>
-
-                {/* Credential / Verify Action Button */}
-                {activeItem.credentialUrl && (
-                  <div className="pt-2">
-                    <a
-                      href={activeItem.credentialUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="inline-flex items-center gap-2 px-5 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-lg shadow-emerald-950/60"
-                    >
-                      <Sparkles className="w-4 h-4" />
-                      <span>Verify Credential / View Original Link</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                  </div>
-                )}
-              </div>
+              </motion.div>
             </motion.div>
           </motion.div>
         )}

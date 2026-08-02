@@ -19,7 +19,7 @@ export function JourneySection() {
       : items.filter((item) => item.category === activeCategory);
 
   return (
-    <section id="journey" className="py-24 bg-[#050505] relative overflow-hidden border-t border-zinc-900">
+    <section id="journey" className="py-24 bg-[#050505] relative overflow-hidden border-t border-zinc-900 scroll-mt-24">
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4 mb-16">
@@ -34,15 +34,15 @@ export function JourneySection() {
             From 8th class Minecraft curiosity to 3rd Year CSE at MVSR Engineering College & NSS active volunteer.
           </p>
 
-          {/* Filter Pills */}
-          <div className="flex flex-wrap items-center justify-center gap-2 pt-4">
+          {/* Filter Pills strictly in a SINGLE LINE */}
+          <div className="flex flex-nowrap items-center justify-start sm:justify-center gap-2 pt-4 overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none] max-w-full px-2">
             {['All', 'Education', 'Engineering', 'Creative', 'NSS & Community', 'Milestone'].map((cat) => (
               <button
                 key={cat}
                 onClick={() => setActiveCategory(cat)}
-                className={`px-3.5 py-1.5 rounded-xl text-xs font-medium transition-all ${
+                className={`px-3.5 py-1.5 rounded-xl text-xs font-medium whitespace-nowrap shrink-0 transition-all cursor-pointer ${
                   activeCategory === cat
-                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/50'
+                    ? 'bg-emerald-600 text-white shadow-lg shadow-emerald-950/50 font-bold'
                     : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
                 }`}
               >
@@ -147,12 +147,12 @@ export function JourneySection() {
             className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 md:p-8 bg-black/90 backdrop-blur-xl"
           >
             <motion.div
-              initial={{ scale: 0.92, opacity: 0, y: 20 }}
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
               animate={{ scale: 1, opacity: 1, y: 0 }}
-              exit={{ scale: 0.92, opacity: 0, y: 20 }}
-              transition={{ duration: 0.25, ease: 'easeOut' }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              transition={{ duration: 0.2, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-3xl lg:max-w-4xl bg-[#09090d]/95 border border-emerald-500/50 rounded-3xl p-5 sm:p-8 md:p-9 space-y-6 shadow-[0_0_80px_rgba(16,185,129,0.22)] overflow-hidden"
+              className="relative w-full max-w-xl sm:max-w-2xl bg-[#0d0d12] border border-emerald-500/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl overflow-hidden my-auto max-h-[85vh] flex flex-col min-w-0"
             >
               {/* Decorative subtle ambient glow in background */}
               <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -162,41 +162,41 @@ export function JourneySection() {
               <button
                 type="button"
                 onClick={() => setSelectedJourneyItem(null)}
-                className="absolute top-5 right-5 z-20 p-2.5 rounded-2xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-all cursor-pointer shadow-lg"
+                className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-all cursor-pointer shadow-lg"
               >
-                <X className="w-5 h-5" />
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
               {/* Modal Header */}
-              <div className="flex items-start sm:items-center gap-4 border-b border-zinc-800/90 pb-5 relative z-10">
-                <div className="w-14 h-14 rounded-2xl bg-emerald-950/90 border border-emerald-500/50 flex items-center justify-center shrink-0 shadow-[0_0_20px_rgba(16,185,129,0.35)]">
-                  <NeonIcon name={selectedJourneyItem.category} className="w-7 h-7 text-emerald-400" />
+              <div className="flex items-start sm:items-center gap-3 border-b border-zinc-800/90 pb-3.5 relative z-10 shrink-0 pr-10">
+                <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-emerald-950/90 border border-emerald-500/50 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                  <NeonIcon name={selectedJourneyItem.category} className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
                 </div>
-                <div className="pr-10">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="text-xs font-mono font-bold text-emerald-300 bg-emerald-950/90 px-3 py-1 rounded-xl border border-emerald-500/40 shadow-sm">
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-1.5 flex-wrap">
+                    <span className="text-[10px] sm:text-xs font-mono font-bold text-emerald-300 bg-emerald-950/90 px-2.5 py-0.5 rounded-lg border border-emerald-500/40 shadow-sm">
                       {selectedJourneyItem.year}
                     </span>
-                    <span className="text-xs font-mono text-zinc-300 bg-zinc-900/90 px-3 py-1 rounded-xl border border-zinc-800 flex items-center gap-1.5">
-                      <NeonIcon name={selectedJourneyItem.category} className="w-3.5 h-3.5 text-emerald-400" />
+                    <span className="text-[10px] sm:text-xs font-mono text-zinc-300 bg-zinc-900/90 px-2.5 py-0.5 rounded-lg border border-zinc-800 flex items-center gap-1">
+                      <NeonIcon name={selectedJourneyItem.category} className="w-3 h-3 text-emerald-400" />
                       <span>{selectedJourneyItem.category}</span>
                     </span>
                   </div>
-                  <h3 className="text-2xl sm:text-3xl font-extrabold text-white tracking-tight mt-2">{selectedJourneyItem.title}</h3>
+                  <h3 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight mt-1 break-words">{selectedJourneyItem.title}</h3>
                 </div>
               </div>
 
               {/* Modal Content Scrollable Container */}
-              <div className="space-y-5 max-h-[72vh] overflow-y-auto pr-1.5 custom-scrollbar relative z-10">
-                <div className="flex items-center gap-2 text-sm font-mono text-emerald-400 bg-zinc-900/60 p-3 rounded-xl border border-zinc-800/80">
-                  <NeonIcon name={selectedJourneyItem.organization} className="w-4 h-4 shrink-0 text-emerald-400" />
+              <div className="space-y-4 overflow-y-auto pr-1 flex-1 relative z-10">
+                <div className="flex items-center gap-2 text-xs sm:text-sm font-mono text-emerald-400 bg-zinc-900/80 p-2.5 sm:p-3 rounded-xl border border-zinc-800/80">
+                  <NeonIcon name={selectedJourneyItem.organization} className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
                   <span className="font-semibold">{selectedJourneyItem.organization}</span>
                   {selectedJourneyItem.role && <span className="text-zinc-300 font-normal">• {selectedJourneyItem.role}</span>}
                 </div>
 
                 {/* Milestone Photos Large Slideshow */}
                 {((selectedJourneyItem.images && selectedJourneyItem.images.length > 0) || selectedJourneyItem.image) && (
-                  <div className="pt-1 pb-1">
+                  <div className="rounded-xl overflow-hidden border border-emerald-500/30 shadow-lg">
                     <JourneyImageSlideshow
                       images={
                         selectedJourneyItem.images && selectedJourneyItem.images.length > 0
@@ -210,9 +210,9 @@ export function JourneySection() {
                   </div>
                 )}
 
-                <div className="p-5 rounded-2xl bg-zinc-950/95 border border-emerald-500/25 text-sm sm:text-base text-zinc-100 leading-relaxed space-y-3 shadow-inner">
-                  <div className="text-xs font-mono text-emerald-400 font-bold flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
-                    <Sparkles className="w-4 h-4 text-emerald-400 animate-pulse" />
+                <div className="p-3.5 sm:p-4 rounded-xl bg-zinc-950/95 border border-emerald-500/25 text-xs sm:text-sm text-zinc-100 leading-relaxed space-y-2 shadow-inner">
+                  <div className="text-[11px] font-mono text-emerald-400 font-bold flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
+                    <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
                     <span>Detailed Milestone Overview:</span>
                   </div>
                   <FormattedText text={selectedJourneyItem.detailedDescription || selectedJourneyItem.description} />
@@ -221,13 +221,13 @@ export function JourneySection() {
 
               {/* Modal Footer Tags */}
               {selectedJourneyItem.tags && selectedJourneyItem.tags.length > 0 && (
-                <div className="pt-3 border-t border-zinc-800/80 relative z-10">
-                  <p className="text-xs font-mono text-zinc-400 mb-2.5 font-semibold">Associated Skills & Tags:</p>
-                  <div className="flex flex-wrap gap-2">
+                <div className="pt-2.5 border-t border-zinc-800/80 relative z-10 shrink-0">
+                  <p className="text-[10px] font-mono text-zinc-400 mb-1.5 font-semibold">Associated Skills & Tags:</p>
+                  <div className="flex flex-wrap gap-1.5">
                     {selectedJourneyItem.tags.map((tag) => (
                       <span
                         key={tag}
-                        className="px-3.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-emerald-500/30 text-emerald-300 text-xs font-mono font-medium transition-colors"
+                        className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono font-medium"
                       >
                         #{tag}
                       </span>

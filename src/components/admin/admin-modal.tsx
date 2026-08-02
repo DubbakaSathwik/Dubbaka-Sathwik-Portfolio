@@ -29,6 +29,7 @@ import {
   ExternalLink,
   CheckCircle2,
   Database,
+  ChevronDown,
 } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
 import { CreativeItem } from '../../types';
@@ -218,6 +219,7 @@ export function AdminPortalModal() {
   const [activeTab, setActiveTab] = useState<
     'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'contact' | 'inbox'
   >('journey');
+  const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const [toast, setToast] = useState<{
     visible: boolean;
@@ -986,48 +988,57 @@ export function AdminPortalModal() {
               </AnimatePresence>
 
               {/* Header */}
-              <div className="px-8 py-4 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 rounded-xl bg-emerald-950 border border-emerald-500/40 text-emerald-400">
-                    <LayoutDashboard className="w-5 h-5" />
+              <div className="px-4 py-3 sm:px-8 sm:py-4 border-b border-zinc-800 bg-zinc-950 flex flex-col md:flex-row md:items-center justify-between gap-3">
+                <div className="flex items-center justify-between md:justify-start gap-2.5">
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-950 border border-emerald-500/40 text-emerald-400 shrink-0">
+                      <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
+                    </div>
+                    <div className="min-w-0">
+                      <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-1.5 flex-wrap truncate">
+                        <span>Smart CMS Portal</span>
+                        <span className="text-[9px] sm:text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                          {dbConnected ? '⚡ MongoDB Atlas Live' : 'MongoDB Sync Active'}
+                        </span>
+                      </h3>
+                      <p className="text-[10px] sm:text-xs text-zinc-400 font-mono truncate hidden sm:block">Dynamic Content Management for Dubbaka Sathwik</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                      <span>Smart CMS Portal</span>
-                      <span className="text-[10px] font-mono font-medium px-2 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30 flex items-center gap-1">
-                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                        {dbConnected ? '⚡ MongoDB Atlas Live' : 'MongoDB Sync Active'}
-                      </span>
-                    </h3>
-                    <p className="text-xs text-zinc-400 font-mono">Dynamic Content Management for Dubbaka Sathwik</p>
-                  </div>
+                  {/* Mobile Close Button */}
+                  <button
+                    onClick={handleClose}
+                    className="md:hidden p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white shrink-0 cursor-pointer"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
                 </div>
-                <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between md:justify-end gap-2 shrink-0 border-t md:border-t-0 border-zinc-800/60 pt-2.5 md:pt-0">
                   <button
                     onClick={() => showSaveToast('All Portfolio Data')}
-                    className="px-3.5 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
+                    className="flex-1 md:flex-none px-3 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 hover:text-white text-[11px] sm:text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
                   >
                     <Save className="w-3.5 h-3.5" /> Sync MongoDB
                   </button>
                   <button
                     onClick={() => setIsAuthenticated(false)}
-                    className="px-3.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-mono"
+                    className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[11px] sm:text-xs font-mono cursor-pointer"
                   >
                     Lock CMS
                   </button>
                   <button
                     onClick={handleClose}
-                    className="p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white"
+                    className="hidden md:flex p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white cursor-pointer"
                   >
                     <X className="w-5 h-5" />
                   </button>
                 </div>
               </div>
 
-              {/* Main Content Grid */}
-              <div className="grid grid-cols-1 md:grid-cols-12 flex-1 overflow-hidden">
-                {/* Left Sidebar */}
-                <div className="md:col-span-3 bg-zinc-950/90 border-r border-zinc-800 p-4 space-y-1 overflow-y-auto">
+              {/* Main Content Area */}
+              <div className="flex flex-col md:grid md:grid-cols-12 flex-1 overflow-hidden">
+                {/* Desktop Left Sidebar */}
+                <div className="hidden md:block md:col-span-3 bg-zinc-950/90 border-r border-zinc-800 p-4 space-y-1 overflow-y-auto">
                   {[
                     { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
                     { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
@@ -1061,8 +1072,148 @@ export function AdminPortalModal() {
                   })}
                 </div>
 
+                {/* Mobile CMS Navigation Bar */}
+                <div className="md:hidden border-b border-zinc-800 bg-zinc-950 p-3 space-y-2 shrink-0 z-30">
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setMobileNavOpen(!mobileNavOpen)}
+                      className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-emerald-500/50 text-white font-mono text-xs font-semibold shadow-md active:scale-[0.99] transition-all cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2.5 min-w-0">
+                        <div className="p-1 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-500/30 shrink-0">
+                          {React.createElement(
+                            [
+                              { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
+                              { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
+                              { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
+                              { id: 'gallery', label: `Certificates & Awards (${(data.gallery || []).length})`, icon: Award },
+                              { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
+                              { id: 'hero', label: 'Hero Section', icon: Sparkles },
+                              { id: 'about', label: 'About Details', icon: User },
+                              { id: 'contact', label: 'Contact Details', icon: Mail },
+                              { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
+                            ].find((t) => t.id === activeTab)?.icon || LayoutDashboard,
+                            { className: 'w-4 h-4' }
+                          )}
+                        </div>
+                        <span className="text-zinc-400 font-normal">CMS Nav:</span>
+                        <span className="text-emerald-400 font-bold truncate">
+                          {[
+                            { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
+                            { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
+                            { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
+                            { id: 'gallery', label: `Certificates & Awards (${(data.gallery || []).length})`, icon: Award },
+                            { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
+                            { id: 'hero', label: 'Hero Section', icon: Sparkles },
+                            { id: 'about', label: 'About Details', icon: User },
+                            { id: 'contact', label: 'Contact Details', icon: Mail },
+                            { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
+                          ].find((t) => t.id === activeTab)?.label}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-1.5 shrink-0">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
+                          {mobileNavOpen ? 'Close Menu' : 'Switch Tab'}
+                        </span>
+                        <ChevronDown
+                          className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${
+                            mobileNavOpen ? 'rotate-180' : ''
+                          }`}
+                        />
+                      </div>
+                    </button>
+
+                    {/* Mobile Dropdown Menu Drawer */}
+                    <AnimatePresence>
+                      {mobileNavOpen && (
+                        <motion.div
+                          initial={{ opacity: 0, y: -8 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -8 }}
+                          className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl bg-zinc-950 border border-emerald-500/40 shadow-2xl p-2 space-y-1 backdrop-blur-2xl max-h-[60vh] overflow-y-auto"
+                        >
+                          <div className="px-3 py-1.5 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider border-b border-zinc-800 flex items-center justify-between">
+                            <span>Select CMS Section</span>
+                            <span className="text-emerald-400 font-normal">9 Sections</span>
+                          </div>
+                          {[
+                            { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
+                            { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
+                            { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
+                            { id: 'gallery', label: `Certificates & Awards (${(data.gallery || []).length})`, icon: Award },
+                            { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
+                            { id: 'hero', label: 'Hero Section', icon: Sparkles },
+                            { id: 'about', label: 'About Details', icon: User },
+                            { id: 'contact', label: 'Contact Details', icon: Mail },
+                            { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
+                          ].map((tab) => {
+                            const Icon = tab.icon;
+                            const isCurrent = activeTab === tab.id;
+                            return (
+                              <button
+                                key={tab.id}
+                                type="button"
+                                onClick={() => {
+                                  setActiveTab(tab.id as any);
+                                  setMobileNavOpen(false);
+                                }}
+                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-mono transition-all text-left ${
+                                  isCurrent
+                                    ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950/50'
+                                    : 'text-zinc-300 hover:text-white hover:bg-zinc-900'
+                                }`}
+                              >
+                                <Icon className={`w-4 h-4 ${isCurrent ? 'text-white' : 'text-emerald-400'}`} />
+                                <span className="flex-1 truncate">{tab.label}</span>
+                                {isCurrent && <span className="text-[10px] font-bold">✓</span>}
+                              </button>
+                            );
+                          })}
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+                  </div>
+
+                  {/* Quick Pill Horizontal Scroll Bar */}
+                  <div className="flex items-center gap-1.5 overflow-x-auto pb-1 scrollbar-none text-xs font-mono">
+                    {[
+                      { id: 'journey', label: 'Journey', icon: Calendar },
+                      { id: 'projects', label: 'Projects', icon: FolderPlus },
+                      { id: 'creative', label: 'Creative', icon: Palette },
+                      { id: 'gallery', label: 'Certificates', icon: Award },
+                      { id: 'resumes', label: 'Resumes', icon: FileText },
+                      { id: 'hero', label: 'Hero', icon: Sparkles },
+                      { id: 'about', label: 'About', icon: User },
+                      { id: 'contact', label: 'Contact', icon: Mail },
+                      { id: 'inbox', label: 'Inbox', icon: Inbox },
+                    ].map((tab) => {
+                      const isCurrent = activeTab === tab.id;
+                      const Icon = tab.icon;
+                      return (
+                        <button
+                          key={tab.id}
+                          type="button"
+                          onClick={() => {
+                            setActiveTab(tab.id as any);
+                            setMobileNavOpen(false);
+                          }}
+                          className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] transition-all flex items-center gap-1.5 ${
+                            isCurrent
+                              ? 'bg-emerald-600 text-white font-bold shadow-sm'
+                              : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
+                          }`}
+                        >
+                          <Icon className="w-3.5 h-3.5" />
+                          <span>{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+
                 {/* Right Content Editor View */}
-                <div className="md:col-span-9 p-6 sm:p-8 overflow-y-auto space-y-8 bg-[#0a0a0d]">
+                <div className="md:col-span-9 p-3.5 sm:p-8 overflow-y-auto space-y-6 sm:space-y-8 bg-[#0a0a0d] flex-1 min-w-0">
                   {/* JOURNEY TAB */}
                   {activeTab === 'journey' && (
                     <div className="space-y-6">

@@ -302,7 +302,7 @@ export function PhotoDropdownSelector({
   };
 
   return (
-    <div className="space-y-3 p-4 rounded-2xl bg-zinc-950 border border-emerald-500/40 shadow-xl">
+    <div className="space-y-3 p-3 sm:p-4 rounded-2xl bg-zinc-950 border border-emerald-500/40 shadow-xl">
       <div className="flex items-center justify-between border-b border-zinc-800 pb-2">
         <label className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-2">
           <HardDrive className="w-4 h-4 text-emerald-400 animate-pulse" />
@@ -502,7 +502,7 @@ export function PhotoDropdownSelector({
       </div>
 
       {/* 4. CUSTOM URL LINK INPUT */}
-      <div className="flex items-center gap-2">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
         <input
           type="text"
           placeholder="Or paste direct image URL (https://...)"

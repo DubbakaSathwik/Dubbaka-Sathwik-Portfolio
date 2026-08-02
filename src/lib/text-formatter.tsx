@@ -116,13 +116,13 @@ export function RichTextEditor({
       {/* Editor Container */}
       <div className="rounded-xl bg-zinc-950 border border-zinc-800 overflow-hidden focus-within:border-emerald-500/60 transition-colors">
         {/* Floating Formatting Toolbar */}
-        <div className="flex items-center justify-between px-3 py-2 bg-zinc-900/90 border-b border-zinc-800/80 text-xs">
-          <span className="text-[10px] font-mono text-zinc-400">Select text & click format:</span>
-          <div className="flex items-center gap-1.5">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5 px-3 py-2 bg-zinc-900/90 border-b border-zinc-800/80 text-xs">
+          <span className="text-[10px] font-mono text-zinc-400 shrink-0">Format selected text:</span>
+          <div className="flex flex-wrap items-center gap-1.5">
             <button
               type="button"
               onClick={() => applyFormat('bold')}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-[11px] transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-zinc-800 hover:bg-zinc-700 text-white font-bold text-[10px] transition-colors cursor-pointer"
               title="Add Bold Marker"
             >
               <Bold className="w-3 h-3 text-zinc-300" />
@@ -132,7 +132,7 @@ export function RichTextEditor({
             <button
               type="button"
               onClick={() => applyFormat('highlight')}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/30 text-[11px] font-mono transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-emerald-950 hover:bg-emerald-900 text-emerald-300 border border-emerald-500/30 text-[10px] font-mono transition-colors cursor-pointer"
               title="Add Highlight Marker"
             >
               <Highlighter className="w-3 h-3 text-emerald-400" />
@@ -142,7 +142,7 @@ export function RichTextEditor({
             <button
               type="button"
               onClick={() => applyFormat('both')}
-              className="flex items-center gap-1 px-2.5 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-extrabold text-[11px] shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded-md bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white font-extrabold text-[10px] shadow-[0_0_10px_rgba(16,185,129,0.3)] transition-colors cursor-pointer"
               title="Add Bold + Highlight Marker"
             >
               <Sparkles className="w-3 h-3 text-amber-300" />
