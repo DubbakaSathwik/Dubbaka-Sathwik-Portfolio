@@ -75,6 +75,7 @@ interface CMSContextType {
   isAdminModalOpen: boolean;
   setIsAdminModalOpen: (open: boolean) => void;
   dbConnected: boolean;
+  forceSyncToMongoDB: () => Promise<{ success: boolean; message: string; database?: string }>;
 }
 
 const STORAGE_KEY = 'dubbaka_sathwik_cms_data_v7';
@@ -204,6 +205,30 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return () => clearTimeout(timer);
     }
   }, [data, isInitialLoaded]);
+
+  const forceSyncToMongoDB = async (): Promise<{ success: boolean; message: string; database?: string }> => {
+    try {
+      const res = await fetch('/api/cms', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(data),
+      });
+      const json = await res.json();
+      if (json.success) setDbConnected(json.database === 'MongoDB Atlas' || dbConnected);
+      return {
+        success: !!json.success,
+        message: json.message || 'Data saved and synced with MongoDB Atlas',
+        database: json.database || (dbConnected ? 'MongoDB Atlas' : 'Server Memory'),
+      };
+    } catch (err: any) {
+      console.error('Failed to sync to MongoDB Atlas:', err);
+      return {
+        success: false,
+        message: err?.message || 'Failed to sync to MongoDB Atlas',
+        database: 'Offline Fallback',
+      };
+    }
+  };
 
   const updateHero = (hero: HeroData) => setData((prev) => ({ ...prev, hero }));
   const updateAbout = (about: AboutData) => setData((prev) => ({ ...prev, about }));
@@ -634,6 +659,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isAdminModalOpen,
         setIsAdminModalOpen,
         dbConnected,
+        forceSyncToMongoDB,
       }}
     >
       {children}

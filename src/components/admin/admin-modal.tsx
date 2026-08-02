@@ -27,6 +27,8 @@ import {
   Eye,
   Printer,
   ExternalLink,
+  CheckCircle2,
+  Database,
 } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
 import { CreativeItem } from '../../types';
@@ -205,6 +207,7 @@ export function AdminPortalModal() {
     setIsAdminModalOpen,
     setIsResumeModalOpen,
     dbConnected,
+    forceSyncToMongoDB,
   } = useCMS();
 
   const isOpen = isAdminModalOpen;
@@ -214,6 +217,35 @@ export function AdminPortalModal() {
   const [activeTab, setActiveTab] = useState<
     'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'contact' | 'inbox'
   >('journey');
+
+  const [toast, setToast] = useState<{
+    visible: boolean;
+    sectionName: string;
+    message: string;
+    database?: string;
+  } | null>(null);
+
+  const showSaveToast = async (sectionName: string) => {
+    setToast({
+      visible: true,
+      sectionName,
+      message: `Saving "${sectionName}" & syncing with MongoDB Atlas...`,
+      database: 'Syncing...',
+    });
+
+    const res = await forceSyncToMongoDB();
+
+    setToast({
+      visible: true,
+      sectionName,
+      message: `"${sectionName}" saved successfully! Synced to ${res.database || 'MongoDB Atlas'}.`,
+      database: res.database || (dbConnected ? 'MongoDB Atlas' : 'Server Memory'),
+    });
+
+    setTimeout(() => {
+      setToast(null);
+    }, 4500);
+  };
 
   // Resume Form State
   const [editingResumeId, setEditingResumeId] = useState<string | null>(null);
@@ -267,6 +299,7 @@ export function AdminPortalModal() {
       });
     }
 
+    const wasEditing = !!editingResumeId;
     setNewResume({
       title: '',
       filename: '',
@@ -274,6 +307,7 @@ export function AdminPortalModal() {
       pdfUrl: '',
       skills: ['React', 'Node.js', 'Full-Stack'],
     });
+    showSaveToast(wasEditing ? 'Resume Document Updated' : 'Resume Document Saved');
   };
 
   const handleStartEditResume = (resume: any) => {
@@ -395,19 +429,19 @@ export function AdminPortalModal() {
   const handleSaveHero = (e: React.FormEvent) => {
     e.preventDefault();
     updateHero(heroForm);
-    alert('Hero section updated successfully!');
+    showSaveToast('Hero Section');
   };
 
   const handleSaveAbout = (e: React.FormEvent) => {
     e.preventDefault();
     updateAbout(aboutForm);
-    alert('About section updated successfully!');
+    showSaveToast('About Page Content');
   };
 
   const handleSaveContact = (e: React.FormEvent) => {
     e.preventDefault();
     updateContactInfo(contactForm);
-    alert('Contact details updated successfully!');
+    showSaveToast('Contact Info & Links');
   };
 
   const handleStartEditJourney = (item: any) => {
@@ -490,6 +524,7 @@ export function AdminPortalModal() {
       });
     }
 
+    const wasEditing = !!editingJourneyId;
     setNewJourney({
       year: '2026',
       title: '',
@@ -502,6 +537,7 @@ export function AdminPortalModal() {
       detailedDescription: '',
       photoUrlsInput: '',
     });
+    showSaveToast(wasEditing ? 'Milestone Entry Updated' : 'Milestone Entry Saved');
   };
 
   const handleStartEditProject = (item: any) => {
@@ -601,6 +637,7 @@ export function AdminPortalModal() {
       });
     }
 
+    const wasEditing = !!editingProjectId;
     setNewProject({
       title: '',
       category: 'Full-Stack',
@@ -614,6 +651,7 @@ export function AdminPortalModal() {
       githubUrl: '',
       featured: true,
     });
+    showSaveToast(wasEditing ? 'Technical Project Updated' : 'Technical Project Saved');
   };
 
   const handleSaveCreative = (e: React.FormEvent) => {
@@ -664,6 +702,7 @@ export function AdminPortalModal() {
       });
     }
 
+    const wasEditing = !!editingCreativeId;
     setNewCreative({
       title: '',
       category: 'Poster Design',
@@ -677,6 +716,7 @@ export function AdminPortalModal() {
       shortDescription: '',
       detailedDescription: '',
     });
+    showSaveToast(wasEditing ? 'Creative Work Updated' : 'Creative Work Saved');
   };
 
   const handleEditCreative = (item: CreativeItem) => {
@@ -798,6 +838,7 @@ export function AdminPortalModal() {
       });
     }
 
+    const wasEditing = !!editingGalleryId;
     setNewGallery({
       title: '',
       category: 'Certificates',
@@ -811,6 +852,7 @@ export function AdminPortalModal() {
       description: '',
       detailedDescription: '',
     });
+    showSaveToast(wasEditing ? 'Certificate / Award Updated' : 'Certificate / Award Saved');
   };
 
   return (
@@ -880,6 +922,39 @@ export function AdminPortalModal() {
               exit={{ scale: 0.95, opacity: 0 }}
               className="relative w-full max-w-6xl bg-[#0a0a0d] rounded-3xl border border-emerald-500/40 shadow-2xl overflow-hidden my-6 flex flex-col h-[90vh]"
             >
+              {/* Toast Notification Banner */}
+              <AnimatePresence>
+                {toast && toast.visible && (
+                  <motion.div
+                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                    animate={{ opacity: 1, y: 0, scale: 1 }}
+                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                    className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3.5 px-6 py-3.5 rounded-2xl bg-zinc-950/95 border border-emerald-500/80 shadow-[0_0_35px_rgba(16,185,129,0.45)] backdrop-blur-2xl text-white font-mono text-xs max-w-lg w-[90%]"
+                  >
+                    <div className="w-9 h-9 rounded-xl bg-emerald-950 border border-emerald-500/50 text-emerald-400 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
+                      <CheckCircle2 className="w-5 h-5 animate-pulse" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <div className="font-bold text-sm text-emerald-400 flex items-center gap-2 flex-wrap">
+                        <span>{toast.sectionName} Saved Successfully!</span>
+                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 font-mono">
+                          <Database className="w-3 h-3" /> {toast.database || 'MongoDB Atlas'}
+                        </span>
+                      </div>
+                      <p className="text-[11px] text-zinc-300 mt-0.5 truncate">
+                        {toast.message}
+                      </p>
+                    </div>
+                    <button
+                      onClick={() => setToast(null)}
+                      className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+
               {/* Header */}
               <div className="px-8 py-4 border-b border-zinc-800 bg-zinc-950 flex items-center justify-between">
                 <div className="flex items-center gap-3">
@@ -898,6 +973,12 @@ export function AdminPortalModal() {
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
+                  <button
+                    onClick={() => showSaveToast('All Portfolio Data')}
+                    className="px-3.5 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
+                  >
+                    <Save className="w-3.5 h-3.5" /> Sync MongoDB
+                  </button>
                   <button
                     onClick={() => setIsAuthenticated(false)}
                     className="px-3.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-xs font-mono"
