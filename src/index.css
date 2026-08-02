@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@theme {
+  --animate-spotlight: spotlight 2s ease .75s 1 forwards;
+  
+  @keyframes spotlight {
+    0% {
+      opacity: 0;
+      transform: translate(-72%, -62%) scale(0.5);
+    }
+    100% {
+      opacity: 1;
+      transform: translate(-50%,-40%) scale(1);
+    }
+  }
+}
+
+/* Keep mouse cursor visible over 3D Spline Canvas / Models while allowing interactive tracking and smooth page scrolling */
+canvas,
+canvas:hover,
+canvas:focus,
+canvas:active,
+[data-spline-canvas],
+.spline-watermark {
+  cursor: default !important;
+  touch-action: pan-y !important;
+}
+
+/* Custom Neon Emerald & Dark Cyberpunk Scrollbar across entire App */
+html, body {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.45) #09090b;
+}
+
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #09090b;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.35);
+  border-radius: 9999px;
+  border: 2px solid #09090b;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(16, 185, 129, 0.85);
+  box-shadow: 0 0 10px rgba(16, 185, 129, 0.6);
+}
+
+::-webkit-scrollbar-corner {
+  background: #09090b;
+}
+
+/* Custom utility scrollbar classes for modals, textareas and overflow containers */
+.scrollbar-none,
+.no-scrollbar {
+  -ms-overflow-style: none !important;
+  scrollbar-width: none !important;
+}
+
+.scrollbar-none::-webkit-scrollbar,
+.no-scrollbar::-webkit-scrollbar {
+  display: none !important;
+  width: 0 !important;
+  height: 0 !important;
+}
+
+.custom-scrollbar,
+.scrollbar-thin {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(16, 185, 129, 0.5) rgba(24, 24, 27, 0.8);
+}
+
+.custom-scrollbar::-webkit-scrollbar,
+.scrollbar-thin::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: rgba(18, 18, 22, 0.8);
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.45);
+  border-radius: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+.scrollbar-thin::-webkit-scrollbar-thumb:hover {
+  background: rgba(52, 211, 153, 0.9);
+}
+
