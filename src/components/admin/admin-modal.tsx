@@ -196,6 +196,7 @@ export function AdminPortalModal() {
     reorderGalleryItem,
     swapGalleryItems,
     addResume,
+    updateResumes,
     updateResumeItem,
     deleteResumeItem,
     reorderResumeItem,
@@ -245,6 +246,35 @@ export function AdminPortalModal() {
     setTimeout(() => {
       setToast(null);
     }, 4500);
+  };
+
+  // Primary Career Objective & Professional Summary State
+  const [primaryObjectiveText, setPrimaryObjectiveText] = useState('');
+
+  useEffect(() => {
+    if (data.resumes && data.resumes.length > 0) {
+      setPrimaryObjectiveText(data.resumes[0].summary || '');
+    }
+  }, [data.resumes]);
+
+  const handleSavePrimaryObjective = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!data.resumes || data.resumes.length === 0) {
+      addResume({
+        id: 'fullstack',
+        title: 'Full Stack Developer Resume',
+        filename: 'Dubbaka_Sathwik_FullStack_Resume.pdf',
+        summary: primaryObjectiveText,
+        skills: ['React', 'Node.js', 'TypeScript', 'MongoDB'],
+        sections: [],
+      });
+    } else {
+      const updated = data.resumes.map((r: any, idx: number) =>
+        idx === 0 ? { ...r, summary: primaryObjectiveText } : r
+      );
+      updateResumes(updated);
+    }
+    showSaveToast('Career Objective & Professional Summary');
   };
 
   // Resume Form State
@@ -2303,7 +2333,7 @@ export function AdminPortalModal() {
                             <span>Manage Resume Documents CMS</span>
                           </h4>
                           <p className="text-xs text-zinc-400">
-                            Drop and upload your 4 types of PDF resumes from device, name them, write short descriptions, and configure competencies.
+                            Edit your primary Career Objective & Summary, drop PDF resumes, and configure document competencies.
                           </p>
                         </div>
                         <div className="flex items-center gap-2">
@@ -2326,6 +2356,45 @@ export function AdminPortalModal() {
                           )}
                         </div>
                       </div>
+
+                      {/* DEDICATED CAREER OBJECTIVE & PROFESSIONAL SUMMARY EDIT CARD */}
+                      <form onSubmit={handleSavePrimaryObjective} className="p-6 rounded-2xl bg-zinc-950 border border-emerald-500/50 space-y-4 shadow-xl relative overflow-hidden">
+                        <div className="absolute top-0 right-0 w-32 h-32 bg-emerald-500/10 rounded-full blur-2xl pointer-events-none" />
+                        
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
+                          <div className="flex items-center gap-3">
+                            <div className="w-9 h-9 rounded-xl bg-emerald-950 border border-emerald-500/40 text-emerald-400 flex items-center justify-center shrink-0">
+                              <Sparkles className="w-4 h-4 animate-pulse" />
+                            </div>
+                            <div>
+                              <h5 className="text-sm font-bold text-white font-sans flex items-center gap-2 flex-wrap">
+                                <span>Career Objective & Professional Summary</span>
+                                <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-300 font-mono text-[10px] border border-emerald-500/30 font-bold">
+                                  ★ Main Portfolio Display
+                                </span>
+                              </h5>
+                              <p className="text-[11px] text-zinc-400 mt-0.5">
+                                This statement appears prominently under "CAREER OBJECTIVE & PROFESSIONAL SUMMARY" in the Resume section on your homepage.
+                              </p>
+                            </div>
+                          </div>
+
+                          <button
+                            type="submit"
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer shrink-0 self-start sm:self-center"
+                          >
+                            <Save className="w-3.5 h-3.5" /> Save Objective & Sync
+                          </button>
+                        </div>
+
+                        <textarea
+                          rows={3}
+                          value={primaryObjectiveText}
+                          onChange={(e) => setPrimaryObjectiveText(e.target.value)}
+                          placeholder="Write your Career Objective & Professional Summary (e.g. 3rd Year CSE Student at MVSR Engineering College proficient in building modern web applications with React, Node.js, Express, MongoDB, MySQL, and Tailwind CSS...)"
+                          className="w-full p-4 rounded-xl bg-zinc-900 border border-zinc-800 text-xs sm:text-sm text-white font-mono focus:border-emerald-500/60 focus:outline-none resize-y leading-relaxed shadow-inner"
+                        />
+                      </form>
 
                       {/* Resume Add/Edit Form */}
                       <form onSubmit={handleSaveResume} className="p-6 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-5">
@@ -2383,12 +2452,12 @@ export function AdminPortalModal() {
 
                         {/* Short Description */}
                         <div className="space-y-1">
-                          <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">
-                            Short Description / Target Role Overview
+                          <label className="text-[10px] font-mono font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+                            <Sparkles className="w-3 h-3" /> Career Objective & Professional Summary (For this Resume) *
                           </label>
                           <textarea
                             rows={3}
-                            placeholder="Write a brief description of this resume focus (e.g. 3rd Year CSE Student proficient in React, Node.js, Express, MongoDB...)"
+                            placeholder="Write your Career Objective & Professional Summary (e.g. 3rd Year CSE Student at MVSR Engineering College proficient in building modern web applications...)"
                             value={newResume.summary}
                             onChange={(e) => setNewResume({ ...newResume, summary: e.target.value })}
                             className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white font-mono focus:border-emerald-500/50 outline-none resize-none"
@@ -2486,7 +2555,8 @@ export function AdminPortalModal() {
                                   )}
                                 </div>
 
-                                <p className="text-xs text-zinc-300 line-clamp-2 leading-relaxed">
+                                <p className="text-xs text-zinc-300 leading-relaxed">
+                                  <span className="text-[10px] font-mono text-emerald-400 font-bold block">Career Objective / Summary:</span>
                                   {r.summary}
                                 </p>
 
@@ -2712,6 +2782,38 @@ export function AdminPortalModal() {
                               {aboutForm.showSkills !== false ? 'ON' : 'OFF'}
                             </button>
                           </div>
+                        </div>
+                      </div>
+
+                      {/* CAREER OBJECTIVE & PROFESSIONAL SUMMARY CARD */}
+                      <div className="p-4 rounded-2xl bg-zinc-950 border border-emerald-500/40 space-y-3 relative overflow-hidden">
+                        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                          <label className="text-xs font-mono text-emerald-400 font-bold flex items-center gap-2">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            CAREER OBJECTIVE & PROFESSIONAL SUMMARY
+                          </label>
+                          <span className="text-[10px] font-mono text-emerald-300 px-2 py-0.5 rounded bg-emerald-950 border border-emerald-500/30">
+                            Syncs with Resumes CMS
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-400">
+                          Edit the primary summary rendered under "CAREER OBJECTIVE & PROFESSIONAL SUMMARY" on your portfolio homepage:
+                        </p>
+                        <div className="space-y-2">
+                          <textarea
+                            rows={3}
+                            value={primaryObjectiveText}
+                            onChange={(e) => setPrimaryObjectiveText(e.target.value)}
+                            placeholder="3rd Year CSE Student at MVSR Engineering College proficient in building modern web applications..."
+                            className="w-full p-3 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white font-mono focus:border-emerald-500/60 focus:outline-none resize-y"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleSavePrimaryObjective}
+                            className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
+                          >
+                            <Save className="w-3.5 h-3.5" /> Save Career Objective
+                          </button>
                         </div>
                       </div>
 

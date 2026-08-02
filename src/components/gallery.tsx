@@ -147,22 +147,9 @@ export function GallerySection() {
       <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[700px] h-[700px] bg-emerald-500/5 blur-[160px] rounded-full pointer-events-none" />
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
-        {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-white text-xs font-mono font-medium">
-              <Award className="w-3.5 h-3.5 text-emerald-400" />
-              <span>Certifications & Honors Showcase</span>
-            </div>
-            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight whitespace-nowrap">
-              Certificates & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-400">Awards</span>
-            </h2>
-            <p className="text-zinc-400 text-sm sm:text-base max-w-xl">
-              Official certifications, academic recognitions, hackathon achievements, and NSS leadership honors.
-            </p>
-          </div>
-
-          {/* Category Filter Pills strictly in a SINGLE LINE */}
+        {/* Section Header (Filter Navbar on Left, Title on Right) */}
+        <div className="flex flex-col-reverse lg:flex-row lg:items-end justify-between gap-6 mb-12">
+          {/* Category Filter Pills on the LEFT */}
           <div className="flex flex-nowrap items-center gap-1.5 bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-800 shrink-0 max-w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden">
             {categories.map((cat) => (
               <button
@@ -178,6 +165,20 @@ export function GallerySection() {
                 {cat}
               </button>
             ))}
+          </div>
+
+          {/* Section Title & Subtitle on the RIGHT */}
+          <div className="space-y-3 flex flex-col items-start lg:items-end lg:text-right">
+            <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-white text-xs font-mono font-medium">
+              <Award className="w-3.5 h-3.5 text-emerald-400" />
+              <span>Certifications & Honors Showcase</span>
+            </div>
+            <h2 className="text-3xl sm:text-5xl font-black text-white tracking-tight whitespace-nowrap">
+              Certificates & <span className="text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-green-400">Awards</span>
+            </h2>
+            <p className="text-zinc-400 text-sm sm:text-base max-w-xl">
+              Official certifications, academic recognitions, hackathon achievements, and NSS leadership honors.
+            </p>
           </div>
         </div>
 

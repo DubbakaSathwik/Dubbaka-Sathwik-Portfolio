@@ -5,6 +5,7 @@ import { Menu, X, Code2, Film, Sparkles } from 'lucide-react';
 const navLinks = [
   { name: 'Home', href: '#home' },
   { name: 'About', href: '#about' },
+  { name: 'Skills', href: '#skills' },
   { name: 'Projects', href: '#projects' },
   { name: 'Creative', href: '#editing' },
   { name: 'Journey', href: '#journey' },
@@ -22,24 +23,26 @@ export function Navbar() {
     const handleScroll = () => {
       setIsScrolled(window.scrollY > 20);
 
-      // Simple active link detection
+      // Active link detection based on section top position relative to navbar offset
       const sections = navLinks.map((link) => link.href.substring(1));
-      const scrollPosition = window.scrollY + 200;
+      const navOffset = 140;
+      let current = 'home';
 
-      for (const section of sections) {
-        const element = document.getElementById(section);
+      for (const sectionId of sections) {
+        const element = document.getElementById(sectionId);
         if (element) {
-          const top = element.offsetTop;
-          const height = element.offsetHeight;
-          if (scrollPosition >= top && scrollPosition < top + height) {
-            setActiveSection(section);
-            break;
+          const rect = element.getBoundingClientRect();
+          if (rect.top <= navOffset) {
+            current = sectionId;
           }
         }
       }
+
+      setActiveSection(current);
     };
 
-    window.addEventListener('scroll', handleScroll);
+    handleScroll();
+    window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
@@ -49,7 +52,15 @@ export function Navbar() {
     const targetId = href.replace('#', '');
     const element = document.getElementById(targetId);
     if (element) {
-      element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      const navOffset = 85;
+      const elementPosition = element.getBoundingClientRect().top;
+      const offsetPosition = elementPosition + window.scrollY - navOffset;
+
+      window.scrollTo({
+        top: Math.max(0, offsetPosition),
+        behavior: 'smooth',
+      });
+      setActiveSection(targetId);
     }
   };
 
