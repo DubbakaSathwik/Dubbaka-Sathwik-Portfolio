@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Award, ExternalLink, X, Calendar, MapPin, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Image as ImageIcon, Layers, LayoutGrid } from 'lucide-react';
+import { Award, ExternalLink, X, Calendar, MapPin, ChevronLeft, ChevronRight, Sparkles, CheckCircle2, Image as ImageIcon, Layers, LayoutGrid, Maximize2 } from 'lucide-react';
 import { useCMS } from '../context/CMSContext';
 import { GalleryItem } from '../types';
 import { FormattedText } from '../lib/text-formatter';
@@ -87,6 +87,8 @@ export function GallerySection() {
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
   const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('stack');
+  const [expandedCertImage, setExpandedCertImage] = useState<string | null>(null);
+  const [expandedCertTitle, setExpandedCertTitle] = useState<string>('');
 
   const ITEMS_PER_PAGE = 6;
 
@@ -150,7 +152,7 @@ export function GallerySection() {
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header (Filter Navbar on Left, Title on Right) */}
-        <div className="flex flex-col-reverse lg:flex-row lg:items-end justify-between gap-6 mb-12">
+        <div className="flex flex-col-reverse lg:flex-row lg:items-end justify-between gap-4 lg:gap-6 mb-3 sm:mb-6 lg:mb-12">
           {/* Category Filter Pills on the LEFT */}
           <div className="flex flex-nowrap items-center gap-1.5 bg-zinc-900/80 p-1.5 rounded-2xl border border-zinc-800 shrink-0 max-w-full overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {categories.map((cat) => (
@@ -185,32 +187,32 @@ export function GallerySection() {
         </div>
 
         {/* Mobile View Switcher (Stack Deck vs Grid) */}
-        <div className="md:hidden flex items-center justify-between mb-6 bg-zinc-900/90 p-2 rounded-2xl border border-zinc-800">
-          <span className="text-xs font-mono font-bold text-zinc-400 pl-2">Mobile Layout:</span>
-          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+        <div className="md:hidden flex items-center justify-between gap-1 mb-3 bg-zinc-900/90 p-1.5 rounded-xl border border-zinc-800 w-full overflow-hidden">
+          <span className="text-[10px] sm:text-xs font-mono font-bold text-zinc-400 pl-1 shrink-0 whitespace-nowrap">Mobile Layout:</span>
+          <div className="flex items-center gap-0.5 bg-zinc-950 p-0.5 rounded-lg border border-zinc-800 shrink-0">
             <button
               type="button"
               onClick={() => setMobileViewMode('stack')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
                 mobileViewMode === 'stack'
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <Layers className="w-3.5 h-3.5" />
+              <Layers className="w-3 h-3 shrink-0" />
               <span>Stack Deck</span>
             </button>
             <button
               type="button"
               onClick={() => setMobileViewMode('grid')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
                 mobileViewMode === 'grid'
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Grid</span>
+              <LayoutGrid className="w-3 h-3 shrink-0" />
+              <span>Grid View</span>
             </button>
           </div>
         </div>
@@ -469,8 +471,18 @@ export function GallerySection() {
                   <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
-                {/* Main Image Display */}
-                <div className="relative aspect-[16/9] w-full bg-zinc-950 overflow-hidden shrink-0">
+                {/* Main Image Display (Click to Expand) */}
+                <div
+                  className="relative aspect-[16/9] w-full bg-zinc-950 overflow-hidden shrink-0 cursor-pointer group"
+                  onClick={() => {
+                    const currentImg =
+                      activeItem.images && activeItem.images.length > 0
+                        ? activeItem.images[activeImageIndex] || activeItem.image
+                        : activeItem.image;
+                    setExpandedCertImage(currentImg);
+                    setExpandedCertTitle(activeItem.title);
+                  }}
+                >
                   <img
                     src={
                       activeItem.images && activeItem.images.length > 0
@@ -478,7 +490,7 @@ export function GallerySection() {
                         : activeItem.image
                     }
                     alt={activeItem.title}
-                    className="w-full h-full object-contain bg-black/90"
+                    className="w-full h-full object-contain bg-black/90 group-hover:scale-102 transition-transform duration-300"
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d12] via-transparent to-transparent pointer-events-none" />
 
@@ -492,6 +504,12 @@ export function GallerySection() {
                         ★ Featured
                       </span>
                     )}
+                  </div>
+
+                  {/* Click to Expand Overlay Badge */}
+                  <div className="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md text-emerald-400 border border-emerald-500/40 text-[11px] font-mono font-bold flex items-center gap-1.5 z-10 shadow-lg group-hover:bg-emerald-600 group-hover:text-white transition-all">
+                    <Maximize2 className="w-3.5 h-3.5" />
+                    <span>Expand Image</span>
                   </div>
                 </div>
 
@@ -561,12 +579,9 @@ export function GallerySection() {
                     <h4 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
                       Certificate Details
                     </h4>
-                    <div
-                      className="text-xs sm:text-sm text-zinc-300 leading-relaxed space-y-2 font-sans"
-                      dangerouslySetInnerHTML={{
-                        __html: activeItem.detailedDescription || activeItem.description,
-                      }}
-                    />
+                    <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed space-y-2 font-sans">
+                      <FormattedText text={activeItem.detailedDescription || activeItem.description} />
+                    </div>
                   </div>
 
                   {/* Credential / Verify Action Button */}
@@ -587,6 +602,55 @@ export function GallerySection() {
                 </div>
               </motion.div>
             </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Full-Screen Certificate Image Lightbox Modal */}
+      <AnimatePresence>
+        {expandedCertImage && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            onClick={() => setExpandedCertImage(null)}
+            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-xl p-4 sm:p-8 flex flex-col items-center justify-between"
+          >
+            {/* Lightbox Header Bar */}
+            <div className="w-full max-w-6xl flex items-center justify-between text-white z-10 bg-zinc-950/90 p-3 sm:p-4 rounded-2xl border border-zinc-800 shadow-2xl">
+              <div className="flex items-center gap-2 min-w-0">
+                <Sparkles className="w-4 h-4 text-emerald-400 shrink-0" />
+                <h4 className="text-xs sm:text-sm font-mono font-bold text-emerald-300 truncate">
+                  {expandedCertTitle || 'Certificate Full View'}
+                </h4>
+              </div>
+              <button
+                type="button"
+                onClick={() => setExpandedCertImage(null)}
+                className="p-2 rounded-xl bg-zinc-900 hover:bg-red-600 text-zinc-300 hover:text-white transition-colors cursor-pointer border border-zinc-800"
+                title="Close Full View"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Lightbox Main Image */}
+            <div className="relative w-full max-w-6xl flex-1 flex items-center justify-center my-4 overflow-hidden">
+              <motion.img
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                src={expandedCertImage}
+                alt="Expanded Certificate"
+                className="max-w-full max-h-[82vh] object-contain rounded-xl shadow-2xl border border-emerald-500/20"
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+
+            {/* Lightbox Footer */}
+            <div className="text-[11px] font-mono text-zinc-400 flex items-center gap-2 bg-zinc-900/90 px-4 py-2 rounded-full border border-zinc-800 shadow-lg">
+              <span className="text-emerald-400 font-bold">★</span> Click anywhere outside or press Close to exit
+            </div>
           </motion.div>
         )}
       </AnimatePresence>

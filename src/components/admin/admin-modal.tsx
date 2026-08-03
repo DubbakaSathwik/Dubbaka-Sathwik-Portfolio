@@ -30,6 +30,8 @@ import {
   CheckCircle2,
   Database,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
 import { CreativeItem } from '../../types';
@@ -180,27 +182,32 @@ export function AdminPortalModal() {
     updateProject,
     deleteProject,
     reorderProjectItem,
+    moveProjectItem,
     swapProjectItems,
     addCreativeItem,
     updateCreativeItem,
     deleteCreativeItem,
     reorderCreativeItem,
+    moveCreativeItem,
     swapCreativeItems,
     addJourneyItem,
     updateJourneyItem,
     deleteJourneyItem,
     reorderJourneyItem,
+    moveJourneyItem,
     swapJourneyItems,
     addGalleryItem,
     updateGalleryItem,
     deleteGalleryItem,
     reorderGalleryItem,
+    moveGalleryItem,
     swapGalleryItems,
     addResume,
     updateResumes,
     updateResumeItem,
     deleteResumeItem,
     reorderResumeItem,
+    moveResumeItem,
     swapResumeItems,
     updateContactInfo,
     markMessageRead,
@@ -1411,16 +1418,52 @@ export function AdminPortalModal() {
                                     </span>
                                   )}
                                 </p>
-                              </div>
-
-                              {/* Position Reordering & Action Controls */}
+                                               {/* Position Reordering & Action Controls */}
                               <div className="flex items-center gap-2 self-end sm:self-center shrink-0 flex-wrap">
-                                {/* Move Up / Down Buttons */}
+                                {/* Position Selector Dropdown */}
+                                <select
+                                  value={idx}
+                                  onChange={(e) => {
+                                    const targetIndex = parseInt(e.target.value, 10);
+                                    if (!isNaN(targetIndex) && targetIndex !== idx) {
+                                      moveJourneyItem(idx, targetIndex);
+                                      showSaveToast('Journey Milestones');
+                                    }
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-zinc-900 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold focus:outline-none cursor-pointer hover:border-emerald-400"
+                                  title="Change Card Position directly"
+                                >
+                                  {data.journey.map((_, pIdx) => (
+                                    <option key={pIdx} value={pIdx} className="bg-zinc-900 text-white">
+                                      Pos #{pIdx + 1} {pIdx === idx ? '(Current)' : ''}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {/* Move to Top Button */}
+                                {idx > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      moveJourneyItem(idx, 0);
+                                      showSaveToast('Journey Milestones');
+                                    }}
+                                    className="px-2 py-1 rounded-lg bg-zinc-900 hover:bg-emerald-950/80 text-emerald-400 border border-zinc-800 hover:border-emerald-500/50 text-[10px] font-mono font-bold transition-colors cursor-pointer"
+                                    title="Move to First Position (#1)"
+                                  >
+                                    Top
+                                  </button>
+                                )}
+
+                                {/* Up / Down Buttons */}
                                 <div className="flex items-center bg-zinc-900 rounded-lg border border-zinc-800 p-0.5">
                                   <button
                                     type="button"
                                     disabled={idx === 0}
-                                    onClick={() => reorderJourneyItem(idx, 'up')}
+                                    onClick={() => {
+                                      reorderJourneyItem(idx, 'up');
+                                      showSaveToast('Journey Milestones');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Up in Roadmap Timeline"
                                   >
@@ -1429,36 +1472,16 @@ export function AdminPortalModal() {
                                   <button
                                     type="button"
                                     disabled={idx === data.journey.length - 1}
-                                    onClick={() => reorderJourneyItem(idx, 'down')}
+                                    onClick={() => {
+                                      reorderJourneyItem(idx, 'down');
+                                      showSaveToast('Journey Milestones');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Down in Roadmap Timeline"
                                   >
                                     <ArrowDown className="w-3.5 h-3.5" />
                                   </button>
-                                </div>
-
-                                {/* Swap Position Dropdown */}
-                                <div className="flex items-center gap-1 bg-zinc-900 rounded-lg border border-zinc-800 px-2 py-1">
-                                  <ArrowUpDown className="w-3 h-3 text-emerald-400 shrink-0" />
-                                  <span className="text-[10px] font-mono text-zinc-400 hidden sm:inline">Swap:</span>
-                                  <select
-                                    value={idx}
-                                    onChange={(e) => {
-                                      const targetIndex = parseInt(e.target.value, 10);
-                                      if (targetIndex !== idx) {
-                                        swapJourneyItems(idx, targetIndex);
-                                      }
-                                    }}
-                                    className="bg-transparent text-xs font-mono font-semibold text-emerald-400 border-none focus:outline-none cursor-pointer"
-                                    title="Swap position with another roadmap item"
-                                  >
-                                    {data.journey.map((_, pos) => (
-                                      <option key={pos} value={pos} className="bg-zinc-900 text-white">
-                                        Pos #{pos + 1}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
+                                </div>                </div>
 
                                 {/* Edit & Delete Buttons */}
                                 <div className="flex items-center gap-1 pl-1 border-l border-zinc-800">
@@ -1781,12 +1804,15 @@ export function AdminPortalModal() {
 
                               {/* Position Reordering & Action Controls */}
                               <div className="flex items-center gap-2 self-end sm:self-center shrink-0 flex-wrap">
-                                {/* Up / Down Buttons */}
+                                {/* Move Up / Down Buttons */}
                                 <div className="flex items-center bg-zinc-900 rounded-lg border border-zinc-800 p-0.5">
                                   <button
                                     type="button"
                                     disabled={idx === 0}
-                                    onClick={() => reorderProjectItem(idx, 'up')}
+                                    onClick={() => {
+                                      reorderProjectItem(idx, 'up');
+                                      showSaveToast('Projects');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Up in Technical Projects Grid"
                                   >
@@ -1795,7 +1821,10 @@ export function AdminPortalModal() {
                                   <button
                                     type="button"
                                     disabled={idx === data.projects.length - 1}
-                                    onClick={() => reorderProjectItem(idx, 'down')}
+                                    onClick={() => {
+                                      reorderProjectItem(idx, 'down');
+                                      showSaveToast('Projects');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Down in Technical Projects Grid"
                                   >
@@ -1803,28 +1832,40 @@ export function AdminPortalModal() {
                                   </button>
                                 </div>
 
-                                {/* Swap Position Dropdown */}
-                                <div className="flex items-center gap-1 bg-zinc-900 rounded-lg border border-zinc-800 px-2 py-1">
-                                  <ArrowUpDown className="w-3 h-3 text-emerald-400 shrink-0" />
-                                  <span className="text-[10px] font-mono text-zinc-400 hidden sm:inline">Swap:</span>
-                                  <select
-                                    value={idx}
-                                    onChange={(e) => {
-                                      const targetIndex = parseInt(e.target.value, 10);
-                                      if (targetIndex !== idx) {
-                                        swapProjectItems(idx, targetIndex);
-                                      }
+                                {/* Position Selector Dropdown */}
+                                <select
+                                  value={idx}
+                                  onChange={(e) => {
+                                    const targetIndex = parseInt(e.target.value, 10);
+                                    if (!isNaN(targetIndex) && targetIndex !== idx) {
+                                      moveProjectItem(idx, targetIndex);
+                                      showSaveToast('Projects');
+                                    }
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-zinc-900 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold focus:outline-none cursor-pointer hover:border-emerald-400"
+                                  title="Change Card Position directly"
+                                >
+                                  {data.projects.map((_, pIdx) => (
+                                    <option key={pIdx} value={pIdx} className="bg-zinc-900 text-white">
+                                      Pos #{pIdx + 1} {pIdx === idx ? '(Current)' : ''}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {/* Move to Top Button */}
+                                {idx > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      moveProjectItem(idx, 0);
+                                      showSaveToast('Projects');
                                     }}
-                                    className="bg-transparent text-xs font-mono font-semibold text-emerald-400 border-none focus:outline-none cursor-pointer"
-                                    title="Swap position with another project"
+                                    className="px-2 py-1 rounded-lg bg-zinc-900 hover:bg-emerald-950/80 text-emerald-400 border border-zinc-800 hover:border-emerald-500/50 text-[10px] font-mono font-bold transition-colors cursor-pointer"
+                                    title="Move to First Position (#1)"
                                   >
-                                    {data.projects.map((_, pos) => (
-                                      <option key={pos} value={pos} className="bg-zinc-900 text-white">
-                                        Pos #{pos + 1}
-                                      </option>
-                                    ))}
-                                  </select>
-                                </div>
+                                    Top
+                                  </button>
+                                )}
 
                                 {/* Edit & Delete Buttons */}
                                 <div className="flex items-center gap-1 pl-1 border-l border-zinc-800">
@@ -1939,15 +1980,20 @@ export function AdminPortalModal() {
                           </div>
                         </div>
 
-                        {/* Photo Dropdown Selector */}
+                        {/* Photo Dropdown & Manager Selector */}
                         <PhotoDropdownSelector
-                          onSelectPhotoUrl={(url) =>
+                          label="Select & Manage Creative Photos (Upload Device Files, Presets or Custom Links)"
+                          multilineMode={true}
+                          currentPhotos={newCreative.photoUrlsInput
+                            .split('\n')
+                            .map((u) => u.trim())
+                            .filter((u) => u.length > 5)}
+                          onUpdatePhotoList={(photos) => {
                             setNewCreative((prev) => ({
                               ...prev,
-                              photoUrlsInput: prev.photoUrlsInput ? `${prev.photoUrlsInput}\n${url}` : url,
-                            }))
-                          }
-                          label="Quick Pick Creative Photo / Graphic"
+                              photoUrlsInput: photos.join('\n'),
+                            }));
+                          }}
                         />
 
                         {/* Photo URLs Input */}
@@ -1964,6 +2010,149 @@ export function AdminPortalModal() {
                             className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white font-mono focus:border-emerald-500/50 outline-none"
                           />
                         </div>
+
+                        {/* Live Image Preview in CMS with Photo Removal & Rearrange Controls */}
+                        {(() => {
+                          const previewUrls = newCreative.photoUrlsInput
+                            .split('\n')
+                            .map((u) => u.trim())
+                            .filter((u) => u.length > 5);
+
+                          if (previewUrls.length === 0) return null;
+
+                          const handleRemovePhoto = (indexToRemove: number) => {
+                            const updated = previewUrls.filter((_, idx) => idx !== indexToRemove);
+                            setNewCreative((prev) => ({
+                              ...prev,
+                              photoUrlsInput: updated.join('\n'),
+                            }));
+                          };
+
+                          const handleMovePhoto = (index: number, direction: 'left' | 'right') => {
+                            const targetIndex = direction === 'left' ? index - 1 : index + 1;
+                            if (targetIndex < 0 || targetIndex >= previewUrls.length) return;
+                            const updated = [...previewUrls];
+                            const temp = updated[index];
+                            updated[index] = updated[targetIndex];
+                            updated[targetIndex] = temp;
+                            setNewCreative((prev) => ({
+                              ...prev,
+                              photoUrlsInput: updated.join('\n'),
+                            }));
+                          };
+
+                          const handleSetCover = (index: number) => {
+                            if (index === 0) return;
+                            const updated = [...previewUrls];
+                            const [selected] = updated.splice(index, 1);
+                            updated.unshift(selected);
+                            setNewCreative((prev) => ({
+                              ...prev,
+                              photoUrlsInput: updated.join('\n'),
+                            }));
+                          };
+
+                          return (
+                            <div className="p-3.5 rounded-2xl bg-zinc-900/90 border border-emerald-500/30 space-y-2.5">
+                              <div className="flex items-center justify-between">
+                                <span className="text-[10px] font-mono font-bold text-emerald-400 uppercase flex items-center gap-1.5">
+                                  <Sparkles className="w-3.5 h-3.5 text-emerald-400" /> Live Image Preview ({previewUrls.length} Photo{previewUrls.length > 1 ? 's' : ''})
+                                </span>
+                                <div className="flex items-center gap-2">
+                                  <span className="text-[10px] font-mono text-zinc-500 hidden sm:inline">Photo #1 is cover photo</span>
+                                  {previewUrls.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={() => setNewCreative((prev) => ({ ...prev, photoUrlsInput: '' }))}
+                                      className="text-[10px] font-mono text-red-400 hover:text-red-300 hover:underline cursor-pointer"
+                                    >
+                                      Remove All Photos
+                                    </button>
+                                  )}
+                                </div>
+                              </div>
+
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                                {previewUrls.map((url, i) => (
+                                  <div
+                                    key={`${i}-${url.substring(0, 20)}`}
+                                    className="relative aspect-video rounded-xl overflow-hidden border border-zinc-800 hover:border-emerald-500/50 bg-black group shadow-md flex flex-col justify-between p-1.5 transition-all"
+                                  >
+                                    <img
+                                      src={url}
+                                      alt={`Preview ${i + 1}`}
+                                      className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform"
+                                      onError={(e) => {
+                                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400';
+                                      }}
+                                    />
+
+                                    {/* Top Bar: Position Badge & Remove Button */}
+                                    <div className="relative z-10 flex items-center justify-between w-full">
+                                      <span
+                                        className={`px-1.5 py-0.5 rounded text-[9px] font-mono font-bold border shadow-sm ${
+                                          i === 0
+                                            ? 'bg-emerald-600/90 text-white border-emerald-400'
+                                            : 'bg-black/80 text-emerald-400 border-emerald-500/30'
+                                        }`}
+                                      >
+                                        {i === 0 ? '★ Cover (#1)' : `#${i + 1}`}
+                                      </span>
+
+                                      <button
+                                        type="button"
+                                        onClick={() => handleRemovePhoto(i)}
+                                        className="p-1 rounded bg-black/80 hover:bg-red-600 text-zinc-300 hover:text-white transition-colors cursor-pointer shadow-lg"
+                                        title="Remove photo"
+                                      >
+                                        <Trash2 className="w-3 h-3" />
+                                      </button>
+                                    </div>
+
+                                    {/* Bottom Bar: Set Cover & Rearrange Buttons */}
+                                    <div className="relative z-10 flex items-center justify-between bg-black/80 backdrop-blur-md px-1.5 py-1 rounded-lg border border-white/10 mt-auto w-full">
+                                      {i > 0 ? (
+                                        <button
+                                          type="button"
+                                          onClick={() => handleSetCover(i)}
+                                          className="text-[9px] font-mono text-emerald-400 hover:text-emerald-300 hover:underline flex items-center gap-0.5 cursor-pointer"
+                                          title="Set as cover photo (#1)"
+                                        >
+                                          Set Cover
+                                        </button>
+                                      ) : (
+                                        <span className="text-[9px] font-mono text-emerald-400 font-bold">Cover</span>
+                                      )}
+
+                                      {previewUrls.length > 1 && (
+                                        <div className="flex items-center gap-0.5">
+                                          <button
+                                            type="button"
+                                            disabled={i === 0}
+                                            onClick={() => handleMovePhoto(i, 'left')}
+                                            className="p-0.5 disabled:opacity-20 text-zinc-300 hover:text-emerald-400 cursor-pointer"
+                                            title="Move Left"
+                                          >
+                                            <ChevronLeft className="w-3.5 h-3.5" />
+                                          </button>
+                                          <button
+                                            type="button"
+                                            disabled={i === previewUrls.length - 1}
+                                            onClick={() => handleMovePhoto(i, 'right')}
+                                            className="p-0.5 disabled:opacity-20 text-zinc-300 hover:text-emerald-400 cursor-pointer"
+                                            title="Move Right"
+                                          >
+                                            <ChevronRight className="w-3.5 h-3.5" />
+                                          </button>
+                                        </div>
+                                      )}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          );
+                        })()}
 
                         {/* Video URL & Posted on Platform Link */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -2065,6 +2254,7 @@ export function AdminPortalModal() {
 
                         {data.creativePortfolio.map((c, idx) => {
                           const isEditingThis = editingCreativeId === c.id;
+                          const thumbUrl = c.thumbnail || (c.images && c.images[0]) || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400';
 
                           return (
                             <div
@@ -2075,49 +2265,106 @@ export function AdminPortalModal() {
                                   : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                               }`}
                             >
-                              <div className="space-y-1.5 min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  {/* Position Badge */}
-                                  <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold shrink-0">
-                                    #{idx + 1}
-                                  </span>
-
-                                  <NeonIcon name={c.category} className="w-4 h-4 shrink-0 text-emerald-400" />
-                                  <span className="text-sm font-bold text-white truncate">{c.title}</span>
-
-                                  <span className="px-2 py-0.5 rounded bg-zinc-900 text-emerald-400 text-[10px] font-mono border border-emerald-500/30 shrink-0">
-                                    {c.category}
-                                  </span>
-
-                                  {c.featured && (
-                                    <span className="px-2 py-0.5 rounded bg-emerald-600/80 text-white text-[10px] font-mono font-bold shrink-0">
-                                      ★ Featured
-                                    </span>
-                                  )}
-
-                                  {isEditingThis && (
-                                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-mono border border-emerald-500/40 animate-pulse shrink-0">
-                                      Editing Now...
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                {/* Thumbnail Image Preview */}
+                                <div className="w-12 h-12 sm:w-16 sm:h-12 rounded-xl bg-black border border-zinc-800 overflow-hidden shrink-0 relative group">
+                                  <img
+                                    src={thumbUrl}
+                                    alt={c.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400';
+                                    }}
+                                  />
+                                  {c.images && c.images.length > 1 && (
+                                    <span className="absolute bottom-0.5 right-0.5 px-1 py-0.2 rounded bg-black/80 text-[8px] font-mono font-bold text-emerald-400">
+                                      +{c.images.length}
                                     </span>
                                   )}
                                 </div>
 
-                                <p className="text-xs text-zinc-400 font-mono flex items-center gap-2 flex-wrap">
-                                  <span>Tools: {(c.softwareUsed || []).join(', ')}</span>
-                                  {c.completionDate && <span className="text-emerald-400/80">• 📅 {c.completionDate}</span>}
-                                  {c.platformUrl && <span className="text-emerald-400/80">• 🌐 Platform Link Attached</span>}
-                                  {c.videoUrl && <span className="text-emerald-400/80">• 🎬 Video Attached</span>}
-                                </p>
+                                <div className="space-y-1.5 min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {/* Position Badge */}
+                                    <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold shrink-0">
+                                      #{idx + 1}
+                                    </span>
+
+                                    <NeonIcon name={c.category} className="w-4 h-4 shrink-0 text-emerald-400" />
+                                    <span className="text-sm font-bold text-white truncate">{c.title}</span>
+
+                                    <span className="px-2 py-0.5 rounded bg-zinc-900 text-emerald-400 text-[10px] font-mono border border-emerald-500/30 shrink-0">
+                                      {c.category}
+                                    </span>
+
+                                    {c.featured && (
+                                      <span className="px-2 py-0.5 rounded bg-emerald-600/80 text-white text-[10px] font-mono font-bold shrink-0">
+                                        ★ Featured
+                                      </span>
+                                    )}
+
+                                    {isEditingThis && (
+                                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-mono border border-emerald-500/40 animate-pulse shrink-0">
+                                        Editing Now...
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <p className="text-xs text-zinc-400 font-mono flex items-center gap-2 flex-wrap">
+                                    <span>Tools: {(c.softwareUsed || []).join(', ')}</span>
+                                    {c.completionDate && <span className="text-emerald-400/80">• 📅 {c.completionDate}</span>}
+                                    {c.platformUrl && <span className="text-emerald-400/80">• 🌐 Platform Link Attached</span>}
+                                    {c.videoUrl && <span className="text-emerald-400/80">• 🎬 Video Attached</span>}
+                                  </p>
+                                </div>
                               </div>
 
                               {/* Position Reordering & Action Controls */}
                               <div className="flex items-center gap-2 self-end sm:self-center shrink-0 flex-wrap">
+                                {/* Position Selector Dropdown */}
+                                <select
+                                  value={idx}
+                                  onChange={(e) => {
+                                    const targetIndex = parseInt(e.target.value, 10);
+                                    if (!isNaN(targetIndex) && targetIndex !== idx) {
+                                      moveCreativeItem(idx, targetIndex);
+                                      showSaveToast('Creative Portfolio');
+                                    }
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-zinc-900 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold focus:outline-none cursor-pointer hover:border-emerald-400"
+                                  title="Change Card Position directly"
+                                >
+                                  {data.creativePortfolio.map((_, pIdx) => (
+                                    <option key={pIdx} value={pIdx} className="bg-zinc-900 text-white">
+                                      Pos #{pIdx + 1} {pIdx === idx ? '(Current)' : ''}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {/* Move to Top Button */}
+                                {idx > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      moveCreativeItem(idx, 0);
+                                      showSaveToast('Creative Portfolio');
+                                    }}
+                                    className="px-2 py-1 rounded-lg bg-zinc-900 hover:bg-emerald-950/80 text-emerald-400 border border-zinc-800 hover:border-emerald-500/50 text-[10px] font-mono font-bold transition-colors cursor-pointer"
+                                    title="Move to First Position (#1)"
+                                  >
+                                    Top
+                                  </button>
+                                )}
+
                                 {/* Up / Down Buttons */}
                                 <div className="flex items-center bg-zinc-900 rounded-lg border border-zinc-800 p-0.5">
                                   <button
                                     type="button"
                                     disabled={idx === 0}
-                                    onClick={() => reorderCreativeItem(idx, 'up')}
+                                    onClick={() => {
+                                      reorderCreativeItem(idx, 'up');
+                                      showSaveToast('Creative Portfolio');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Up in Creative Showcase"
                                   >
@@ -2126,7 +2373,10 @@ export function AdminPortalModal() {
                                   <button
                                     type="button"
                                     disabled={idx === data.creativePortfolio.length - 1}
-                                    onClick={() => reorderCreativeItem(idx, 'down')}
+                                    onClick={() => {
+                                      reorderCreativeItem(idx, 'down');
+                                      showSaveToast('Creative Portfolio');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Down in Creative Showcase"
                                   >
@@ -2371,13 +2621,14 @@ export function AdminPortalModal() {
                           <p className="text-xs font-mono font-semibold text-zinc-400">
                             Existing Certificates & Awards ({data.gallery.length}) — Click <Pencil className="w-3 h-3 inline text-emerald-400" /> to edit
                           </p>
-                          <span className="text-[10px] font-mono text-emerald-400/80">
-                            ▲▼ Reorder Items
+                          <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
+                            ★ Use ▲▼, Top, or Position Dropdown to Rearrange Cards
                           </span>
                         </div>
 
                         {data.gallery.map((g, idx) => {
                           const isEditingThis = editingGalleryId === g.id;
+                          const thumbUrl = g.image || (g.images && g.images[0]) || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=400';
 
                           return (
                             <div
@@ -2388,49 +2639,101 @@ export function AdminPortalModal() {
                                   : 'bg-zinc-950 border-zinc-800 hover:border-zinc-700'
                               }`}
                             >
-                              <div className="space-y-1.5 min-w-0 flex-1">
-                                <div className="flex items-center gap-2 flex-wrap">
-                                  {/* Position Badge */}
-                                  <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold shrink-0">
-                                    #{idx + 1}
-                                  </span>
-
-                                  <Award className="w-4 h-4 shrink-0 text-emerald-400" />
-                                  <span className="text-sm font-bold text-white truncate">{g.title}</span>
-
-                                  <span className="px-2 py-0.5 rounded bg-zinc-900 text-emerald-400 text-[10px] font-mono border border-emerald-500/30 shrink-0">
-                                    {g.category}
-                                  </span>
-
-                                  {g.featured && (
-                                    <span className="px-2 py-0.5 rounded bg-emerald-600/80 text-white text-[10px] font-mono font-bold shrink-0">
-                                      ★ Featured
-                                    </span>
-                                  )}
-
-                                  {isEditingThis && (
-                                    <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-mono border border-emerald-500/40 animate-pulse shrink-0">
-                                      Editing Now...
-                                    </span>
-                                  )}
+                              <div className="flex items-center gap-3 min-w-0 flex-1">
+                                {/* Thumbnail Image Preview */}
+                                <div className="w-12 h-12 sm:w-16 sm:h-12 rounded-xl bg-black border border-zinc-800 overflow-hidden shrink-0 relative group">
+                                  <img
+                                    src={thumbUrl}
+                                    alt={g.title}
+                                    className="w-full h-full object-cover"
+                                    onError={(e) => {
+                                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400';
+                                    }}
+                                  />
                                 </div>
 
-                                <p className="text-xs text-zinc-400 font-mono flex items-center gap-2 flex-wrap">
-                                  {g.date && <span>📅 {g.date}</span>}
-                                  {g.location && <span>• 📍 {g.location}</span>}
-                                  {g.technologies && g.technologies.length > 0 && <span>• Tech: {g.technologies.join(', ')}</span>}
-                                  {g.credentialUrl && <span className="text-emerald-400/80">• 🔗 Credential Attached</span>}
-                                </p>
+                                <div className="space-y-1.5 min-w-0 flex-1">
+                                  <div className="flex items-center gap-2 flex-wrap">
+                                    {/* Position Badge */}
+                                    <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold shrink-0">
+                                      #{idx + 1}
+                                    </span>
+
+                                    <Award className="w-4 h-4 shrink-0 text-emerald-400" />
+                                    <span className="text-sm font-bold text-white truncate">{g.title}</span>
+
+                                    <span className="px-2 py-0.5 rounded bg-zinc-900 text-emerald-400 text-[10px] font-mono border border-emerald-500/30 shrink-0">
+                                      {g.category}
+                                    </span>
+
+                                    {g.featured && (
+                                      <span className="px-2 py-0.5 rounded bg-emerald-600/80 text-white text-[10px] font-mono font-bold shrink-0">
+                                        ★ Featured
+                                      </span>
+                                    )}
+
+                                    {isEditingThis && (
+                                      <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-mono border border-emerald-500/40 animate-pulse shrink-0">
+                                        Editing Now...
+                                      </span>
+                                    )}
+                                  </div>
+
+                                  <p className="text-xs text-zinc-400 font-mono flex items-center gap-2 flex-wrap">
+                                    {g.date && <span>📅 {g.date}</span>}
+                                    {g.location && <span>• 📍 {g.location}</span>}
+                                    {g.technologies && g.technologies.length > 0 && <span>• Tech: {g.technologies.join(', ')}</span>}
+                                    {g.credentialUrl && <span className="text-emerald-400/80">• 🔗 Credential Attached</span>}
+                                  </p>
+                                </div>
                               </div>
 
                               {/* Position Reordering & Action Controls */}
                               <div className="flex items-center gap-2 self-end sm:self-center shrink-0 flex-wrap">
+                                {/* Position Selector Dropdown */}
+                                <select
+                                  value={idx}
+                                  onChange={(e) => {
+                                    const newPos = parseInt(e.target.value, 10);
+                                    if (!isNaN(newPos) && newPos !== idx) {
+                                      moveGalleryItem(idx, newPos);
+                                      showSaveToast('Certificates & Awards');
+                                    }
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-zinc-900 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold focus:outline-none cursor-pointer hover:border-emerald-400"
+                                  title="Change Card Position directly"
+                                >
+                                  {data.gallery.map((_, pIdx) => (
+                                    <option key={pIdx} value={pIdx} className="bg-zinc-900 text-white">
+                                      Pos #{pIdx + 1} {pIdx === idx ? '(Current)' : ''}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {/* Move to Top Button */}
+                                {idx > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      moveGalleryItem(idx, 0);
+                                      showSaveToast('Certificates & Awards');
+                                    }}
+                                    className="px-2 py-1 rounded-lg bg-zinc-900 hover:bg-emerald-950/80 text-emerald-400 border border-zinc-800 hover:border-emerald-500/50 text-[10px] font-mono font-bold transition-colors cursor-pointer"
+                                    title="Move to First Position (#1)"
+                                  >
+                                    Top
+                                  </button>
+                                )}
+
                                 {/* Up / Down Buttons */}
                                 <div className="flex items-center bg-zinc-900 rounded-lg border border-zinc-800 p-0.5">
                                   <button
                                     type="button"
                                     disabled={idx === 0}
-                                    onClick={() => reorderGalleryItem(idx, 'up')}
+                                    onClick={() => {
+                                      reorderGalleryItem(idx, 'up');
+                                      showSaveToast('Certificates & Awards');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Up in List"
                                   >
@@ -2439,7 +2742,10 @@ export function AdminPortalModal() {
                                   <button
                                     type="button"
                                     disabled={idx === data.gallery.length - 1}
-                                    onClick={() => reorderGalleryItem(idx, 'down')}
+                                    onClick={() => {
+                                      reorderGalleryItem(idx, 'down');
+                                      showSaveToast('Certificates & Awards');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Down in List"
                                   >
@@ -2719,12 +3025,50 @@ export function AdminPortalModal() {
 
                               {/* Action Controls */}
                               <div className="flex items-center gap-2 self-end sm:self-center shrink-0 flex-wrap">
+                                {/* Position Selector Dropdown */}
+                                <select
+                                  value={idx}
+                                  onChange={(e) => {
+                                    const targetIndex = parseInt(e.target.value, 10);
+                                    if (!isNaN(targetIndex) && targetIndex !== idx) {
+                                      moveResumeItem(idx, targetIndex);
+                                      showSaveToast('Resumes & Documents');
+                                    }
+                                  }}
+                                  className="px-2 py-1 rounded-lg bg-zinc-900 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold focus:outline-none cursor-pointer hover:border-emerald-400"
+                                  title="Change Card Position directly"
+                                >
+                                  {data.resumes.map((_, pIdx) => (
+                                    <option key={pIdx} value={pIdx} className="bg-zinc-900 text-white">
+                                      Pos #{pIdx + 1} {pIdx === idx ? '(Current)' : ''}
+                                    </option>
+                                  ))}
+                                </select>
+
+                                {/* Move to Top Button */}
+                                {idx > 0 && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      moveResumeItem(idx, 0);
+                                      showSaveToast('Resumes & Documents');
+                                    }}
+                                    className="px-2 py-1 rounded-lg bg-zinc-900 hover:bg-emerald-950/80 text-emerald-400 border border-zinc-800 hover:border-emerald-500/50 text-[10px] font-mono font-bold transition-colors cursor-pointer"
+                                    title="Move to First Position (#1)"
+                                  >
+                                    Top
+                                  </button>
+                                )}
+
                                 {/* Up / Down Buttons */}
                                 <div className="flex items-center bg-zinc-900 rounded-lg border border-zinc-800 p-0.5">
                                   <button
                                     type="button"
                                     disabled={idx === 0}
-                                    onClick={() => reorderResumeItem(idx, 'up')}
+                                    onClick={() => {
+                                      reorderResumeItem(idx, 'up');
+                                      showSaveToast('Resumes & Documents');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Up in List"
                                   >
@@ -2733,7 +3077,10 @@ export function AdminPortalModal() {
                                   <button
                                     type="button"
                                     disabled={idx === data.resumes.length - 1}
-                                    onClick={() => reorderResumeItem(idx, 'down')}
+                                    onClick={() => {
+                                      reorderResumeItem(idx, 'down');
+                                      showSaveToast('Resumes & Documents');
+                                    }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Down in List"
                                   >

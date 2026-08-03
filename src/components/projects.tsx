@@ -134,7 +134,7 @@ export function ProjectsSection() {
     <section id="projects" className="pt-8 pb-16 sm:pt-8 sm:pb-20 bg-[#050505] relative overflow-hidden scroll-mt-16 sm:scroll-mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
         {/* Section Header */}
-        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-6 mb-12">
+        <div className="flex flex-col lg:flex-row lg:items-end justify-between gap-4 lg:gap-6 mb-3 sm:mb-6 lg:mb-12">
           <div className="space-y-3">
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-white text-xs font-mono font-medium">
               <Code2 className="w-3.5 h-3.5 text-emerald-400" />
@@ -168,32 +168,32 @@ export function ProjectsSection() {
         </div>
 
         {/* Mobile View Switcher (Stack Deck vs Grid) */}
-        <div className="md:hidden flex items-center justify-between mb-6 bg-zinc-900/90 p-2 rounded-2xl border border-zinc-800">
-          <span className="text-xs font-mono font-bold text-zinc-400 pl-2">Mobile Layout:</span>
-          <div className="flex items-center gap-1 bg-zinc-950 p-1 rounded-xl border border-zinc-800">
+        <div className="md:hidden flex items-center justify-between gap-1 mb-3 bg-zinc-900/90 p-1.5 rounded-xl border border-zinc-800 w-full overflow-hidden">
+          <span className="text-[10px] sm:text-xs font-mono font-bold text-zinc-400 pl-1 shrink-0 whitespace-nowrap">Mobile Layout:</span>
+          <div className="flex items-center gap-0.5 bg-zinc-950 p-0.5 rounded-lg border border-zinc-800 shrink-0">
             <button
               type="button"
               onClick={() => setMobileViewMode('stack')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
                 mobileViewMode === 'stack'
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <Layers className="w-3.5 h-3.5" />
+              <Layers className="w-3 h-3 shrink-0" />
               <span>Stack Deck</span>
             </button>
             <button
               type="button"
               onClick={() => setMobileViewMode('grid')}
-              className={`px-3 py-1.5 rounded-lg text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+              className={`px-2 py-1 rounded-md text-[10px] sm:text-xs font-mono font-bold flex items-center gap-1 transition-all cursor-pointer whitespace-nowrap ${
                 mobileViewMode === 'grid'
                   ? 'bg-emerald-600 text-white shadow-md'
                   : 'text-zinc-400 hover:text-white'
               }`}
             >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span>Grid</span>
+              <LayoutGrid className="w-3 h-3 shrink-0" />
+              <span>Grid View</span>
             </button>
           </div>
         </div>

@@ -26,6 +26,7 @@ interface CMSContextType {
   updateProject: (project: Project) => void;
   deleteProject: (id: string) => void;
   reorderProjectItem: (index: number, direction: 'up' | 'down') => void;
+  moveProjectItem: (fromIndex: number, toIndex: number) => void;
   swapProjectItems: (index1: number, index2: number) => void;
 
   updateCreativePortfolio: (items: CreativeItem[]) => void;
@@ -33,6 +34,7 @@ interface CMSContextType {
   updateCreativeItem: (item: CreativeItem) => void;
   deleteCreativeItem: (id: string) => void;
   reorderCreativeItem: (index: number, direction: 'up' | 'down') => void;
+  moveCreativeItem: (fromIndex: number, toIndex: number) => void;
   swapCreativeItems: (index1: number, index2: number) => void;
 
   updateJourney: (journey: JourneyItem[]) => void;
@@ -40,6 +42,7 @@ interface CMSContextType {
   updateJourneyItem: (item: JourneyItem) => void;
   deleteJourneyItem: (id: string) => void;
   reorderJourneyItem: (index: number, direction: 'up' | 'down') => void;
+  moveJourneyItem: (fromIndex: number, toIndex: number) => void;
   swapJourneyItems: (index1: number, index2: number) => void;
 
   updateGallery: (gallery: GalleryItem[]) => void;
@@ -47,6 +50,7 @@ interface CMSContextType {
   updateGalleryItem: (item: GalleryItem) => void;
   deleteGalleryItem: (id: string) => void;
   reorderGalleryItem: (index: number, direction: 'up' | 'down') => void;
+  moveGalleryItem: (fromIndex: number, toIndex: number) => void;
   swapGalleryItems: (index1: number, index2: number) => void;
 
   updateBlogs: (blogs: BlogPost[]) => void;
@@ -59,6 +63,7 @@ interface CMSContextType {
   updateResumeItem: (resume: ResumeOption) => void;
   deleteResumeItem: (id: string) => void;
   reorderResumeItem: (index: number, direction: 'up' | 'down') => void;
+  moveResumeItem: (fromIndex: number, toIndex: number) => void;
   swapResumeItems: (index1: number, index2: number) => void;
   updateContactInfo: (contact: ContactInfo) => void;
 
@@ -180,13 +185,59 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     return () => { isMounted = false; };
   }, []);
 
+  // Safely save to LocalStorage with automatic quota error handling and cleanup
+  const saveToLocalStorage = (dataToSave: CMSData) => {
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+    } catch (e) {
+      // If quota exceeded or error occurred, first remove obsolete/older version keys from localStorage
+      try {
+        const keysToRemove: string[] = [];
+        for (let i = 0; i < localStorage.length; i++) {
+          const key = localStorage.key(i);
+          if (key && key !== STORAGE_KEY && (key.startsWith('dubbaka_sathwik_cms_data') || key.startsWith('cms_data'))) {
+            keysToRemove.push(key);
+          }
+        }
+        keysToRemove.forEach((k) => localStorage.removeItem(k));
+
+        // Attempt second save after clearing old keys
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      } catch (retryErr) {
+        // If still exceeding quota (e.g. large attached PDF/image data URLs), create a lightweight localStorage copy
+        try {
+          const lightweightData = {
+            ...dataToSave,
+            resumes: (dataToSave.resumes || []).map((r) => {
+              if (r.pdfUrl && r.pdfUrl.length > 100000 && r.pdfUrl.startsWith('data:')) {
+                return { ...r, pdfUrl: '' }; // preserve in memory/DB, omit huge base64 in local storage
+              }
+              return r;
+            }),
+            gallery: (dataToSave.gallery || []).map((g) => {
+              if (g.image && g.image.length > 200000 && g.image.startsWith('data:')) {
+                return { ...g, image: '' };
+              }
+              return g;
+            }),
+            creativePortfolio: (dataToSave.creativePortfolio || []).map((c) => {
+              if (c.thumbnail && c.thumbnail.length > 200000 && c.thumbnail.startsWith('data:')) {
+                return { ...c, thumbnail: '' };
+              }
+              return c;
+            }),
+          };
+          localStorage.setItem(STORAGE_KEY, JSON.stringify(lightweightData));
+        } catch (finalErr) {
+          console.warn('LocalStorage quota limit reached. Data will persist via MongoDB Atlas backend.');
+        }
+      }
+    }
+  };
+
   // Sync to LocalStorage AND MongoDB Atlas on data changes
   useEffect(() => {
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {
-      console.error('Failed to save CMS data to localStorage:', e);
-    }
+    saveToLocalStorage(data);
 
     // Auto sync to MongoDB Atlas
     if (isInitialLoaded) {
@@ -274,9 +325,17 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const items = [...(prev.projects || [])];
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
-      const temp = items[index];
-      items[index] = items[targetIndex];
-      items[targetIndex] = temp;
+      const [moved] = items.splice(index, 1);
+      items.splice(targetIndex, 0, moved);
+      return { ...prev, projects: items };
+    });
+  };
+  const moveProjectItem = (fromIndex: number, toIndex: number) => {
+    setData((prev) => {
+      const items = [...(prev.projects || [])];
+      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
       return { ...prev, projects: items };
     });
   };
@@ -333,9 +392,17 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const items = [...(prev.creativePortfolio || [])];
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
-      const temp = items[index];
-      items[index] = items[targetIndex];
-      items[targetIndex] = temp;
+      const [moved] = items.splice(index, 1);
+      items.splice(targetIndex, 0, moved);
+      return { ...prev, creativePortfolio: items };
+    });
+  };
+  const moveCreativeItem = (fromIndex: number, toIndex: number) => {
+    setData((prev) => {
+      const items = [...(prev.creativePortfolio || [])];
+      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
       return { ...prev, creativePortfolio: items };
     });
   };
@@ -387,9 +454,17 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const items = [...(prev.journey || [])];
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
-      const temp = items[index];
-      items[index] = items[targetIndex];
-      items[targetIndex] = temp;
+      const [moved] = items.splice(index, 1);
+      items.splice(targetIndex, 0, moved);
+      return { ...prev, journey: items };
+    });
+  };
+  const moveJourneyItem = (fromIndex: number, toIndex: number) => {
+    setData((prev) => {
+      const items = [...(prev.journey || [])];
+      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
       return { ...prev, journey: items };
     });
   };
@@ -444,9 +519,17 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const items = [...(prev.gallery || [])];
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
-      const temp = items[index];
-      items[index] = items[targetIndex];
-      items[targetIndex] = temp;
+      const [moved] = items.splice(index, 1);
+      items.splice(targetIndex, 0, moved);
+      return { ...prev, gallery: items };
+    });
+  };
+  const moveGalleryItem = (fromIndex: number, toIndex: number) => {
+    setData((prev) => {
+      const items = [...(prev.gallery || [])];
+      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
       return { ...prev, gallery: items };
     });
   };
@@ -540,9 +623,17 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const items = [...(prev.resumes || [])];
       const targetIndex = direction === 'up' ? index - 1 : index + 1;
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
-      const temp = items[index];
-      items[index] = items[targetIndex];
-      items[targetIndex] = temp;
+      const [moved] = items.splice(index, 1);
+      items.splice(targetIndex, 0, moved);
+      return { ...prev, resumes: items };
+    });
+  };
+  const moveResumeItem = (fromIndex: number, toIndex: number) => {
+    setData((prev) => {
+      const items = [...(prev.resumes || [])];
+      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      const [moved] = items.splice(fromIndex, 1);
+      items.splice(toIndex, 0, moved);
       return { ...prev, resumes: items };
     });
   };
@@ -621,21 +712,29 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateProject,
         deleteProject,
         reorderProjectItem,
+        moveProjectItem,
         swapProjectItems,
         updateCreativePortfolio,
         addCreativeItem,
         updateCreativeItem,
         deleteCreativeItem,
+        reorderCreativeItem,
+        moveCreativeItem,
+        swapCreativeItems,
         updateJourney,
         addJourneyItem,
         updateJourneyItem,
         deleteJourneyItem,
         reorderJourneyItem,
+        moveJourneyItem,
         swapJourneyItems,
         updateGallery,
         addGalleryItem,
         updateGalleryItem,
         deleteGalleryItem,
+        reorderGalleryItem,
+        moveGalleryItem,
+        swapGalleryItems,
         updateBlogs,
         addBlogPost,
         updateBlogPost,
@@ -645,6 +744,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         updateResumeItem,
         deleteResumeItem,
         reorderResumeItem,
+        moveResumeItem,
         swapResumeItems,
         updateContactInfo,
         addMessage,
