@@ -19,7 +19,7 @@ export function Footer() {
         <div className="flex flex-col items-center gap-1.5 text-center lg:flex-row lg:text-left lg:gap-3">
           <div>
             <p className="text-white font-bold text-sm">Dubbaka Sathwik</p>
-            <p className="text-[10px] sm:text-xs text-zinc-500 font-mono mt-0.5">Full-Stack Engineer & Senior Video Editor</p>
+            <p className="text-[10px] sm:text-xs text-zinc-500 font-mono mt-0.5">Full-Stack Engineer & Creative Designer</p>
           </div>
         </div>
 

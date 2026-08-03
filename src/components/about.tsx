@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { motion } from 'framer-motion';
 import {
   Sparkles,
@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   Cpu,
   Building,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import { useCMS } from '../context/CMSContext';
 import { FormattedText } from '../lib/text-formatter';
@@ -25,6 +27,26 @@ export function AboutSection() {
   const { data, setIsResumeModalOpen } = useCMS();
   const about = data.about;
   const skillCategories = data.skills || [];
+
+  const [isJourneyExpanded, setIsJourneyExpanded] = useState(false);
+  const [isPhilosophyExpanded, setIsPhilosophyExpanded] = useState(false);
+
+  const journeyRef = useRef<HTMLDivElement>(null);
+  const philosophyRef = useRef<HTMLDivElement>(null);
+
+  const handleCloseJourney = () => {
+    setIsJourneyExpanded(false);
+    setTimeout(() => {
+      journeyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
+
+  const handleClosePhilosophy = () => {
+    setIsPhilosophyExpanded(false);
+    setTimeout(() => {
+      philosophyRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 50);
+  };
 
   const githubUrl =
     data.contactInfo?.socials?.find((s) => s.platform.toLowerCase().includes('github'))?.url ||
@@ -39,7 +61,7 @@ export function AboutSection() {
       <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-emerald-950/20 blur-[150px] pointer-events-none rounded-full" />
       <div className="absolute bottom-0 left-0 w-[400px] h-[400px] bg-emerald-900/10 blur-[150px] pointer-events-none rounded-full" />
 
-      <div className="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-16">
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 space-y-16">
         {/* Section Header */}
         <div className="text-center max-w-3xl mx-auto space-y-4">
           <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-emerald-950/50 border border-emerald-500/30 text-white text-xs font-mono font-medium">
@@ -65,10 +87,10 @@ export function AboutSection() {
           >
             <div className="absolute top-0 right-0 translate-x-1/3 -translate-y-1/3 w-60 h-60 bg-emerald-600/15 blur-3xl rounded-full pointer-events-none" />
 
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 lg:gap-8 items-stretch">
-              {/* Left 1/3: Photo covering the left frame */}
-              <div className="lg:col-span-4 flex flex-col h-full">
-                <div className="relative w-full h-full min-h-[280px] sm:min-h-[320px] lg:min-h-full rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.2)] bg-zinc-950">
+            <div className="flex flex-col lg:flex-row gap-6 lg:gap-8 items-stretch">
+              {/* Left Column: Photo matches exact height of right column content in laptop view */}
+              <div className="w-full lg:w-[290px] xl:w-[310px] lg:shrink-0 relative min-h-[300px] lg:min-h-0">
+                <div className="relative lg:absolute lg:inset-0 w-full h-full min-h-[300px] lg:min-h-0 rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.2)] bg-zinc-950">
                   <img
                     src={about.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800'}
                     alt={data.hero.heading}
@@ -78,10 +100,10 @@ export function AboutSection() {
                 </div>
               </div>
 
-              {/* Right 2/3: Quick Profile & Recruiter Information */}
-              <div className="lg:col-span-8 flex flex-col justify-between space-y-5">
+              {/* Right Column: Quick Profile & Recruiter Information */}
+              <div className="flex-1 flex flex-col justify-between space-y-4">
                 {/* Header & Quick Actions */}
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-zinc-800/80 pb-4">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800/80 pb-3">
                   <div className="space-y-1 min-w-0 flex-1">
                     <h3 className="text-2xl sm:text-3xl font-black text-white tracking-tight whitespace-nowrap overflow-hidden text-ellipsis">
                       {data.hero.heading}
@@ -89,7 +111,7 @@ export function AboutSection() {
                     <p className="text-xs sm:text-sm font-mono text-emerald-400 font-medium">
                       {about.degree || 'B.E. Computer Science & Information Technology'}
                     </p>
-                    <p className="text-xs text-zinc-400 flex items-center gap-1.5 pt-0.5">
+                    <p className="text-xs sm:text-sm text-zinc-400 flex items-center gap-1.5 pt-0.5">
                       <MapPin className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
                       <span>{about.location || `${about.college} • Hyderabad, Telangana, India`}</span>
                     </p>
@@ -136,28 +158,28 @@ export function AboutSection() {
                   </div>
                 </div>
 
-                {/* Quick Profile Grid */}
-                <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
+                {/* Quick Profile Grid - Larger Cards in Laptop View */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3.5 sm:gap-4.5">
                   {/* 🎓 Education */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-1.5">
-                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-semibold">
-                      <GraduationCap className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <div className="p-4 sm:p-4.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-2 h-full flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs sm:text-sm font-bold">
+                      <GraduationCap className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-400 flex-shrink-0" />
                       <span>Education</span>
                     </div>
-                    <div className="text-xs text-zinc-300 space-y-0.5 font-sans">
+                    <div className="text-xs sm:text-sm text-zinc-300 space-y-1 font-sans">
                       <p className="font-semibold text-white">{about.department || 'Computer Science & Info Tech'}</p>
                       <p className="text-zinc-400">{about.college || 'MVSR Engineering College'}</p>
-                      <p className="text-emerald-400/90 font-mono text-[11px]">{about.yearOfStudy || '3rd Year'}</p>
+                      <p className="text-emerald-400/90 font-mono text-xs">{about.yearOfStudy || '3rd Year'}</p>
                     </div>
                   </div>
 
                   {/* 💻 Role */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-1.5">
-                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-semibold">
-                      <Laptop className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <div className="p-4 sm:p-4.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-2 h-full flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs sm:text-sm font-bold">
+                      <Laptop className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-400 flex-shrink-0" />
                       <span>Role</span>
                     </div>
-                    <div className="text-xs text-zinc-300 space-y-0.5 font-sans">
+                    <div className="text-xs sm:text-sm text-zinc-300 space-y-1 font-sans">
                       <p className="font-semibold text-white">Student</p>
                       <p className="text-zinc-400">Full-Stack Developer</p>
                       <p className="text-zinc-400">Creative Designer</p>
@@ -165,24 +187,24 @@ export function AboutSection() {
                   </div>
 
                   {/* 📍 Location */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-1.5">
-                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-semibold">
-                      <MapPin className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <div className="p-4 sm:p-4.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-2 h-full flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs sm:text-sm font-bold">
+                      <MapPin className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-400 flex-shrink-0" />
                       <span>Location</span>
                     </div>
-                    <div className="text-xs text-zinc-300 space-y-0.5 font-sans">
+                    <div className="text-xs sm:text-sm text-zinc-300 space-y-1 font-sans">
                       <p className="font-semibold text-white">Hyderabad, Telangana</p>
                       <p className="text-zinc-400">India</p>
                     </div>
                   </div>
 
                   {/* 🤝 Leadership & Community */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-1.5">
-                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-semibold">
-                      <Users className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <div className="p-4 sm:p-4.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-2 h-full flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs sm:text-sm font-bold">
+                      <Users className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-400 flex-shrink-0" />
                       <span>Leadership & Community</span>
                     </div>
-                    <ul className="text-xs text-zinc-300 space-y-0.5 font-sans text-[11px] sm:text-xs">
+                    <ul className="text-xs sm:text-sm text-zinc-300 space-y-1 font-sans">
                       {(about.leadership && about.leadership.length > 0
                         ? about.leadership
                         : ['NSS Digital Co-Lead', 'IEEE Student Member', 'Student Coordinator']
@@ -195,12 +217,12 @@ export function AboutSection() {
                   </div>
 
                   {/* 🚀 Current Focus */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-1.5">
-                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-semibold">
-                      <Rocket className="w-4 h-4 text-emerald-400 flex-shrink-0" />
+                  <div className="p-4 sm:p-4.5 rounded-xl bg-zinc-950/80 border border-zinc-800/80 hover:border-emerald-500/30 transition-all space-y-2 h-full flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs sm:text-sm font-bold">
+                      <Rocket className="w-4 h-4 sm:w-4.5 sm:h-4.5 text-emerald-400 flex-shrink-0" />
                       <span>Current Focus</span>
                     </div>
-                    <ul className="text-xs text-zinc-300 space-y-0.5 font-sans text-[11px] sm:text-xs">
+                    <ul className="text-xs sm:text-sm text-zinc-300 space-y-1 font-sans">
                       {(about.currentFocus && about.currentFocus.length > 0
                         ? about.currentFocus
                         : ['Full-Stack Development', 'Artificial Intelligence', 'Creative Design', 'AI-powered Applications']
@@ -213,21 +235,21 @@ export function AboutSection() {
                   </div>
 
                   {/* 💼 Availability */}
-                  <div className="p-3.5 rounded-xl bg-zinc-950/80 border border-emerald-500/30 hover:border-emerald-500/50 transition-all space-y-1.5 bg-emerald-950/20">
-                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs font-semibold">
+                  <div className="p-4 sm:p-4.5 rounded-xl bg-zinc-950/80 border border-emerald-500/30 hover:border-emerald-500/50 transition-all space-y-2 bg-emerald-950/20 h-full flex flex-col justify-between">
+                    <div className="flex items-center gap-2 text-emerald-400 font-mono text-xs sm:text-sm font-bold">
                       <span className="relative flex h-2.5 w-2.5">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
                       </span>
                       <span>Availability</span>
                     </div>
-                    <div className="text-xs text-zinc-300 space-y-1 font-sans pt-0.5">
+                    <div className="text-xs sm:text-sm text-zinc-300 space-y-1.5 font-sans pt-0.5">
                       {(about.availability && about.availability.length > 0
                         ? about.availability
                         : ['Open for Internships', 'Freelance Projects']
                       ).map((item, idx) => (
                         <p key={idx} className="font-semibold text-white flex items-center gap-1.5">
-                          <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                          <CheckCircle2 className="w-4 h-4 text-emerald-400 flex-shrink-0" />
                           <span>{item}</span>
                         </p>
                       ))}
@@ -290,51 +312,123 @@ export function AboutSection() {
 
           {/* MY JOURNEY SECTION */}
           {about.showJourney !== false && (
-            <div className="p-6 sm:p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 shadow-xl space-y-6">
+            <div ref={journeyRef} className="p-5 sm:p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 shadow-xl space-y-6 relative scroll-mt-20 sm:scroll-mt-24">
               <h3 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3 border-b border-zinc-800 pb-4">
                 <Compass className="w-6 h-6 text-emerald-400" />
                 <span>{about.journeyTitle || 'My Journey'}</span>
               </h3>
 
-              <div className="space-y-4 text-sm sm:text-base leading-relaxed text-zinc-300">
-                {[
-                  about.bioParagraph1,
-                  about.bioParagraph2,
-                  about.bioParagraph3,
-                  about.bioParagraph4,
-                  about.bioParagraph5,
-                ]
-                  .filter((p): p is string => Boolean(p && p.trim().length > 0))
-                  .map((p, idx) => (
-                    <p key={idx} className="whitespace-pre-line">
-                      <FormattedText text={p} />
-                    </p>
-                  ))}
+              <div className={`relative transition-all duration-300 ${!isJourneyExpanded ? 'max-h-[170px] sm:max-h-none overflow-hidden sm:overflow-visible' : ''}`}>
+                <div className="space-y-4 text-sm sm:text-base leading-relaxed text-zinc-300">
+                  {[
+                    about.bioParagraph1,
+                    about.bioParagraph2,
+                    about.bioParagraph3,
+                    about.bioParagraph4,
+                    about.bioParagraph5,
+                  ]
+                    .filter((p): p is string => Boolean(p && p.trim().length > 0))
+                    .map((p, idx) => (
+                      <p key={idx} className="whitespace-pre-line">
+                        <FormattedText text={p} />
+                      </p>
+                    ))}
+                </div>
+
+                {/* Mobile Fade Overlay & Arrow Button when collapsed */}
+                {!isJourneyExpanded && (
+                  <div
+                    onClick={() => setIsJourneyExpanded(true)}
+                    className="sm:hidden absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#141416] via-[#141416]/95 to-transparent flex items-end justify-center pb-1 cursor-pointer group z-10"
+                  >
+                    <button
+                      type="button"
+                      aria-label="Expand My Journey"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsJourneyExpanded(true);
+                      }}
+                      className="text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer py-1 px-3"
+                    >
+                      <ChevronDown className="w-8 h-8 text-emerald-400 drop-shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {/* Mobile Show Less button when expanded */}
+              {isJourneyExpanded && (
+                <div className="sm:hidden flex justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={handleCloseJourney}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-950 border border-zinc-800 text-xs font-mono text-emerald-400 hover:border-emerald-500/40 transition-all cursor-pointer"
+                  >
+                    <span>Show Less</span>
+                    <ChevronUp className="w-4 h-4 text-emerald-400" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
 
           {/* MY PHILOSOPHY SECTION */}
           {about.showPhilosophy !== false && (
-            <div className="p-6 sm:p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 shadow-xl space-y-6">
+            <div ref={philosophyRef} className="p-5 sm:p-8 rounded-2xl bg-zinc-900/60 border border-zinc-800/80 shadow-xl space-y-6 relative scroll-mt-20 sm:scroll-mt-24">
               <h3 className="text-2xl sm:text-3xl font-bold text-white flex items-center gap-3 border-b border-zinc-800 pb-4">
                 <Lightbulb className="w-6 h-6 text-emerald-400" />
                 <span>{about.philosophyTitle || 'My Philosophy'}</span>
               </h3>
 
-              <div className="space-y-4 text-sm sm:text-base leading-relaxed text-zinc-300">
-                {[
-                  about.philosophyParagraph1,
-                  about.philosophyParagraph2,
-                  about.philosophyParagraph3,
-                ]
-                  .filter((p): p is string => Boolean(p && p.trim().length > 0))
-                  .map((p, idx) => (
-                    <p key={idx} className="whitespace-pre-line">
-                      <FormattedText text={p} />
-                    </p>
-                  ))}
+              <div className={`relative transition-all duration-300 ${!isPhilosophyExpanded ? 'max-h-[170px] sm:max-h-none overflow-hidden sm:overflow-visible' : ''}`}>
+                <div className="space-y-4 text-sm sm:text-base leading-relaxed text-zinc-300">
+                  {[
+                    about.philosophyParagraph1,
+                    about.philosophyParagraph2,
+                    about.philosophyParagraph3,
+                  ]
+                    .filter((p): p is string => Boolean(p && p.trim().length > 0))
+                    .map((p, idx) => (
+                      <p key={idx} className="whitespace-pre-line">
+                        <FormattedText text={p} />
+                      </p>
+                    ))}
+                </div>
+
+                {/* Mobile Fade Overlay & Arrow Button when collapsed */}
+                {!isPhilosophyExpanded && (
+                  <div
+                    onClick={() => setIsPhilosophyExpanded(true)}
+                    className="sm:hidden absolute inset-x-0 bottom-0 h-28 bg-gradient-to-t from-[#141416] via-[#141416]/95 to-transparent flex items-end justify-center pb-1 cursor-pointer group z-10"
+                  >
+                    <button
+                      type="button"
+                      aria-label="Expand My Philosophy"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setIsPhilosophyExpanded(true);
+                      }}
+                      className="text-emerald-400 hover:text-emerald-300 transition-colors cursor-pointer py-1 px-3"
+                    >
+                      <ChevronDown className="w-8 h-8 text-emerald-400 drop-shadow-[0_2px_8px_rgba(16,185,129,0.5)]" />
+                    </button>
+                  </div>
+                )}
               </div>
+
+              {/* Mobile Show Less button when expanded */}
+              {isPhilosophyExpanded && (
+                <div className="sm:hidden flex justify-center pt-2">
+                  <button
+                    type="button"
+                    onClick={handleClosePhilosophy}
+                    className="flex items-center gap-1.5 px-3 py-1 rounded-full bg-zinc-950 border border-zinc-800 text-xs font-mono text-emerald-400 hover:border-emerald-500/40 transition-all cursor-pointer"
+                  >
+                    <span>Show Less</span>
+                    <ChevronUp className="w-4 h-4 text-emerald-400" />
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </motion.div>
