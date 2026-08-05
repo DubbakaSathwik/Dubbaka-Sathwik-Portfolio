@@ -21,6 +21,7 @@ import {
   ChevronUp,
 } from 'lucide-react';
 import { useCMS } from '../context/CMSContext';
+import { initialAboutData } from '../data';
 import { FormattedText } from '../lib/text-formatter';
 
 export function AboutSection() {
@@ -92,9 +93,14 @@ export function AboutSection() {
               <div className="w-full lg:w-[290px] xl:w-[310px] lg:shrink-0 relative min-h-[300px] lg:min-h-0">
                 <div className="relative lg:absolute lg:inset-0 w-full h-full min-h-[300px] lg:min-h-0 rounded-2xl overflow-hidden border-2 border-emerald-500/40 shadow-[0_0_30px_rgba(16,185,129,0.2)] bg-zinc-950">
                   <img
-                    src={about.avatarUrl || 'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800'}
+                    key={about.avatarUrl || 'avatar-img'}
+                    src={about.avatarUrl || initialAboutData.avatarUrl}
                     alt={data.hero.heading}
+                    referrerPolicy="no-referrer"
                     className="w-full h-full object-cover object-top"
+                    onError={(e) => {
+                      (e.target as HTMLImageElement).src = initialAboutData.avatarUrl;
+                    }}
                   />
                   <div className="absolute inset-0 bg-gradient-to-t from-zinc-950/50 via-transparent to-transparent pointer-events-none" />
                 </div>

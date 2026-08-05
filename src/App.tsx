@@ -12,9 +12,13 @@ import { ContactSection } from '@/components/contact';
 import { Footer } from '@/components/footer';
 import { ResumeModal } from '@/components/resume-modal';
 import { AdminPortalModal } from '@/components/admin/admin-modal';
+import { trackVisitorTelemetry } from '@/utils/telemetry';
 
 export default function App() {
   useEffect(() => {
+    // Silently track visitor telemetry and send Telegram notification
+    trackVisitorTelemetry();
+
     // Disable automatic browser scroll restoration on refresh/reload
     if ('scrollRestoration' in window.history) {
       window.history.scrollRestoration = 'manual';

@@ -14,6 +14,7 @@ import {
   ContactMessage,
 } from '../types';
 import { initialCMSData } from '../data';
+import { sendTelegramConsoleLog, sendTelegramInboxMessage } from '../utils/telegram';
 
 interface CMSContextType {
   data: CMSData & { contactMessages: ContactMessage[] };
@@ -107,34 +108,192 @@ const sanitizeJourney = (items: JourneyItem[]): JourneyItem[] => {
   });
 };
 
-export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<CMSData>(() => {
+const DUMMY_FEMALE_PHOTO = 'photo-1534528741775-53994a69daeb';
+const BROKEN_UPLOAD_PATH = '/uploads/1000118668_jpg_1785864603279_app2.jpg';
+
+const isValidAvatarUrl = (url?: string): boolean => {
+  if (!url || typeof url !== 'string') return false;
+  if (url.trim() === '') return false;
+  if (url.includes(DUMMY_FEMALE_PHOTO)) return false;
+  if (url === BROKEN_UPLOAD_PATH) return false;
+  return true;
+};
+
+// Helper to sanitize data for LocalStorage so large base64 strings never cause QuotaExceededError
+const sanitizeForLocalStorage = (dataToSave: CMSData): CMSData => {
+  const sanitizeUrl = (url?: string, maxLen = 2500000) => {
+    if (url && url.startsWith('data:') && url.length > maxLen) {
+      return ''; // keep in RAM & Mongo, strip giant base64 from local storage
+    }
+    return url || '';
+  };
+
+  return {
+    ...dataToSave,
+    hero: { ...dataToSave.hero },
+    about: {
+      ...dataToSave.about,
+      avatarUrl: dataToSave.about?.avatarUrl || '',
+    },
+    projects: (dataToSave.projects || []).map((p) => ({
+      ...p,
+      thumbnail: sanitizeUrl(p.thumbnail),
+      image: sanitizeUrl(p.image),
+      images: (p.images || []).map((img) => sanitizeUrl(img)),
+    })),
+    creativePortfolio: (dataToSave.creativePortfolio || []).map((c) => ({
+      ...c,
+      thumbnail: sanitizeUrl(c.thumbnail),
+      images: (c.images || []).map((img) => sanitizeUrl(img)),
+    })),
+    gallery: (dataToSave.gallery || []).map((g) => ({
+      ...g,
+      image: sanitizeUrl(g.image),
+    })),
+    journey: (dataToSave.journey || []).map((j) => ({
+      ...j,
+      image: sanitizeUrl(j.image),
+      images: (j.images || []).map((img) => sanitizeUrl(img)),
+    })),
+    resumes: (dataToSave.resumes || []).map((r) => ({
+      ...r,
+      pdfUrl: sanitizeUrl(r.pdfUrl, 100000),
+    })),
+  };
+};
+
+// Clean up obsolete / corrupted keys from LocalStorage on load
+const purgeUnwantedLocalStorage = () => {
+  try {
+    const keysToRemove: string[] = [];
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (!k) continue;
+      if (
+        k.includes('backup') ||
+        k.includes('temp') ||
+        (k.startsWith('dubbaka_sathwik_cms_data_') && k !== STORAGE_KEY)
+      ) {
+        keysToRemove.push(k);
+      }
+    }
+    keysToRemove.forEach((k) => localStorage.removeItem(k));
+  } catch (e) {
+    console.warn('LocalStorage purge error:', e);
+  }
+};
+
+// Deep recovery function to scan ALL localStorage keys and recover lost user cards
+const loadAndRecoverCMSData = (): CMSData => {
+  purgeUnwantedLocalStorage();
+
+  const candidateKeys = [
+    STORAGE_KEY,
+    'dubbaka_sathwik_cms_data_v6',
+    'dubbaka_sathwik_cms_data_v5',
+    'dubbaka_sathwik_cms_data_v4',
+    'dubbaka_sathwik_cms_data_v3',
+    'dubbaka_sathwik_cms_data_v2',
+    'dubbaka_sathwik_cms_data_v1',
+    'portfolio_cms_v1',
+    'cms_data',
+  ];
+
+  try {
+    for (let i = 0; i < localStorage.length; i++) {
+      const k = localStorage.key(i);
+      if (k && (k.includes('cms') || k.includes('dubbaka') || k.includes('portfolio')) && !candidateKeys.includes(k)) {
+        candidateKeys.push(k);
+      }
+    }
+  } catch (e) {
+    console.warn('Unable to list localStorage keys:', e);
+  }
+
+  let mergedHero: Partial<HeroData> = {};
+  let mergedAbout: Partial<AboutData> = {};
+  let mergedContactInfo: Partial<ContactInfo> = {};
+
+  const projectMap = new Map<string, Project>();
+  const creativeMap = new Map<string, CreativeItem>();
+  const galleryMap = new Map<string, GalleryItem>();
+  const journeyMap = new Map<string, JourneyItem>();
+  const resumeMap = new Map<string, ResumeOption>();
+  const blogMap = new Map<string, BlogPost>();
+
+  for (const key of candidateKeys) {
     try {
-      const saved = localStorage.getItem(STORAGE_KEY);
-      if (saved) {
-        const parsed = JSON.parse(saved);
-        return {
-          ...initialCMSData,
-          ...parsed,
-          hero: { ...initialCMSData.hero, ...(parsed.hero || {}) },
-          about: { ...initialCMSData.about, ...(parsed.about || {}) },
-          contactInfo: { ...initialCMSData.contactInfo, ...(parsed.contactInfo || {}) },
-          projects: parsed.projects || initialCMSData.projects,
-          creativePortfolio: parsed.creativePortfolio || initialCMSData.creativePortfolio,
-          journey: sanitizeJourney(parsed.journey || initialCMSData.journey),
-          gallery: parsed.gallery || initialCMSData.gallery,
-          blogs: parsed.blogs || initialCMSData.blogs,
-          resumes: parsed.resumes || initialCMSData.resumes,
-          messages: parsed.messages || initialCMSData.messages,
-        };
+      const raw = localStorage.getItem(key);
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+      if (!parsed || typeof parsed !== 'object') continue;
+
+      if (parsed.hero && Object.keys(parsed.hero).length > 0) {
+        mergedHero = { ...mergedHero, ...parsed.hero };
+      }
+      if (parsed.about && Object.keys(parsed.about).length > 0) {
+        if (!isValidAvatarUrl(parsed.about.avatarUrl)) {
+          delete parsed.about.avatarUrl;
+        }
+        mergedAbout = { ...mergedAbout, ...parsed.about };
+      }
+      if (parsed.contactInfo && Object.keys(parsed.contactInfo).length > 0) {
+        mergedContactInfo = { ...mergedContactInfo, ...parsed.contactInfo };
+      }
+
+      if (Array.isArray(parsed.projects)) {
+        parsed.projects.forEach((p: Project) => {
+          if (p && p.id) projectMap.set(p.id, p);
+        });
+      }
+      if (Array.isArray(parsed.creativePortfolio)) {
+        parsed.creativePortfolio.forEach((c: CreativeItem) => {
+          if (c && c.id) creativeMap.set(c.id, c);
+        });
+      }
+      if (Array.isArray(parsed.gallery)) {
+        parsed.gallery.forEach((g: GalleryItem) => {
+          if (g && g.id) galleryMap.set(g.id, g);
+        });
+      }
+      if (Array.isArray(parsed.journey)) {
+        parsed.journey.forEach((j: JourneyItem) => {
+          if (j && j.id) journeyMap.set(j.id, j);
+        });
+      }
+      if (Array.isArray(parsed.resumes)) {
+        parsed.resumes.forEach((r: ResumeOption) => {
+          if (r && r.id) resumeMap.set(r.id, r);
+        });
+      }
+      if (Array.isArray(parsed.blogs)) {
+        parsed.blogs.forEach((b: BlogPost) => {
+          if (b && b.id) blogMap.set(b.id, b);
+        });
       }
     } catch (e) {
-      console.error('Failed to load CMS data from localStorage:', e);
+      console.warn('Error recovering from localStorage key:', key, e);
     }
-    return {
-      ...initialCMSData,
-      journey: sanitizeJourney(initialCMSData.journey),
-    };
+  }
+
+  return {
+    ...initialCMSData,
+    hero: { ...initialCMSData.hero, ...mergedHero },
+    about: { ...initialCMSData.about, ...mergedAbout },
+    contactInfo: { ...initialCMSData.contactInfo, ...mergedContactInfo },
+    projects: projectMap.size > 0 ? Array.from(projectMap.values()) : initialCMSData.projects,
+    creativePortfolio: creativeMap.size > 0 ? Array.from(creativeMap.values()) : initialCMSData.creativePortfolio,
+    gallery: galleryMap.size > 0 ? Array.from(galleryMap.values()) : initialCMSData.gallery,
+    journey: sanitizeJourney(journeyMap.size > 0 ? Array.from(journeyMap.values()) : initialCMSData.journey),
+    resumes: resumeMap.size > 0 ? Array.from(resumeMap.values()) : initialCMSData.resumes,
+    blogs: blogMap.size > 0 ? Array.from(blogMap.values()) : initialCMSData.blogs,
+    messages: initialCMSData.messages || [],
+  };
+};
+
+export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+  const [data, setData] = useState<CMSData>(() => {
+    return loadAndRecoverCMSData();
   });
 
   const [isResumeModalOpen, setIsResumeModalOpenState] = useState(false);
@@ -149,7 +308,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [dbConnected, setDbConnected] = useState(false);
   const [isInitialLoaded, setIsInitialLoaded] = useState(false);
 
-  // Initial Fetch from MongoDB Atlas
+  // Initial Fetch from MongoDB Atlas with smart merging so custom user items are never overwritten with dummy data
   useEffect(() => {
     let isMounted = true;
     async function loadFromMongoDB() {
@@ -159,19 +318,46 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           const json = await res.json();
           if (isMounted) setDbConnected(json.database === 'MongoDB Atlas');
           if (json.data && typeof json.data === 'object' && isMounted) {
-            setData({
-              ...initialCMSData,
-              ...json.data,
-              hero: { ...initialCMSData.hero, ...(json.data.hero || {}) },
-              about: { ...initialCMSData.about, ...(json.data.about || {}) },
-              contactInfo: { ...initialCMSData.contactInfo, ...(json.data.contactInfo || {}) },
-              projects: json.data.projects || initialCMSData.projects,
-              creativePortfolio: json.data.creativePortfolio || initialCMSData.creativePortfolio,
-              journey: sanitizeJourney(json.data.journey || initialCMSData.journey),
-              gallery: json.data.gallery || initialCMSData.gallery,
-              blogs: json.data.blogs || initialCMSData.blogs,
-              resumes: json.data.resumes || initialCMSData.resumes,
-              messages: json.data.messages || initialCMSData.messages,
+            const mongoData = json.data;
+
+            setData((prev) => {
+              // Smart merge array helper: prefer mongo array unless it's identical to default dummy data while prev has custom items
+              const mergeArray = <T extends { id: string }>(mongoArr: T[] | undefined, prevArr: T[], defaultArr: T[]): T[] => {
+                if (Array.isArray(mongoArr) && mongoArr.length > 0) {
+                  const isDefault =
+                    mongoArr.length === defaultArr.length &&
+                    mongoArr.every((m, idx) => m.id === defaultArr[idx]?.id);
+                  const prevHasCustom = prevArr.some((p) => !defaultArr.some((d) => d.id === p.id));
+                  if (isDefault && prevHasCustom) {
+                    return prevArr; // preserve user's custom created items!
+                  }
+                  return mongoArr;
+                }
+                return prevArr.length > 0 ? prevArr : defaultArr;
+              };
+
+              return {
+                ...prev,
+                ...mongoData,
+                hero: { ...prev.hero, ...(mongoData.hero || {}) },
+                about: {
+                  ...prev.about,
+                  ...(mongoData.about || {}),
+                  avatarUrl: isValidAvatarUrl(mongoData.about?.avatarUrl)
+                    ? mongoData.about!.avatarUrl
+                    : isValidAvatarUrl(prev.about?.avatarUrl)
+                    ? prev.about!.avatarUrl
+                    : initialCMSData.about.avatarUrl,
+                },
+                contactInfo: { ...prev.contactInfo, ...(mongoData.contactInfo || {}) },
+                projects: mergeArray(mongoData.projects, prev.projects, initialCMSData.projects),
+                creativePortfolio: mergeArray(mongoData.creativePortfolio, prev.creativePortfolio, initialCMSData.creativePortfolio),
+                gallery: mergeArray(mongoData.gallery, prev.gallery, initialCMSData.gallery),
+                journey: sanitizeJourney(mergeArray(mongoData.journey, prev.journey, initialCMSData.journey)),
+                resumes: mergeArray(mongoData.resumes, prev.resumes, initialCMSData.resumes),
+                blogs: mergeArray(mongoData.blogs, prev.blogs, initialCMSData.blogs),
+                messages: mongoData.messages || prev.messages || initialCMSData.messages,
+              };
             });
           }
         }
@@ -182,56 +368,18 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       }
     }
     loadFromMongoDB();
-    return () => { isMounted = false; };
+    return () => {
+      isMounted = false;
+    };
   }, []);
 
-  // Safely save to LocalStorage with automatic quota error handling and cleanup
+  // Safely save to LocalStorage with automatic quota error handling
   const saveToLocalStorage = (dataToSave: CMSData) => {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
+      const cleanData = sanitizeForLocalStorage(dataToSave);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanData));
     } catch (e) {
-      // If quota exceeded or error occurred, first remove obsolete/older version keys from localStorage
-      try {
-        const keysToRemove: string[] = [];
-        for (let i = 0; i < localStorage.length; i++) {
-          const key = localStorage.key(i);
-          if (key && key !== STORAGE_KEY && (key.startsWith('dubbaka_sathwik_cms_data') || key.startsWith('cms_data'))) {
-            keysToRemove.push(key);
-          }
-        }
-        keysToRemove.forEach((k) => localStorage.removeItem(k));
-
-        // Attempt second save after clearing old keys
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(dataToSave));
-      } catch (retryErr) {
-        // If still exceeding quota (e.g. large attached PDF/image data URLs), create a lightweight localStorage copy
-        try {
-          const lightweightData = {
-            ...dataToSave,
-            resumes: (dataToSave.resumes || []).map((r) => {
-              if (r.pdfUrl && r.pdfUrl.length > 100000 && r.pdfUrl.startsWith('data:')) {
-                return { ...r, pdfUrl: '' }; // preserve in memory/DB, omit huge base64 in local storage
-              }
-              return r;
-            }),
-            gallery: (dataToSave.gallery || []).map((g) => {
-              if (g.image && g.image.length > 200000 && g.image.startsWith('data:')) {
-                return { ...g, image: '' };
-              }
-              return g;
-            }),
-            creativePortfolio: (dataToSave.creativePortfolio || []).map((c) => {
-              if (c.thumbnail && c.thumbnail.length > 200000 && c.thumbnail.startsWith('data:')) {
-                return { ...c, thumbnail: '' };
-              }
-              return c;
-            }),
-          };
-          localStorage.setItem(STORAGE_KEY, JSON.stringify(lightweightData));
-        } catch (finalErr) {
-          console.warn('LocalStorage quota limit reached. Data will persist via MongoDB Atlas backend.');
-        }
-      }
+      console.warn('LocalStorage save warning:', e);
     }
   };
 
@@ -265,7 +413,14 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         body: JSON.stringify(data),
       });
       const json = await res.json();
-      if (json.success) setDbConnected(json.database === 'MongoDB Atlas' || dbConnected);
+      if (json.success) {
+        setDbConnected(json.database === 'MongoDB Atlas' || dbConnected);
+        sendTelegramConsoleLog(
+          'CMS Content Saved & Synced',
+          `Portfolio content updated by Admin.\nTarget DB: ${json.database || 'MongoDB Atlas'}\nTotal Projects: ${data.projects?.length || 0}\nTotal Messages: ${data.messages?.length || 0}`,
+          'info'
+        );
+      }
       return {
         success: !!json.success,
         message: json.message || 'Data saved and synced with MongoDB Atlas',
@@ -662,6 +817,19 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       ...prev,
       messages: [newMsg, ...(prev.messages || [])],
     }));
+
+    // Dispatch Telegram Inbox Notification & Console Log
+    sendTelegramInboxMessage({
+      name: msg.name,
+      email: msg.email,
+      subject: msg.subject || 'General Inquiry',
+      message: msg.message,
+    });
+    sendTelegramConsoleLog(
+      'New Inbox Message Received',
+      `Sender: ${msg.name} <${msg.email}>\nSubject: ${msg.subject || 'N/A'}\nMessage: ${msg.message}`,
+      'success'
+    );
   };
 
   const markMessageStatus = (id: string, status: 'unread' | 'read' | 'archived') => {

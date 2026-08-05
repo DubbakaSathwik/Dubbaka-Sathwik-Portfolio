@@ -32,7 +32,7 @@ export const initialAboutData: AboutData = {
   location: 'MVSR Engineering College • Hyderabad, Telangana, India',
   yearOfStudy: '3rd Year',
   avatarUrl:
-    'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=800',
+    'https://images.unsplash.com/photo-1539571696357-5a69c17a67c6?auto=format&fit=crop&q=80&w=800',
   bioParagraph1:
     "My journey into technology started much earlier than I ever imagined. Back in school, I began experimenting with Minecraft Mods, texture packs, and game modifications, which became my first introduction to programming. As my curiosity grew, I learned C, Java, Python, and JavaScript, eventually diving into full-stack web development with React, Node.js, Express, MongoDB, and MySQL. Along the way, my team built an AI-powered SQL Query Generator for a GFG Hackathon, sparking my passion for AI development. Alongside coding, I design posters, edit photos, produce promotional reels, and contribute as NSS Digital Co-Lead and an IEEE Student Member at MVSR Engineering College.",
   bioParagraph2: '',

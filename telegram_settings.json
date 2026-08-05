@@ -1,0 +1,10 @@
+{
+  "masterEnabled": true,
+  "websiteVisit": true,
+  "contactInbox": true,
+  "cmsUpdates": true,
+  "consoleAlerts": true,
+  "resumeDownloads": true,
+  "consoleTimerEnabled": true,
+  "consoleTimerIntervalMinutes": 2
+}

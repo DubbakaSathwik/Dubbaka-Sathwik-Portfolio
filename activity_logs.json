@@ -1,0 +1,98 @@
+[
+  {
+    "id": "log_1785913946825_a6prf",
+    "timestamp": "2026-08-05T07:12:26.825Z",
+    "event": "Telegram Notification Toggles Updated",
+    "details": "Updated Telegram notification toggles. Master: ON, Website Visits: ON, Contact Inbox: ON, CMS Edits: ON, Console Alerts: ON, Downloads: ON",
+    "category": "system",
+    "level": "info"
+  },
+  {
+    "id": "log_1785912772585_52uev",
+    "timestamp": "2026-08-05T06:52:52.585Z",
+    "event": "Site Visit / Reload",
+    "category": "visit",
+    "level": "info",
+    "details": "Visitor opened portfolio via Opera on Windows OS (Tablet). IP: 157.66.153.106, 169.254.169.126",
+    "clientIp": "157.66.153.106, 169.254.169.126",
+    "metadata": {
+      "deviceType": "Tablet",
+      "browser": "Opera",
+      "os": "Windows OS",
+      "screenRes": "1536x960 (Viewport: 962x442)",
+      "language": "en-US",
+      "timezone": "Asia/Calcutta",
+      "pageUrl": "https://ais-dev-7odcjijn4fveq6owdpto7z-985825966170.asia-southeast1.run.app/",
+      "referrer": "https://aistudio.google.com/",
+      "clientIp": "157.66.153.106, 169.254.169.126"
+    }
+  },
+  {
+    "id": "log_1785912772575_mib6v",
+    "timestamp": "2026-08-05T06:52:52.575Z",
+    "event": "Site Visit / Reload",
+    "category": "visit",
+    "level": "info",
+    "details": "Visitor opened portfolio via Opera on Windows OS (Tablet). IP: 157.66.153.106, 169.254.169.126",
+    "clientIp": "157.66.153.106, 169.254.169.126",
+    "metadata": {
+      "deviceType": "Tablet",
+      "browser": "Opera",
+      "os": "Windows OS",
+      "screenRes": "1536x960 (Viewport: 962x442)",
+      "language": "en-US",
+      "timezone": "Asia/Calcutta",
+      "pageUrl": "https://ais-dev-7odcjijn4fveq6owdpto7z-985825966170.asia-southeast1.run.app/",
+      "referrer": "https://aistudio.google.com/",
+      "clientIp": "157.66.153.106, 169.254.169.126"
+    }
+  },
+  {
+    "id": "log_1785910927704_tl0vd",
+    "timestamp": "2026-08-05T06:22:07.704Z",
+    "event": "Portfolio CMS Content Saved",
+    "details": "Admin updated portfolio content. Total Projects: 7, Certificates: 9",
+    "category": "cms_update",
+    "level": "info"
+  },
+  {
+    "id": "log_1785910919278_39c1k",
+    "timestamp": "2026-08-05T06:21:59.278Z",
+    "event": "Site Visit / Reload",
+    "category": "visit",
+    "level": "info",
+    "details": "Visitor opened portfolio via Opera on Windows OS (Mobile). IP: 157.66.153.106, 169.254.169.126",
+    "clientIp": "157.66.153.106, 169.254.169.126",
+    "metadata": {
+      "deviceType": "Mobile",
+      "browser": "Opera",
+      "os": "Windows OS",
+      "screenRes": "1536x960 (Viewport: 0x0)",
+      "language": "en-US",
+      "timezone": "Asia/Calcutta",
+      "pageUrl": "https://ais-dev-7odcjijn4fveq6owdpto7z-985825966170.asia-southeast1.run.app/",
+      "referrer": "https://aistudio.google.com/",
+      "clientIp": "157.66.153.106, 169.254.169.126"
+    }
+  },
+  {
+    "id": "log_1785910919268_sx5ig",
+    "timestamp": "2026-08-05T06:21:59.268Z",
+    "event": "Site Visit / Reload",
+    "category": "visit",
+    "level": "info",
+    "details": "Visitor opened portfolio via Opera on Windows OS (Mobile). IP: 157.66.153.106, 169.254.169.126",
+    "clientIp": "157.66.153.106, 169.254.169.126",
+    "metadata": {
+      "deviceType": "Mobile",
+      "browser": "Opera",
+      "os": "Windows OS",
+      "screenRes": "1536x960 (Viewport: 0x0)",
+      "language": "en-US",
+      "timezone": "Asia/Calcutta",
+      "pageUrl": "https://ais-dev-7odcjijn4fveq6owdpto7z-985825966170.asia-southeast1.run.app/",
+      "referrer": "https://aistudio.google.com/",
+      "clientIp": "157.66.153.106, 169.254.169.126"
+    }
+  }
+]

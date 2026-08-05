@@ -54,7 +54,7 @@ function GalleryCardSlideshow({ images, title }: { images: string[]; title: stri
       <AnimatePresence initial={false} custom={direction}>
         <motion.img
           key={page}
-          src={validImages[currentIndex]}
+          src={validImages[currentIndex] || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800'}
           custom={direction}
           variants={slideVariants}
           initial="enter"
@@ -485,9 +485,9 @@ export function GallerySection() {
                 >
                   <img
                     src={
-                      activeItem.images && activeItem.images.length > 0
+                      (activeItem.images && activeItem.images.length > 0
                         ? activeItem.images[activeImageIndex] || activeItem.image
-                        : activeItem.image
+                        : activeItem.image) || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=800'
                     }
                     alt={activeItem.title}
                     className="w-full h-full object-contain bg-black/90 group-hover:scale-102 transition-transform duration-300"
@@ -527,7 +527,7 @@ export function GallerySection() {
                             : 'border-zinc-800 opacity-60 hover:opacity-100'
                         }`}
                       >
-                        <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+                        <img src={imgUrl || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=400'} alt="" className="w-full h-full object-cover" />
                       </button>
                     ))}
                   </div>

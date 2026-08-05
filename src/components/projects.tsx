@@ -55,7 +55,7 @@ function ProjectCardSlideshow({ images, title }: { images: string[]; title: stri
       <AnimatePresence initial={false} custom={direction}>
         <motion.img
           key={page}
-          src={validImages[currentIndex]}
+          src={validImages[currentIndex] || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=800'}
           custom={direction}
           variants={slideVariants}
           initial="enter"

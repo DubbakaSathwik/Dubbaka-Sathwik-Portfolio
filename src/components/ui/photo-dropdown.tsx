@@ -208,14 +208,37 @@ export function PhotoDropdownSelector({
     });
   };
 
+  // Helper to upload image to server endpoint or fallback to data URL
+  const uploadToServerOrFallback = async (fileName: string, dataUrl: string): Promise<string> => {
+    if (!dataUrl || !dataUrl.startsWith('data:')) return dataUrl;
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: fileName, dataUrl }),
+      });
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.url) {
+          return json.url;
+        }
+      }
+    } catch (err) {
+      console.warn('Server asset upload fallback to dataUrl:', err);
+    }
+    return dataUrl;
+  };
+
   // Process files from input or drop in batch mode
   const processFiles = async (files: FileList | File[]) => {
     const fileList = Array.from(files).filter((file) => file.type.startsWith('image/'));
     if (fileList.length === 0) return;
 
     const readPromises = fileList.map(async (file) => {
-      const dataUrl = await compressImageFile(file);
-      return { name: file.name, dataUrl };
+      const maxDim = multilineMode ? 1200 : 800;
+      const compressedDataUrl = await compressImageFile(file, maxDim, maxDim, 0.82);
+      const finalUrl = await uploadToServerOrFallback(file.name, compressedDataUrl);
+      return { name: file.name, dataUrl: finalUrl };
     });
 
     const results = await Promise.all(readPromises);
@@ -335,14 +358,14 @@ export function PhotoDropdownSelector({
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2.5 pt-1">
-            {currentPhotos.map((photoUrl, idx) => (
+            {currentPhotos.filter(Boolean).map((photoUrl, idx) => (
               <div
                 key={`${idx}-${photoUrl.substring(0, 30)}`}
                 className="relative group rounded-xl overflow-hidden border border-emerald-500/40 bg-black aspect-video flex flex-col justify-between p-1 shadow-md hover:border-emerald-400 transition-all"
               >
                 {/* Background Image */}
                 <img
-                  src={photoUrl}
+                  src={photoUrl || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400'}
                   alt={`Photo ${idx + 1}`}
                   className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                 />

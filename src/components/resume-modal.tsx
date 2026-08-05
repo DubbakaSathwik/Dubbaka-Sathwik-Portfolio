@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useCMS } from '../context/CMSContext';
+import { sendTelegramConsoleLog } from '../utils/telegram';
 import { ResumeOption } from '../types';
 import { FileText, Download, X, Check, Code, Palette, Briefcase, GraduationCap, Sparkles, Printer } from 'lucide-react';
 
@@ -26,6 +27,12 @@ export function ResumeModal() {
 
   const handleDownload = (resume: ResumeOption) => {
     setDownloading(true);
+
+    sendTelegramConsoleLog(
+      'Resume Downloaded',
+      `A visitor downloaded the resume:\nDocument: ${resume.title}\nFile: ${resume.filename || 'resume.pdf'}`,
+      'info'
+    );
 
     if (resume.pdfUrl) {
       const link = document.createElement('a');
