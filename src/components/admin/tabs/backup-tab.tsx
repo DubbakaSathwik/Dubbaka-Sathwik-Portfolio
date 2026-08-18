@@ -20,7 +20,7 @@ export function BackupRestoreTab({
 }: {
   showToast: (section: string, msg: string, db?: string) => void;
 }) {
-  const { data, updateData } = useCMS();
+  const { data, updateData, authToken } = useCMS();
   const [isRestoring, setIsRestoring] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<any | null>(null);
@@ -103,9 +103,12 @@ export function BackupRestoreTab({
       updateData(previewData);
 
       // Send to server to write cms_backup.json and sync MongoDB
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
       const res = await fetch('/api/cms/restore', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(previewData),
       });
 

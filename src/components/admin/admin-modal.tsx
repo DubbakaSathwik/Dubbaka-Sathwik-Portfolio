@@ -224,11 +224,14 @@ export function AdminPortalModal() {
     setIsResumeModalOpen,
     dbConnected,
     forceSyncToMongoDB,
+    isAuthenticated,
+    login,
+    logout,
   } = useCMS();
 
   const isOpen = isAdminModalOpen;
   const [password, setPassword] = useState('');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState<
     'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'contact' | 'inbox' | 'backup' | 'logs'
@@ -493,28 +496,28 @@ export function AdminPortalModal() {
     }
   }, [data, isAdminModalOpen]);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (password === 'bachi200' || password === 'admin' || password === 'sathwik' || password === '1234') {
-      setIsAuthenticated(true);
+    setIsLoggingIn(true);
+    setErrorMsg('');
+    const res = await login(password);
+    setIsLoggingIn(false);
+    if (res.success) {
+      setPassword('');
       setErrorMsg('');
-      sendTelegramConsoleLog(
-        'Admin Login Successful',
-        `Sathwik logged in to the Portfolio CMS Portal.\nTimestamp: ${new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' })} IST`,
-        'success'
-      );
     } else {
-      setErrorMsg('Incorrect Password. Please try again.');
-      sendTelegramConsoleLog(
-        'Admin Login Failed',
-        `Unsuccessful CMS login attempt.\nAttempted Password length: ${password.length}`,
-        'warning'
-      );
+      setErrorMsg(res.message || 'Incorrect Password. Please try again.');
     }
   };
 
   const handleClose = () => {
     setIsAdminModalOpen(false);
+    setPassword('');
+    setErrorMsg('');
+  };
+
+  const handleLogout = () => {
+    logout();
     setPassword('');
     setErrorMsg('');
   };
@@ -1001,9 +1004,10 @@ export function AdminPortalModal() {
 
                 <button
                   type="submit"
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-sm shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer"
+                  disabled={isLoggingIn}
+                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-sm shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer disabled:opacity-50"
                 >
-                  Login to CMS
+                  {isLoggingIn ? 'Authenticating...' : 'Login to CMS'}
                 </button>
               </form>
             </motion.div>
@@ -1091,7 +1095,7 @@ export function AdminPortalModal() {
                     <Save className="w-3.5 h-3.5" /> Sync MongoDB
                   </button>
                   <button
-                    onClick={() => setIsAuthenticated(false)}
+                    onClick={handleLogout}
                     className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[11px] sm:text-xs font-mono cursor-pointer"
                   >
                     Lock CMS

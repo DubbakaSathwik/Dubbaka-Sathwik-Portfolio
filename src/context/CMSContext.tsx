@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import {
   CMSData,
   HeroData,
@@ -14,10 +14,17 @@ import {
   ContactMessage,
 } from '../types';
 import { initialCMSData } from '../data';
-import { sendTelegramConsoleLog, sendTelegramInboxMessage } from '../utils/telegram';
+import { sendTelegramConsoleLog } from '../utils/telegram';
 
 interface CMSContextType {
   data: CMSData & { contactMessages: ContactMessage[] };
+  isLoading: boolean;
+  dbConnected: boolean;
+  isAuthenticated: boolean;
+  authToken: string | null;
+  login: (password: string) => Promise<{ success: boolean; message: string }>;
+  logout: () => void;
+
   updateHero: (hero: HeroData) => void;
   updateAbout: (about: AboutData) => void;
   updateSkills: (skills: SkillCategory[]) => void;
@@ -75,18 +82,18 @@ interface CMSContextType {
   deleteMessage: (id: string) => void;
 
   resetToDefaults: () => void;
+  updateData: (newData: any) => void;
   isResumeModalOpen: boolean;
   activeResumeId: string | null;
   setIsResumeModalOpen: (open: boolean, resumeId?: string) => void;
   isAdminModalOpen: boolean;
   setIsAdminModalOpen: (open: boolean) => void;
-  dbConnected: boolean;
   forceSyncToMongoDB: () => Promise<{ success: boolean; message: string; database?: string }>;
 }
 
-const STORAGE_KEY = 'dubbaka_sathwik_cms_data_v7';
-
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
+
+const AUTH_STORAGE_KEY = 'sathwik_portfolio_auth_token';
 
 const sanitizeJourney = (items: JourneyItem[]): JourneyItem[] => {
   return (items || []).map((item) => {
@@ -119,330 +126,252 @@ const isValidAvatarUrl = (url?: string): boolean => {
   return true;
 };
 
-// Helper to sanitize data for LocalStorage so large base64 strings never cause QuotaExceededError
-const sanitizeForLocalStorage = (dataToSave: CMSData): CMSData => {
-  const sanitizeUrl = (url?: string, maxLen = 2500000) => {
-    if (url && url.startsWith('data:') && url.length > maxLen) {
-      return ''; // keep in RAM & Mongo, strip giant base64 from local storage
-    }
-    return url || '';
-  };
-
-  return {
-    ...dataToSave,
-    hero: { ...dataToSave.hero },
-    about: {
-      ...dataToSave.about,
-      avatarUrl: dataToSave.about?.avatarUrl || '',
-    },
-    projects: (dataToSave.projects || []).map((p) => ({
-      ...p,
-      thumbnail: sanitizeUrl(p.thumbnail),
-      image: sanitizeUrl(p.image),
-      images: (p.images || []).map((img) => sanitizeUrl(img)),
-    })),
-    creativePortfolio: (dataToSave.creativePortfolio || []).map((c) => ({
-      ...c,
-      thumbnail: sanitizeUrl(c.thumbnail),
-      images: (c.images || []).map((img) => sanitizeUrl(img)),
-    })),
-    gallery: (dataToSave.gallery || []).map((g) => ({
-      ...g,
-      image: sanitizeUrl(g.image),
-    })),
-    journey: (dataToSave.journey || []).map((j) => ({
-      ...j,
-      image: sanitizeUrl(j.image),
-      images: (j.images || []).map((img) => sanitizeUrl(img)),
-    })),
-    resumes: (dataToSave.resumes || []).map((r) => ({
-      ...r,
-      pdfUrl: sanitizeUrl(r.pdfUrl, 100000),
-    })),
-  };
-};
-
-// Clean up obsolete / corrupted keys from LocalStorage on load
-const purgeUnwantedLocalStorage = () => {
-  try {
-    const keysToRemove: string[] = [];
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (!k) continue;
-      if (
-        k.includes('backup') ||
-        k.includes('temp') ||
-        (k.startsWith('dubbaka_sathwik_cms_data_') && k !== STORAGE_KEY)
-      ) {
-        keysToRemove.push(k);
-      }
-    }
-    keysToRemove.forEach((k) => localStorage.removeItem(k));
-  } catch (e) {
-    console.warn('LocalStorage purge error:', e);
-  }
-};
-
-// Deep recovery function to scan ALL localStorage keys and recover lost user cards
-const loadAndRecoverCMSData = (): CMSData => {
-  purgeUnwantedLocalStorage();
-
-  const candidateKeys = [
-    STORAGE_KEY,
-    'dubbaka_sathwik_cms_data_v6',
-    'dubbaka_sathwik_cms_data_v5',
-    'dubbaka_sathwik_cms_data_v4',
-    'dubbaka_sathwik_cms_data_v3',
-    'dubbaka_sathwik_cms_data_v2',
-    'dubbaka_sathwik_cms_data_v1',
-    'portfolio_cms_v1',
-    'cms_data',
-  ];
-
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const k = localStorage.key(i);
-      if (k && (k.includes('cms') || k.includes('dubbaka') || k.includes('portfolio')) && !candidateKeys.includes(k)) {
-        candidateKeys.push(k);
-      }
-    }
-  } catch (e) {
-    console.warn('Unable to list localStorage keys:', e);
-  }
-
-  let mergedHero: Partial<HeroData> = {};
-  let mergedAbout: Partial<AboutData> = {};
-  let mergedContactInfo: Partial<ContactInfo> = {};
-
-  const projectMap = new Map<string, Project>();
-  const creativeMap = new Map<string, CreativeItem>();
-  const galleryMap = new Map<string, GalleryItem>();
-  const journeyMap = new Map<string, JourneyItem>();
-  const resumeMap = new Map<string, ResumeOption>();
-  const blogMap = new Map<string, BlogPost>();
-
-  for (const key of candidateKeys) {
-    try {
-      const raw = localStorage.getItem(key);
-      if (!raw) continue;
-      const parsed = JSON.parse(raw);
-      if (!parsed || typeof parsed !== 'object') continue;
-
-      if (parsed.hero && Object.keys(parsed.hero).length > 0) {
-        mergedHero = { ...mergedHero, ...parsed.hero };
-      }
-      if (parsed.about && Object.keys(parsed.about).length > 0) {
-        if (!isValidAvatarUrl(parsed.about.avatarUrl)) {
-          delete parsed.about.avatarUrl;
-        }
-        mergedAbout = { ...mergedAbout, ...parsed.about };
-      }
-      if (parsed.contactInfo && Object.keys(parsed.contactInfo).length > 0) {
-        mergedContactInfo = { ...mergedContactInfo, ...parsed.contactInfo };
-      }
-
-      if (Array.isArray(parsed.projects)) {
-        parsed.projects.forEach((p: Project) => {
-          if (p && p.id) projectMap.set(p.id, p);
-        });
-      }
-      if (Array.isArray(parsed.creativePortfolio)) {
-        parsed.creativePortfolio.forEach((c: CreativeItem) => {
-          if (c && c.id) creativeMap.set(c.id, c);
-        });
-      }
-      if (Array.isArray(parsed.gallery)) {
-        parsed.gallery.forEach((g: GalleryItem) => {
-          if (g && g.id) galleryMap.set(g.id, g);
-        });
-      }
-      if (Array.isArray(parsed.journey)) {
-        parsed.journey.forEach((j: JourneyItem) => {
-          if (j && j.id) journeyMap.set(j.id, j);
-        });
-      }
-      if (Array.isArray(parsed.resumes)) {
-        parsed.resumes.forEach((r: ResumeOption) => {
-          if (r && r.id) resumeMap.set(r.id, r);
-        });
-      }
-      if (Array.isArray(parsed.blogs)) {
-        parsed.blogs.forEach((b: BlogPost) => {
-          if (b && b.id) blogMap.set(b.id, b);
-        });
-      }
-    } catch (e) {
-      console.warn('Error recovering from localStorage key:', key, e);
-    }
-  }
-
-  return {
-    ...initialCMSData,
-    hero: { ...initialCMSData.hero, ...mergedHero },
-    about: { ...initialCMSData.about, ...mergedAbout },
-    contactInfo: { ...initialCMSData.contactInfo, ...mergedContactInfo },
-    projects: projectMap.size > 0 ? Array.from(projectMap.values()) : initialCMSData.projects,
-    creativePortfolio: creativeMap.size > 0 ? Array.from(creativeMap.values()) : initialCMSData.creativePortfolio,
-    gallery: galleryMap.size > 0 ? Array.from(galleryMap.values()) : initialCMSData.gallery,
-    journey: sanitizeJourney(journeyMap.size > 0 ? Array.from(journeyMap.values()) : initialCMSData.journey),
-    resumes: resumeMap.size > 0 ? Array.from(resumeMap.values()) : initialCMSData.resumes,
-    blogs: blogMap.size > 0 ? Array.from(blogMap.values()) : initialCMSData.blogs,
-    messages: initialCMSData.messages || [],
-  };
-};
-
 export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<CMSData>(() => {
-    return loadAndRecoverCMSData();
-  });
+  const [data, setData] = useState<CMSData>(initialCMSData);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [dbConnected, setDbConnected] = useState<boolean>(false);
+  const [isInitialLoaded, setIsInitialLoaded] = useState<boolean>(false);
 
+  // Authentication State
+  const [authToken, setAuthToken] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem(AUTH_STORAGE_KEY);
+    } catch (e) {
+      return null;
+    }
+  });
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // Modals state
   const [isResumeModalOpen, setIsResumeModalOpenState] = useState(false);
   const [activeResumeId, setActiveResumeId] = useState<string | null>(null);
+  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
+
   const setIsResumeModalOpen = (open: boolean, resumeId?: string) => {
     setIsResumeModalOpenState(open);
     if (open && resumeId) {
       setActiveResumeId(resumeId);
     }
   };
-  const [isAdminModalOpen, setIsAdminModalOpen] = useState(false);
-  const [dbConnected, setDbConnected] = useState(false);
-  const [isInitialLoaded, setIsInitialLoaded] = useState(false);
 
-  // Initial Fetch from MongoDB Atlas with smart merging so custom user items are never overwritten with dummy data
+  // Check auth session on startup
   useEffect(() => {
-    let isMounted = true;
-    async function loadFromMongoDB() {
-      try {
-        const res = await fetch('/api/cms');
-        if (res.ok) {
-          const json = await res.json();
-          if (isMounted) setDbConnected(json.database === 'MongoDB Atlas');
-          if (json.data && typeof json.data === 'object' && isMounted) {
-            const mongoData = json.data;
-
-            setData((prev) => {
-              // Smart merge array helper: prefer mongo array unless it's identical to default dummy data while prev has custom items
-              const mergeArray = <T extends { id: string }>(mongoArr: T[] | undefined, prevArr: T[], defaultArr: T[]): T[] => {
-                if (Array.isArray(mongoArr) && mongoArr.length > 0) {
-                  const isDefault =
-                    mongoArr.length === defaultArr.length &&
-                    mongoArr.every((m, idx) => m.id === defaultArr[idx]?.id);
-                  const prevHasCustom = prevArr.some((p) => !defaultArr.some((d) => d.id === p.id));
-                  if (isDefault && prevHasCustom) {
-                    return prevArr; // preserve user's custom created items!
-                  }
-                  return mongoArr;
-                }
-                return prevArr.length > 0 ? prevArr : defaultArr;
-              };
-
-              return {
-                ...prev,
-                ...mongoData,
-                hero: { ...prev.hero, ...(mongoData.hero || {}) },
-                about: {
-                  ...prev.about,
-                  ...(mongoData.about || {}),
-                  avatarUrl: isValidAvatarUrl(mongoData.about?.avatarUrl)
-                    ? mongoData.about!.avatarUrl
-                    : isValidAvatarUrl(prev.about?.avatarUrl)
-                    ? prev.about!.avatarUrl
-                    : initialCMSData.about.avatarUrl,
-                },
-                contactInfo: { ...prev.contactInfo, ...(mongoData.contactInfo || {}) },
-                projects: mergeArray(mongoData.projects, prev.projects, initialCMSData.projects),
-                creativePortfolio: mergeArray(mongoData.creativePortfolio, prev.creativePortfolio, initialCMSData.creativePortfolio),
-                gallery: mergeArray(mongoData.gallery, prev.gallery, initialCMSData.gallery),
-                journey: sanitizeJourney(mergeArray(mongoData.journey, prev.journey, initialCMSData.journey)),
-                resumes: mergeArray(mongoData.resumes, prev.resumes, initialCMSData.resumes),
-                blogs: mergeArray(mongoData.blogs, prev.blogs, initialCMSData.blogs),
-                messages: mongoData.messages || prev.messages || initialCMSData.messages,
-              };
-            });
-          }
-        }
-      } catch (e) {
-        console.warn('MongoDB API not responding yet or in offline mode:', e);
-      } finally {
-        if (isMounted) setIsInitialLoaded(true);
-      }
+    if (!authToken) {
+      setIsAuthenticated(false);
+      return;
     }
-    loadFromMongoDB();
-    return () => {
-      isMounted = false;
-    };
-  }, []);
 
-  // Safely save to LocalStorage with automatic quota error handling
-  const saveToLocalStorage = (dataToSave: CMSData) => {
+    fetch('/api/auth/me', {
+      headers: { Authorization: `Bearer ${authToken}` },
+    })
+      .then((res) => res.json())
+      .then((json) => {
+        if (json.success && json.authenticated) {
+          setIsAuthenticated(true);
+        } else {
+          setIsAuthenticated(false);
+          setAuthToken(null);
+          try {
+            localStorage.removeItem(AUTH_STORAGE_KEY);
+          } catch (e) {}
+        }
+      })
+      .catch(() => {
+        // If network error, keep current state
+      });
+  }, [authToken]);
+
+  // Login handler
+  const login = async (password: string): Promise<{ success: boolean; message: string }> => {
     try {
-      const cleanData = sanitizeForLocalStorage(dataToSave);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(cleanData));
-    } catch (e) {
-      console.warn('LocalStorage save warning:', e);
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      });
+      const json = await res.json();
+
+      if (json.success && json.token) {
+        setAuthToken(json.token);
+        setIsAuthenticated(true);
+        try {
+          localStorage.setItem(AUTH_STORAGE_KEY, json.token);
+        } catch (e) {}
+        return { success: true, message: 'Admin authentication successful' };
+      } else {
+        return {
+          success: false,
+          message: json.error?.message || 'Incorrect Password. Please try again.',
+        };
+      }
+    } catch (err: any) {
+      return {
+        success: false,
+        message: err?.message || 'Server connection error during login.',
+      };
     }
   };
 
-  // Sync to LocalStorage AND MongoDB Atlas on data changes
-  useEffect(() => {
-    saveToLocalStorage(data);
+  // Logout handler
+  const logout = () => {
+    setAuthToken(null);
+    setIsAuthenticated(false);
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch (e) {}
+    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
+  };
 
-    // Auto sync to MongoDB Atlas
-    if (isInitialLoaded) {
-      const timer = setTimeout(() => {
-        fetch('/api/cms', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(data),
-        })
-          .then((res) => res.json())
-          .then((json) => {
-            if (json.success) setDbConnected(true);
-          })
-          .catch((err) => console.warn('Sync to MongoDB Atlas error:', err));
-      }, 1000);
-      return () => clearTimeout(timer);
+  // 1. Initial Fetch from MongoDB Atlas (Single Authoritative Source)
+  const fetchFromMongoDB = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch('/api/cms');
+      if (res.ok) {
+        const json = await res.json();
+        setDbConnected(json.database === 'MongoDB Atlas');
+        if (json.data && typeof json.data === 'object') {
+          const mongoData = json.data;
+          setData({
+            hero: { ...initialCMSData.hero, ...(mongoData.hero || {}) },
+            about: {
+              ...initialCMSData.about,
+              ...(mongoData.about || {}),
+              avatarUrl: isValidAvatarUrl(mongoData.about?.avatarUrl)
+                ? mongoData.about.avatarUrl
+                : initialCMSData.about.avatarUrl,
+            },
+            skills:
+              Array.isArray(mongoData.skills) && mongoData.skills.length > 0
+                ? mongoData.skills
+                : initialCMSData.skills,
+            projects:
+              Array.isArray(mongoData.projects) && mongoData.projects.length > 0
+                ? mongoData.projects
+                : initialCMSData.projects,
+            creativePortfolio:
+              Array.isArray(mongoData.creativePortfolio) && mongoData.creativePortfolio.length > 0
+                ? mongoData.creativePortfolio
+                : initialCMSData.creativePortfolio,
+            gallery:
+              Array.isArray(mongoData.gallery) && mongoData.gallery.length > 0
+                ? mongoData.gallery
+                : initialCMSData.gallery,
+            journey: sanitizeJourney(
+              Array.isArray(mongoData.journey) && mongoData.journey.length > 0
+                ? mongoData.journey
+                : initialCMSData.journey
+            ),
+            resumes:
+              Array.isArray(mongoData.resumes) && mongoData.resumes.length > 0
+                ? mongoData.resumes
+                : initialCMSData.resumes,
+            blogs:
+              Array.isArray(mongoData.blogs) && mongoData.blogs.length > 0
+                ? mongoData.blogs
+                : initialCMSData.blogs,
+            contactInfo: { ...initialCMSData.contactInfo, ...(mongoData.contactInfo || {}) },
+            messages: Array.isArray(mongoData.messages) ? mongoData.messages : [],
+          });
+        }
+      }
+    } catch (e) {
+      console.warn('[CMSContext] MongoDB API connection:', e);
+      setDbConnected(false);
+    } finally {
+      setIsLoading(false);
+      setIsInitialLoaded(true);
     }
-  }, [data, isInitialLoaded]);
+  }, []);
 
+  useEffect(() => {
+    fetchFromMongoDB();
+  }, [fetchFromMongoDB]);
+
+  // 2. Auto-sync to MongoDB Atlas when authenticated admin makes edits
+  useEffect(() => {
+    if (!isInitialLoaded || !isAuthenticated || !authToken) return;
+
+    const timer = setTimeout(() => {
+      fetch('/api/cms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${authToken}`,
+        },
+        body: JSON.stringify(data),
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success) {
+            setDbConnected(true);
+          }
+        })
+        .catch((err) => {
+          console.warn('[CMS Auto-Sync Error]:', err);
+        });
+    }, 1500);
+
+    return () => clearTimeout(timer);
+  }, [data, isInitialLoaded, isAuthenticated, authToken]);
+
+  // Force manual sync to MongoDB
   const forceSyncToMongoDB = async (): Promise<{ success: boolean; message: string; database?: string }> => {
     try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) {
+        headers['Authorization'] = `Bearer ${authToken}`;
+      }
+
       const res = await fetch('/api/cms', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers,
         body: JSON.stringify(data),
       });
       const json = await res.json();
+
       if (json.success) {
-        setDbConnected(json.database === 'MongoDB Atlas' || dbConnected);
+        setDbConnected(true);
         sendTelegramConsoleLog(
           'CMS Content Saved & Synced',
-          `Portfolio content updated by Admin.\nTarget DB: ${json.database || 'MongoDB Atlas'}\nTotal Projects: ${data.projects?.length || 0}\nTotal Messages: ${data.messages?.length || 0}`,
+          `Portfolio content updated by Admin.\nTarget DB: MongoDB Atlas\nTotal Projects: ${data.projects?.length || 0}\nTotal Messages: ${data.messages?.length || 0}`,
           'info'
         );
+        return {
+          success: true,
+          message: 'Data saved and synced with MongoDB Atlas',
+          database: 'MongoDB Atlas',
+        };
+      } else {
+        return {
+          success: false,
+          message: json.error?.message || 'Failed to save to MongoDB',
+          database: 'MongoDB Atlas',
+        };
       }
-      return {
-        success: !!json.success,
-        message: json.message || 'Data saved and synced with MongoDB Atlas',
-        database: json.database || (dbConnected ? 'MongoDB Atlas' : 'Server Memory'),
-      };
     } catch (err: any) {
       console.error('Failed to sync to MongoDB Atlas:', err);
       return {
         success: false,
-        message: err?.message || 'Failed to sync to MongoDB Atlas',
-        database: 'Offline Fallback',
+        message: err?.message || 'Network error while syncing to MongoDB Atlas',
+        database: 'Offline',
       };
     }
   };
 
+  // Section update handlers
   const updateHero = (hero: HeroData) => setData((prev) => ({ ...prev, hero }));
   const updateAbout = (about: AboutData) => setData((prev) => ({ ...prev, about }));
   const updateSkills = (skills: SkillCategory[]) => setData((prev) => ({ ...prev, skills }));
 
+  // Projects
   const updateProjects = (projects: Project[]) => setData((prev) => ({ ...prev, projects }));
   const addProject = (project: any) => {
-    const firstImg = project.thumbnail || project.image || (project.images && project.images[0]) || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000';
+    const firstImg =
+      project.thumbnail ||
+      project.image ||
+      (project.images && project.images[0]) ||
+      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000';
     const newProj: Project = {
       id: 'proj-' + Date.now(),
       title: project.title || 'Untitled Project',
@@ -488,7 +417,14 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const moveProjectItem = (fromIndex: number, toIndex: number) => {
     setData((prev) => {
       const items = [...(prev.projects || [])];
-      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      if (
+        fromIndex < 0 ||
+        fromIndex >= items.length ||
+        toIndex < 0 ||
+        toIndex >= items.length ||
+        fromIndex === toIndex
+      )
+        return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
       return { ...prev, projects: items };
@@ -505,23 +441,26 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const updateCreativePortfolio = (creativePortfolio: CreativeItem[]) =>
-    setData((prev) => ({ ...prev, creativePortfolio }));
+  // Creative Portfolio
+  const updateCreativePortfolio = (items: CreativeItem[]) =>
+    setData((prev) => ({ ...prev, creativePortfolio: items }));
   const addCreativeItem = (item: any) => {
-    const firstImg = item.thumbnail || item.image || (item.images && item.images[0]) || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=1000';
+    const firstImg =
+      item.thumbnail ||
+      item.image ||
+      (item.images && item.images[0]) ||
+      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000';
     const newItem: CreativeItem = {
       id: 'cr-' + Date.now(),
-      title: item.title || 'Untitled Creative',
-      category: item.category || 'Poster Design',
-      shortDescription: item.shortDescription || item.description || '',
-      detailedDescription: item.detailedDescription || item.shortDescription || item.description || '',
-      softwareUsed: item.softwareUsed || ['Canva'],
-      tags: item.tags || ['Design'],
+      title: item.title || 'Untitled Work',
+      category: item.category || 'UI/UX',
       thumbnail: firstImg,
       images: item.images && item.images.length > 0 ? item.images : [firstImg],
-      videoUrl: item.videoUrl || '',
-      platformUrl: item.platformUrl || '',
-      completionDate: item.completionDate || item.date || '2026',
+      shortDescription: item.shortDescription || item.description || '',
+      detailedDescription: item.detailedDescription || item.description || '',
+      softwareUsed: item.softwareUsed || ['Figma'],
+      tags: item.tags || [],
+      completionDate: item.completionDate || item.year || '2026',
       featured: item.featured ?? true,
       status: item.status || 'Published',
     };
@@ -555,7 +494,14 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const moveCreativeItem = (fromIndex: number, toIndex: number) => {
     setData((prev) => {
       const items = [...(prev.creativePortfolio || [])];
-      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      if (
+        fromIndex < 0 ||
+        fromIndex >= items.length ||
+        toIndex < 0 ||
+        toIndex >= items.length ||
+        fromIndex === toIndex
+      )
+        return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
       return { ...prev, creativePortfolio: items };
@@ -572,30 +518,36 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  const updateJourney = (journey: JourneyItem[]) => setData((prev) => ({ ...prev, journey }));
+  // Journey
+  const updateJourney = (journey: JourneyItem[]) =>
+    setData((prev) => ({ ...prev, journey: sanitizeJourney(journey) }));
   const addJourneyItem = (item: any) => {
+    const firstImg =
+      item.image ||
+      (item.images && item.images[0]) ||
+      'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000';
     const newItem: JourneyItem = {
-      id: 'j-' + Date.now(),
+      id: 'jour-' + Date.now(),
       year: item.year || '2026',
-      title: item.title || 'New Milestone',
-      organization: item.organization || '',
-      role: item.role || '',
-      category: item.category || item.primaryTag || (item.tags && item.tags[0]) || 'College',
+      title: item.title || 'Milestone',
+      organization: item.organization || 'MVSR Engineering College',
+      role: item.role || 'Member',
+      category: item.category || 'Achievement',
       description: item.description || '',
       detailedDescription: item.detailedDescription || item.description || '',
-      tags: item.tags || [],
-      images: item.images || [],
-      image: item.image || '',
+      image: firstImg,
+      images: item.images && item.images.length > 0 ? item.images : [firstImg],
+      tags: item.tags || [item.category || 'Achievement'],
     };
     setData((prev) => ({
       ...prev,
-      journey: [...(prev.journey || []), newItem],
+      journey: sanitizeJourney([newItem, ...(prev.journey || [])]),
     }));
   };
   const updateJourneyItem = (item: JourneyItem) => {
     setData((prev) => ({
       ...prev,
-      journey: (prev.journey || []).map((j) => (j.id === item.id ? item : j)),
+      journey: sanitizeJourney((prev.journey || []).map((j) => (j.id === item.id ? item : j))),
     }));
   };
   const deleteJourneyItem = (id: string) => {
@@ -617,7 +569,14 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const moveJourneyItem = (fromIndex: number, toIndex: number) => {
     setData((prev) => {
       const items = [...(prev.journey || [])];
-      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      if (
+        fromIndex < 0 ||
+        fromIndex >= items.length ||
+        toIndex < 0 ||
+        toIndex >= items.length ||
+        fromIndex === toIndex
+      )
+        return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
       return { ...prev, journey: items };
@@ -634,23 +593,27 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  // Gallery / Certificates
   const updateGallery = (gallery: GalleryItem[]) => setData((prev) => ({ ...prev, gallery }));
   const addGalleryItem = (item: any) => {
-    const mainImg = item.image || item.thumbnail || (item.images && item.images[0]) || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000';
+    const firstImg =
+      item.image ||
+      (item.images && item.images[0]) ||
+      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=1000';
     const newItem: GalleryItem = {
-      id: 'g-' + Date.now(),
-      title: item.title || 'New Certificate / Award',
+      id: 'gal-' + Date.now(),
+      title: item.title || 'Certificate / Award',
       category: item.category || 'Certificates',
-      image: mainImg,
-      images: item.images && item.images.length > 0 ? item.images : [mainImg],
-      description: item.description || item.summary || '',
+      description: item.description || '',
       detailedDescription: item.detailedDescription || item.description || '',
-      date: item.date || item.year || '2026',
-      location: item.location || '',
+      image: firstImg,
+      images: item.images && item.images.length > 0 ? item.images : [firstImg],
+      date: item.date || '2026',
+      location: item.location || 'Online',
       credentialUrl: item.credentialUrl || '',
-      tags: item.tags || ['Certificate'],
-      technologies: item.technologies || item.skills || [],
       featured: item.featured ?? true,
+      tags: item.tags || [item.category || 'Certificates'],
+      technologies: item.technologies || [],
     };
     setData((prev) => ({
       ...prev,
@@ -682,7 +645,14 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const moveGalleryItem = (fromIndex: number, toIndex: number) => {
     setData((prev) => {
       const items = [...(prev.gallery || [])];
-      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      if (
+        fromIndex < 0 ||
+        fromIndex >= items.length ||
+        toIndex < 0 ||
+        toIndex >= items.length ||
+        fromIndex === toIndex
+      )
+        return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
       return { ...prev, gallery: items };
@@ -699,6 +669,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  // Blogs
   const updateBlogs = (blogs: BlogPost[]) => setData((prev) => ({ ...prev, blogs }));
   const addBlogPost = (post: any) => {
     const newPost: BlogPost = {
@@ -711,7 +682,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       readTime: post.readTime || '5 min read',
       category: post.category || 'Tech',
       tags: post.tags || ['Article'],
-      coverImage: post.coverImage || 'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000',
+      coverImage:
+        post.coverImage ||
+        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000',
       status: post.status || 'Published',
     };
     setData((prev) => ({
@@ -732,11 +705,13 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }));
   };
 
+  // Resumes
   const updateResumes = (resumes: ResumeOption[]) => setData((prev) => ({ ...prev, resumes }));
   const addResume = (item: Partial<ResumeOption>) => {
     const title = item.title || 'Untitled Resume';
     const id = item.id || 'res-' + Date.now();
-    const filename = item.filename || `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_Resume.pdf`;
+    const filename =
+      item.filename || `${title.toLowerCase().replace(/[^a-z0-9]+/g, '_')}_Resume.pdf`;
     const newResume: ResumeOption = {
       id,
       title,
@@ -786,7 +761,14 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const moveResumeItem = (fromIndex: number, toIndex: number) => {
     setData((prev) => {
       const items = [...(prev.resumes || [])];
-      if (fromIndex < 0 || fromIndex >= items.length || toIndex < 0 || toIndex >= items.length || fromIndex === toIndex) return prev;
+      if (
+        fromIndex < 0 ||
+        fromIndex >= items.length ||
+        toIndex < 0 ||
+        toIndex >= items.length ||
+        fromIndex === toIndex
+      )
+        return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
       return { ...prev, resumes: items };
@@ -802,8 +784,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       return { ...prev, resumes: items };
     });
   };
-  const updateContactInfo = (contactInfo: ContactInfo) => setData((prev) => ({ ...prev, contactInfo }));
 
+  // Contact Info
+  const updateContactInfo = (contactInfo: ContactInfo) =>
+    setData((prev) => ({ ...prev, contactInfo }));
+
+  // Contact Messages
   const addMessage = (msg: Omit<ContactMessage, 'id' | 'date' | 'time' | 'status'>) => {
     const now = new Date();
     const newMsg: ContactMessage = {
@@ -818,18 +804,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       messages: [newMsg, ...(prev.messages || [])],
     }));
 
-    // Dispatch Telegram Inbox Notification & Console Log
-    sendTelegramInboxMessage({
-      name: msg.name,
-      email: msg.email,
-      subject: msg.subject || 'General Inquiry',
-      message: msg.message,
-    });
-    sendTelegramConsoleLog(
-      'New Inbox Message Received',
-      `Sender: ${msg.name} <${msg.email}>\nSubject: ${msg.subject || 'N/A'}\nMessage: ${msg.message}`,
-      'success'
-    );
+    // Post to backend API (which automatically dispatches Telegram alerts & persists to DB)
+    fetch('/api/contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(msg),
+    }).catch((err) => console.warn('Failed to send contact message to API:', err));
   };
 
   const markMessageStatus = (id: string, status: 'unread' | 'read' | 'archived') => {
@@ -852,10 +832,17 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetToDefaults = () => {
     setData(initialCMSData);
-    localStorage.removeItem(STORAGE_KEY);
   };
 
-  // Safe data object with contactMessages alias and safe arrays
+  const updateData = (newData: any) => {
+    if (newData && typeof newData === 'object') {
+      setData((prev) => ({
+        ...prev,
+        ...newData,
+      }));
+    }
+  };
+
   const safeData = {
     ...data,
     projects: data.projects || [],
@@ -872,6 +859,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     <CMSContext.Provider
       value={{
         data: safeData,
+        isLoading,
+        dbConnected,
+        isAuthenticated,
+        authToken,
+        login,
+        logout,
         updateHero,
         updateAbout,
         updateSkills,
@@ -921,12 +914,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         markMessageRead,
         deleteMessage,
         resetToDefaults,
+        updateData,
         isResumeModalOpen,
         activeResumeId,
         setIsResumeModalOpen,
         isAdminModalOpen,
         setIsAdminModalOpen,
-        dbConnected,
         forceSyncToMongoDB,
       }}
     >
