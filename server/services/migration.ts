@@ -193,7 +193,7 @@ export async function runStorageMigration(force: boolean = false): Promise<Migra
       data: canonicalCMSData,
       updatedAt: new Date(),
     },
-    { upsert: true, new: true }
+    { upsert: true, returnDocument: 'after' }
   ).exec();
 
   console.log(`[Migration] MongoDB document updated to version ${nextVersion}`);

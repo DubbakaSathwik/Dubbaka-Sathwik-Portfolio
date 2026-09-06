@@ -88,7 +88,7 @@ export async function updateTelegramSettings(
     await TelegramSettingsModel.findOneAndUpdate(
       { key: 'telegram_settings_v1' },
       { ...telegramSettings, updatedAt: new Date() },
-      { upsert: true, new: true }
+      { upsert: true, returnDocument: 'after' }
     ).exec();
   } catch (e) {
     console.warn('[Telegram] Failed to sync settings to MongoDB:', e);

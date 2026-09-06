@@ -74,7 +74,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
             cmsDoc = await CMSModel.findOneAndUpdate(
               { key: 'portfolio_cms_v1' },
               { schemaVersion: 1, version: 1, data: diskData, updatedAt: new Date() },
-              { upsert: true, new: true }
+              { upsert: true, returnDocument: 'after' }
             ).exec();
           }
         }
@@ -175,7 +175,7 @@ router.post('/', requireAuth, async (req: Request, res: Response): Promise<void>
             data: payload,
             updatedAt: new Date(),
           },
-          { upsert: true, new: true }
+          { upsert: true, returnDocument: 'after' }
         ).exec();
 
         dbStatus = 'MongoDB Atlas';
@@ -304,7 +304,7 @@ router.post('/restore', requireAuth, async (req: Request, res: Response): Promis
             data: payload,
             updatedAt: new Date(),
           },
-          { upsert: true, new: true }
+          { upsert: true, returnDocument: 'after' }
         ).exec();
 
         dbStatus = 'MongoDB Atlas';
