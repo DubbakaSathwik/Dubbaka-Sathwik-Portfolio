@@ -13,7 +13,9 @@ import {
   IntroData,
 } from './types';
 
-export const initialHeroData: HeroData = {
+import seedData from './seed_data.json';
+
+export const initialHeroData: HeroData = (seedData.hero as HeroData) || {
   heading: 'Dubbaka Sathwik',
   subtitle: 'Student • Full-Stack Developer • Creative Designer',
   tagline: 'Developer by Curiosity. Creator by Passion.',
@@ -24,7 +26,7 @@ export const initialHeroData: HeroData = {
   tertiaryBtnText: 'Contact Me',
 };
 
-export const initialAboutData: AboutData = {
+export const initialAboutData: AboutData = (seedData.about as AboutData) || {
   heading: 'Developer by Curiosity. Creator by Passion.',
   subheading: '3rd Year CSIT Student at MVSR Engineering College\nFull Stack Developer & Creative Designer',
   degree: 'B.E. Computer Science & Information Technology',
@@ -86,8 +88,6 @@ export const initialAboutData: AboutData = {
   showPhilosophy: true,
   showSkills: true,
 };
-
-import seedData from './seed_data.json';
 
 export const initialSkills: SkillCategory[] = (seedData.skills || []) as SkillCategory[];
 
