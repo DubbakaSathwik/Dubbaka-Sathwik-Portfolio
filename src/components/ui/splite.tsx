@@ -1,6 +1,6 @@
 'use client'
 
-import { Suspense, lazy, CSSProperties, useRef, useEffect } from 'react'
+import { Suspense, lazy, CSSProperties } from 'react'
 const Spline = lazy(() => import('@splinetool/react-spline'))
 
 interface SplineSceneProps {
@@ -11,35 +11,11 @@ interface SplineSceneProps {
 }
 
 export function SplineScene({ scene, className, style, onLoad }: SplineSceneProps) {
-  const containerRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    const container = containerRef.current
-    if (!container) return
-
-    // Stop wheel & touchmove event propagation on capture phase
-    // so Spline cannot hijack/prevent standard page scrolling
-    const handleWheel = (e: WheelEvent) => {
-      e.stopPropagation()
-    }
-
-    const handleTouchMove = (e: TouchEvent) => {
-      e.stopPropagation()
-    }
-
-    container.addEventListener('wheel', handleWheel, { capture: true, passive: true })
-    container.addEventListener('touchmove', handleTouchMove, { capture: true, passive: true })
-
-    return () => {
-      container.removeEventListener('wheel', handleWheel, { capture: true })
-      container.removeEventListener('touchmove', handleTouchMove, { capture: true })
-    }
-  }, [])
-
   const handleLoad = (splineApp: any) => {
     if (splineApp && splineApp.canvas) {
       splineApp.canvas.style.setProperty('cursor', 'default', 'important')
       splineApp.canvas.style.setProperty('touch-action', 'pan-y', 'important')
+      splineApp.canvas.style.setProperty('pointer-events', 'none', 'important')
     }
     if (onLoad) {
       onLoad(splineApp)
@@ -47,7 +23,7 @@ export function SplineScene({ scene, className, style, onLoad }: SplineSceneProp
   }
 
   return (
-    <div ref={containerRef} className="w-full h-full relative">
+    <div className="w-full h-full relative pointer-events-none select-none">
       <Suspense 
         fallback={
           <div className="w-full h-full flex items-center justify-center">
@@ -58,7 +34,7 @@ export function SplineScene({ scene, className, style, onLoad }: SplineSceneProp
         <Spline
           scene={scene}
           className={className}
-          style={{ cursor: 'default', touchAction: 'pan-y', ...style }}
+          style={{ cursor: 'default', touchAction: 'pan-y', pointerEvents: 'none', ...style }}
           onLoad={handleLoad}
         />
       </Suspense>
