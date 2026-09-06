@@ -191,7 +191,7 @@ function getInitialCachedCMSData(): CMSData {
 
 export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [data, setData] = useState<CMSData>(getInitialCachedCMSData);
-  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
   const [dbConnected, setDbConnected] = useState<boolean>(true);
   const [isInitialLoaded, setIsInitialLoaded] = useState<boolean>(true);
 

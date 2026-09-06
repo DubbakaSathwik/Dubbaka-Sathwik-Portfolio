@@ -12,6 +12,7 @@ import { ContactSection } from '@/components/contact';
 import { Footer } from '@/components/footer';
 import { ResumeModal } from '@/components/resume-modal';
 import { AdminPortalModal } from '@/components/admin/admin-modal';
+import { CinematicLoadingScreen } from '@/components/loading/cinematic-loader';
 import { trackVisitorTelemetry } from '@/utils/telemetry';
 
 export default function App() {
@@ -61,6 +62,9 @@ export default function App() {
         {/* Global Modals */}
         <ResumeModal />
         <AdminPortalModal />
+
+        {/* Premium Cinematic Loading Screen */}
+        <CinematicLoadingScreen />
       </div>
     </CMSProvider>
   );

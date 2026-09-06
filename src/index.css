@@ -15,16 +15,19 @@
   }
 }
 
-/* Ensure 3D Spline Canvas / Models do NOT intercept or alter static page scrolling speed */
+/* Keep mouse cursor interactive over 3D Spline Canvas / Models while allowing smooth page scrolling */
 canvas,
 canvas:hover,
 canvas:focus,
-canvas:active,
 [data-spline-canvas],
 .spline-watermark {
-  cursor: default !important;
+  cursor: grab !important;
   touch-action: pan-y !important;
-  pointer-events: none !important;
+  pointer-events: auto !important;
+}
+
+canvas:active {
+  cursor: grabbing !important;
 }
 
 /* Custom Neon Emerald & Dark Cyberpunk Scrollbar across entire App */
