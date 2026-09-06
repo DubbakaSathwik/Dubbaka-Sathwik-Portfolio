@@ -10,6 +10,7 @@ import {
   ResumeOption,
   ContactInfo,
   CMSData,
+  IntroData,
 } from './types';
 
 export const initialHeroData: HeroData = {
@@ -86,19 +87,21 @@ export const initialAboutData: AboutData = {
   showSkills: true,
 };
 
-export const initialSkills: SkillCategory[] = [];
+import seedData from './seed_data.json';
 
-export const initialProjects: Project[] = [];
+export const initialSkills: SkillCategory[] = (seedData.skills || []) as SkillCategory[];
 
-export const initialCreativePortfolio: CreativeItem[] = [];
+export const initialProjects: Project[] = (seedData.projects || []) as Project[];
 
-export const initialJourneyItems: JourneyItem[] = [];
+export const initialCreativePortfolio: CreativeItem[] = (seedData.creativePortfolio || []) as CreativeItem[];
 
-export const initialGalleryItems: GalleryItem[] = [];
+export const initialJourneyItems: JourneyItem[] = (seedData.journey || []) as JourneyItem[];
 
-export const initialBlogPosts: BlogPost[] = [];
+export const initialGalleryItems: GalleryItem[] = (seedData.gallery || []) as GalleryItem[];
 
-export const initialResumeOptions: ResumeOption[] = [];
+export const initialBlogPosts: BlogPost[] = (seedData.blogs || []) as BlogPost[];
+
+export const initialResumeOptions: ResumeOption[] = (seedData.resumes || []) as ResumeOption[];
 
 export const initialContactInfo: ContactInfo = {
   email: 'dubbakasathwik@gmail.com',
@@ -115,6 +118,7 @@ export const initialContactInfo: ContactInfo = {
     { platform: 'WhatsApp', url: 'https://wa.me/918527564839' },
     { platform: 'Discord', url: 'https://discord.com' },
   ],
+  ...(seedData.contactInfo || {}),
 };
 
 export const initialIntroData: IntroData = {
@@ -139,11 +143,12 @@ export const initialIntroData: IntroData = {
   ],
   wordsSpeedSeconds: 4.8,
   nameDelaySeconds: 1.2,
+  ...(seedData.intro || {}),
 };
 
 export const initialCMSData: CMSData = {
-  hero: initialHeroData,
-  about: initialAboutData,
+  hero: (seedData.hero as HeroData) || initialHeroData,
+  about: (seedData.about as AboutData) || initialAboutData,
   skills: initialSkills,
   projects: initialProjects,
   creativePortfolio: initialCreativePortfolio,

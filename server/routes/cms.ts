@@ -426,14 +426,22 @@ function loadStaticBackupData(): any {
 // Helper to safely save active static backup
 function saveStaticBackupData(payload: any, snapshotFilename?: string): boolean {
   try {
-    // 1. Write active static backup
-    fs.writeFileSync(STATIC_BACKUP_PATH, JSON.stringify(payload, null, 2), 'utf-8');
+    const jsonStr = JSON.stringify(payload, null, 2);
 
-    // 2. Also keep safety copy in static_backups folder
+    // 1. Write active static backup in root
+    fs.writeFileSync(STATIC_BACKUP_PATH, jsonStr, 'utf-8');
+
+    // 2. Write active static backup to public/ directory for direct static serving
+    try {
+      const publicPath = path.join(process.cwd(), 'public', 'static_backup.json');
+      fs.writeFileSync(publicPath, jsonStr, 'utf-8');
+    } catch (e) {}
+
+    // 3. Also keep safety copy in static_backups folder
     if (snapshotFilename) {
       const cleanName = snapshotFilename.replace(/[^a-zA-Z0-9_.-]/g, '_');
       const snapshotPath = path.join(STATIC_BACKUPS_DIR, cleanName);
-      fs.writeFileSync(snapshotPath, JSON.stringify(payload, null, 2), 'utf-8');
+      fs.writeFileSync(snapshotPath, jsonStr, 'utf-8');
     }
     return true;
   } catch (err) {
