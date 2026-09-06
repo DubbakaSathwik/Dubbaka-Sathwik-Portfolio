@@ -388,4 +388,311 @@ router.get('/backups/list', requireAuth, async (req: Request, res: Response): Pr
   }
 });
 
+// ==========================================
+// STATIC BACKUP ENGINE
+// ==========================================
+const STATIC_BACKUP_PATH = path.join(process.cwd(), 'static_backup.json');
+const STATIC_BACKUPS_DIR = path.join(process.cwd(), 'static_backups');
+
+// Ensure static_backups folder exists
+if (!fs.existsSync(STATIC_BACKUPS_DIR)) {
+  try {
+    fs.mkdirSync(STATIC_BACKUPS_DIR, { recursive: true });
+  } catch (e) {}
+}
+
+// Helper to safely load active static backup
+function loadStaticBackupData(): any {
+  try {
+    if (fs.existsSync(STATIC_BACKUP_PATH)) {
+      const raw = fs.readFileSync(STATIC_BACKUP_PATH, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (parsed && typeof parsed === 'object' && parsed.hero) {
+        return parsed;
+      }
+    }
+  } catch (err) {
+    console.warn('[CMS Route] Error reading static_backup.json:', err);
+  }
+  // If static_backup.json doesn't exist yet, initialize it from cms_backup.json or initialCMSData
+  const diskData = loadLocalDiskData();
+  if (diskData && diskData.hero) {
+    saveStaticBackupData(diskData, 'initial_static_backup.json');
+    return diskData;
+  }
+  return initialCMSData;
+}
+
+// Helper to safely save active static backup
+function saveStaticBackupData(payload: any, snapshotFilename?: string): boolean {
+  try {
+    // 1. Write active static backup
+    fs.writeFileSync(STATIC_BACKUP_PATH, JSON.stringify(payload, null, 2), 'utf-8');
+
+    // 2. Also keep safety copy in static_backups folder
+    if (snapshotFilename) {
+      const cleanName = snapshotFilename.replace(/[^a-zA-Z0-9_.-]/g, '_');
+      const snapshotPath = path.join(STATIC_BACKUPS_DIR, cleanName);
+      fs.writeFileSync(snapshotPath, JSON.stringify(payload, null, 2), 'utf-8');
+    }
+    return true;
+  } catch (err) {
+    console.error('[CMS Route] Error writing static_backup.json:', err);
+    return false;
+  }
+}
+
+// Helper to list available static backup snapshots
+function getAvailableStaticBackupFiles(): Array<{
+  id: string;
+  name: string;
+  filename: string;
+  sizeBytes: number;
+  sizeFormatted: string;
+  lastModified: string;
+  isDefault?: boolean;
+}> {
+  const list: Array<{
+    id: string;
+    name: string;
+    filename: string;
+    sizeBytes: number;
+    sizeFormatted: string;
+    lastModified: string;
+    isDefault?: boolean;
+  }> = [];
+
+  // 1. Active static_backup.json
+  if (fs.existsSync(STATIC_BACKUP_PATH)) {
+    const stat = fs.statSync(STATIC_BACKUP_PATH);
+    list.push({
+      id: 'active_static',
+      name: 'Current Active Static Backup (static_backup.json)',
+      filename: 'static_backup.json',
+      sizeBytes: stat.size,
+      sizeFormatted: (stat.size / 1024).toFixed(2) + ' KB',
+      lastModified: stat.mtime.toISOString(),
+      isDefault: true,
+    });
+  }
+
+  // 2. Local cms_backup.json
+  if (fs.existsSync(BACKUP_FILE_PATH)) {
+    const stat = fs.statSync(BACKUP_FILE_PATH);
+    list.push({
+      id: 'cms_backup',
+      name: 'CMS Disk Backup (cms_backup.json)',
+      filename: 'cms_backup.json',
+      sizeBytes: stat.size,
+      sizeFormatted: (stat.size / 1024).toFixed(2) + ' KB',
+      lastModified: stat.mtime.toISOString(),
+    });
+  }
+
+  // 3. Any files inside static_backups/
+  if (fs.existsSync(STATIC_BACKUPS_DIR)) {
+    try {
+      const files = fs.readdirSync(STATIC_BACKUPS_DIR);
+      files.forEach((file) => {
+        if (file.endsWith('.json')) {
+          const filePath = path.join(STATIC_BACKUPS_DIR, file);
+          const stat = fs.statSync(filePath);
+          list.push({
+            id: 'snapshot_' + file,
+            name: file.replace(/_/g, ' ').replace('.json', ''),
+            filename: file,
+            sizeBytes: stat.size,
+            sizeFormatted: (stat.size / 1024).toFixed(2) + ' KB',
+            lastModified: stat.mtime.toISOString(),
+          });
+        }
+      });
+    } catch (e) {}
+  }
+
+  return list;
+}
+
+// GET /api/cms/static-backup - Public endpoint to retrieve active static backup
+router.get('/static-backup', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const staticData = loadStaticBackupData();
+    const stat = fs.existsSync(STATIC_BACKUP_PATH) ? fs.statSync(STATIC_BACKUP_PATH) : null;
+    const availableFiles = getAvailableStaticBackupFiles();
+
+    res.json({
+      success: true,
+      data: staticData,
+      filename: 'static_backup.json',
+      sizeFormatted: stat ? (stat.size / 1024).toFixed(2) + ' KB' : 'N/A',
+      lastModified: stat ? stat.mtime.toISOString() : new Date().toISOString(),
+      recordCounts: {
+        projects: staticData.projects?.length || 0,
+        journey: staticData.journey?.length || 0,
+        certificates: staticData.gallery?.length || 0,
+        creative: staticData.creativePortfolio?.length || 0,
+        resumes: staticData.resumes?.length || 0,
+        messages: staticData.messages?.length || 0,
+      },
+      availableFiles,
+    });
+  } catch (err: any) {
+    console.error('[CMS Static Backup Error] GET /api/cms/static-backup:', err);
+    res.status(500).json({
+      success: false,
+      error: { code: 'FETCH_STATIC_FAILED', message: err?.message || 'Failed to fetch static backup' },
+    });
+  }
+});
+
+// POST /api/cms/static-backup - Protected Admin endpoint to save / update static backup
+router.post('/static-backup', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { data: payload, filename } = req.body || {};
+    const dataToSave = payload || req.body;
+
+    const validation = validateCMSPayload(dataToSave);
+    if (!validation.valid) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_PAYLOAD', message: validation.reason || 'Invalid static backup payload' },
+      });
+      return;
+    }
+
+    const customName = filename || `static_backup_${Date.now()}.json`;
+    saveStaticBackupData(dataToSave, customName);
+    // Also update cms_backup.json for consistency
+    saveLocalDiskData(dataToSave);
+
+    // If MongoDB is connected, update DB as well
+    if (isDatabaseConnected()) {
+      try {
+        await CMSModel.findOneAndUpdate(
+          { key: 'portfolio_cms_v1' },
+          { data: dataToSave, updatedAt: new Date() },
+          { upsert: true }
+        ).exec();
+      } catch (e) {}
+    }
+
+    // Record Activity Log
+    try {
+      await ActivityLogModel.create({
+        logId: 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+        event: 'Static Backup Updated',
+        details: `Admin updated the authoritative Static Backup (${customName}).`,
+        category: 'cms_update',
+        level: 'success',
+      });
+    } catch (e) {}
+
+    const availableFiles = getAvailableStaticBackupFiles();
+    res.json({
+      success: true,
+      message: 'Static backup saved successfully. It will load on every reload and logo click.',
+      data: dataToSave,
+      availableFiles,
+    });
+  } catch (err: any) {
+    console.error('[CMS Static Backup Error] POST /api/cms/static-backup:', err);
+    res.status(500).json({
+      success: false,
+      error: { code: 'SAVE_STATIC_FAILED', message: err?.message || 'Failed to save static backup' },
+    });
+  }
+});
+
+// POST /api/cms/static-backup/select - Select an existing backup file to be active Static Backup
+router.post('/static-backup/select', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const { filename, id } = req.body || {};
+    let targetPath = '';
+
+    if (filename === 'cms_backup.json' || id === 'cms_backup') {
+      targetPath = BACKUP_FILE_PATH;
+    } else if (filename === 'static_backup.json' || id === 'active_static') {
+      targetPath = STATIC_BACKUP_PATH;
+    } else if (filename) {
+      targetPath = path.join(STATIC_BACKUPS_DIR, filename);
+    }
+
+    if (!targetPath || !fs.existsSync(targetPath)) {
+      res.status(404).json({
+        success: false,
+        error: { code: 'FILE_NOT_FOUND', message: 'Selected backup file does not exist' },
+      });
+      return;
+    }
+
+    const raw = fs.readFileSync(targetPath, 'utf-8');
+    const parsed = JSON.parse(raw);
+    const validation = validateCMSPayload(parsed);
+    if (!validation.valid) {
+      res.status(400).json({
+        success: false,
+        error: { code: 'INVALID_FILE_CONTENT', message: validation.reason || 'File contains invalid CMS format' },
+      });
+      return;
+    }
+
+    // Save as active static_backup.json
+    saveStaticBackupData(parsed);
+    saveLocalDiskData(parsed);
+
+    if (isDatabaseConnected()) {
+      try {
+        await CMSModel.findOneAndUpdate(
+          { key: 'portfolio_cms_v1' },
+          { data: parsed, updatedAt: new Date() },
+          { upsert: true }
+        ).exec();
+      } catch (e) {}
+    }
+
+    // Record Activity Log
+    try {
+      await ActivityLogModel.create({
+        logId: 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
+        event: 'Static Backup Selected from Dropdown',
+        details: `Active Static Backup set to "${filename || id}".`,
+        category: 'cms_update',
+        level: 'info',
+      });
+    } catch (e) {}
+
+    const availableFiles = getAvailableStaticBackupFiles();
+    res.json({
+      success: true,
+      message: `Active static backup successfully switched to "${filename || id}"`,
+      data: parsed,
+      availableFiles,
+    });
+  } catch (err: any) {
+    console.error('[CMS Static Backup Select Error]:', err);
+    res.status(500).json({
+      success: false,
+      error: { code: 'SELECT_FAILED', message: err?.message || 'Failed to select static backup' },
+    });
+  }
+});
+
+// GET /api/cms/static-backup/download - Download active static backup JSON
+router.get('/static-backup/download', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const data = loadStaticBackupData();
+    const dateStr = new Date().toISOString().replace(/[:.]/g, '-');
+    const filename = `sathwik_static_backup_${dateStr}.json`;
+
+    res.setHeader('Content-Type', 'application/json');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    res.send(JSON.stringify(data, null, 2));
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      error: { code: 'EXPORT_FAILED', message: err?.message || 'Download failed' },
+    });
+  }
+});
+
 export default router;

@@ -1,4 +1,6 @@
 import { Router, Request, Response } from 'express';
+import fs from 'fs';
+import path from 'path';
 import { CMSModel, isDatabaseConnected, ActivityLogModel } from '../db/mongo';
 import { contactRateLimiter } from '../middleware/auth';
 import {
@@ -60,14 +62,32 @@ router.post('/', contactRateLimiter, async (req: Request, res: Response): Promis
       metadata: { name: newMessage.name, email: newMessage.email, subject: newMessage.subject },
     }).catch((err) => console.warn('[Contact] Telegram notification error:', err));
 
-    // 2. Persist to MongoDB
+    // 2. Persist to MongoDB & Local Disk Backup
+    try {
+      const backupPath = path.join(process.cwd(), 'cms_backup.json');
+      if (fs.existsSync(backupPath)) {
+        const raw = fs.readFileSync(backupPath, 'utf-8');
+        const diskData = JSON.parse(raw);
+        if (diskData && typeof diskData === 'object') {
+          diskData.messages = [newMessage, ...(diskData.messages || [])];
+          fs.writeFileSync(backupPath, JSON.stringify(diskData, null, 2), 'utf-8');
+        }
+      }
+    } catch (diskErr) {
+      console.warn('[Contact] Error saving message to local disk backup:', diskErr);
+    }
+
     if (isDatabaseConnected()) {
-      const cmsDoc = await CMSModel.findOne({ key: 'portfolio_cms_v1' }).exec();
-      if (cmsDoc) {
-        const existingMessages = cmsDoc.data?.messages || [];
-        cmsDoc.data.messages = [newMessage, ...existingMessages];
-        cmsDoc.markModified('data');
-        await cmsDoc.save();
+      try {
+        const cmsDoc = await CMSModel.findOne({ key: 'portfolio_cms_v1' }).exec();
+        if (cmsDoc) {
+          const existingMessages = cmsDoc.data?.messages || [];
+          cmsDoc.data.messages = [newMessage, ...existingMessages];
+          cmsDoc.markModified('data');
+          await cmsDoc.save();
+        }
+      } catch (dbErr) {
+        console.warn('[Contact] Error saving message to MongoDB:', dbErr);
       }
     }
 

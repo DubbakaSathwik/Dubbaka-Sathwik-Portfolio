@@ -89,6 +89,14 @@ interface CMSContextType {
   isAdminModalOpen: boolean;
   setIsAdminModalOpen: (open: boolean) => void;
   forceSyncToMongoDB: () => Promise<{ success: boolean; message: string; database?: string }>;
+
+  // Static Backup Methods
+  loadStaticBackup: (silent?: boolean) => Promise<{ success: boolean; message: string; data?: any }>;
+  saveAsStaticBackup: (filename?: string) => Promise<{ success: boolean; message: string }>;
+  selectStaticBackup: (filenameOrId: string) => Promise<{ success: boolean; message: string; data?: any }>;
+  staticBackupStats: any;
+  staticBackupFiles: any[];
+  refreshStaticBackupInfo: () => Promise<void>;
 }
 
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
@@ -286,61 +294,119 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
   };
 
-  // 1. Initial Fetch from MongoDB Atlas (Single Authoritative Source)
+  // Static Backup State
+  const [staticBackupStats, setStaticBackupStats] = useState<any>(null);
+  const [staticBackupFiles, setStaticBackupFiles] = useState<any[]>([]);
+
+  const formatCMSPayload = (rawData: any): CMSData => {
+    return {
+      hero: { ...initialCMSData.hero, ...(rawData.hero || {}) },
+      about: {
+        ...initialCMSData.about,
+        ...(rawData.about || {}),
+        avatarUrl: isValidAvatarUrl(rawData.about?.avatarUrl)
+          ? rawData.about.avatarUrl
+          : initialCMSData.about.avatarUrl,
+      },
+      skills:
+        Array.isArray(rawData.skills) && rawData.skills.length > 0
+          ? rawData.skills
+          : initialCMSData.skills,
+      projects:
+        Array.isArray(rawData.projects) && rawData.projects.length > 0
+          ? rawData.projects
+          : initialCMSData.projects,
+      creativePortfolio:
+        Array.isArray(rawData.creativePortfolio) && rawData.creativePortfolio.length > 0
+          ? rawData.creativePortfolio
+          : initialCMSData.creativePortfolio,
+      gallery:
+        Array.isArray(rawData.gallery) && rawData.gallery.length > 0
+          ? rawData.gallery
+          : initialCMSData.gallery,
+      journey: sanitizeJourney(
+        Array.isArray(rawData.journey) && rawData.journey.length > 0
+          ? rawData.journey
+          : initialCMSData.journey
+      ),
+      resumes:
+        Array.isArray(rawData.resumes) && rawData.resumes.length > 0
+          ? rawData.resumes
+          : initialCMSData.resumes,
+      blogs:
+        Array.isArray(rawData.blogs) && rawData.blogs.length > 0
+          ? rawData.blogs
+          : initialCMSData.blogs,
+      contactInfo: { ...initialCMSData.contactInfo, ...(rawData.contactInfo || {}) },
+      messages: Array.isArray(rawData.messages) ? rawData.messages : [],
+    };
+  };
+
+  const refreshStaticBackupInfo = useCallback(async () => {
+    try {
+      const res = await fetch('/api/cms/static-backup');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success) {
+          setStaticBackupStats({
+            filename: json.filename,
+            sizeFormatted: json.sizeFormatted,
+            lastModified: json.lastModified,
+            recordCounts: json.recordCounts,
+          });
+          if (json.availableFiles) {
+            setStaticBackupFiles(json.availableFiles);
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[CMSContext] Failed to fetch static backup info:', e);
+    }
+  }, []);
+
+  // 1. Initial Fetch from Static Backup / MongoDB (Runs on every page load & reload)
   const fetchFromMongoDB = useCallback(async () => {
     setIsLoading(true);
     try {
+      // First try to load the authoritative Static Backup
+      const staticRes = await fetch('/api/cms/static-backup');
+      if (staticRes.ok) {
+        const staticJson = await staticRes.json();
+        if (staticJson.success && staticJson.data && typeof staticJson.data === 'object' && staticJson.data.hero) {
+          const formatted = formatCMSPayload(staticJson.data);
+          setData(formatted);
+          setDbConnected(true);
+          try {
+            localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(formatted));
+          } catch (e) {}
+
+          setStaticBackupStats({
+            filename: staticJson.filename,
+            sizeFormatted: staticJson.sizeFormatted,
+            lastModified: staticJson.lastModified,
+            recordCounts: staticJson.recordCounts,
+          });
+          if (staticJson.availableFiles) {
+            setStaticBackupFiles(staticJson.availableFiles);
+          }
+          setIsLoading(false);
+          setIsInitialLoaded(true);
+          return;
+        }
+      }
+
+      // Fallback to standard /api/cms
       const res = await fetch('/api/cms');
       if (res.ok) {
         const json = await res.json();
         setDbConnected(json.database === 'MongoDB Atlas');
         if (json.data && typeof json.data === 'object') {
-          const mongoData = json.data;
-          setData({
-            hero: { ...initialCMSData.hero, ...(mongoData.hero || {}) },
-            about: {
-              ...initialCMSData.about,
-              ...(mongoData.about || {}),
-              avatarUrl: isValidAvatarUrl(mongoData.about?.avatarUrl)
-                ? mongoData.about.avatarUrl
-                : initialCMSData.about.avatarUrl,
-            },
-            skills:
-              Array.isArray(mongoData.skills) && mongoData.skills.length > 0
-                ? mongoData.skills
-                : initialCMSData.skills,
-            projects:
-              Array.isArray(mongoData.projects) && mongoData.projects.length > 0
-                ? mongoData.projects
-                : initialCMSData.projects,
-            creativePortfolio:
-              Array.isArray(mongoData.creativePortfolio) && mongoData.creativePortfolio.length > 0
-                ? mongoData.creativePortfolio
-                : initialCMSData.creativePortfolio,
-            gallery:
-              Array.isArray(mongoData.gallery) && mongoData.gallery.length > 0
-                ? mongoData.gallery
-                : initialCMSData.gallery,
-            journey: sanitizeJourney(
-              Array.isArray(mongoData.journey) && mongoData.journey.length > 0
-                ? mongoData.journey
-                : initialCMSData.journey
-            ),
-            resumes:
-              Array.isArray(mongoData.resumes) && mongoData.resumes.length > 0
-                ? mongoData.resumes
-                : initialCMSData.resumes,
-            blogs:
-              Array.isArray(mongoData.blogs) && mongoData.blogs.length > 0
-                ? mongoData.blogs
-                : initialCMSData.blogs,
-            contactInfo: { ...initialCMSData.contactInfo, ...(mongoData.contactInfo || {}) },
-            messages: Array.isArray(mongoData.messages) ? mongoData.messages : [],
-          });
+          const formatted = formatCMSPayload(json.data);
+          setData(formatted);
         }
       }
     } catch (e) {
-      console.warn('[CMSContext] MongoDB API connection:', e);
+      console.warn('[CMSContext] Static Backup / MongoDB API connection:', e);
       setDbConnected(false);
     } finally {
       setIsLoading(false);
@@ -350,7 +416,91 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   useEffect(() => {
     fetchFromMongoDB();
-  }, [fetchFromMongoDB]);
+    refreshStaticBackupInfo();
+  }, [fetchFromMongoDB, refreshStaticBackupInfo]);
+
+  // Load Static Backup explicitly (e.g. on Logo click or button click)
+  const loadStaticBackup = async (silent: boolean = false): Promise<{ success: boolean; message: string; data?: any }> => {
+    try {
+      const res = await fetch('/api/cms/static-backup');
+      if (res.ok) {
+        const json = await res.json();
+        if (json.success && json.data) {
+          const formatted = formatCMSPayload(json.data);
+          setData(formatted);
+          try {
+            localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(formatted));
+          } catch (e) {}
+
+          if (!silent) {
+            sendTelegramConsoleLog(
+              'Static Backup Loaded',
+              'Static backup state loaded into portfolio via user trigger / logo click.',
+              'info'
+            );
+          }
+
+          return {
+            success: true,
+            message: 'Static backup successfully loaded and applied',
+            data: formatted,
+          };
+        }
+      }
+      return { success: false, message: 'Could not fetch static backup from server' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Error loading static backup' };
+    }
+  };
+
+  // Save current portfolio as Static Backup
+  const saveAsStaticBackup = async (filename?: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+      const res = await fetch('/api/cms/static-backup', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ data, filename }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        refreshStaticBackupInfo();
+        return { success: true, message: json.message || 'Static backup saved successfully!' };
+      }
+      return { success: false, message: json.error?.message || 'Failed to save static backup' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error saving static backup' };
+    }
+  };
+
+  // Select a static backup from available dropdown
+  const selectStaticBackup = async (filenameOrId: string): Promise<{ success: boolean; message: string; data?: any }> => {
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+      const res = await fetch('/api/cms/static-backup/select', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({ filename: filenameOrId, id: filenameOrId }),
+      });
+      const json = await res.json();
+      if (json.success && json.data) {
+        const formatted = formatCMSPayload(json.data);
+        setData(formatted);
+        try {
+          localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(formatted));
+        } catch (e) {}
+        refreshStaticBackupInfo();
+        return { success: true, message: json.message || 'Switched static backup', data: formatted };
+      }
+      return { success: false, message: json.error?.message || 'Failed to switch static backup' };
+    } catch (err: any) {
+      return { success: false, message: err?.message || 'Network error selecting static backup' };
+    }
+  };
 
   // 2. Auto-sync to MongoDB Atlas when authenticated admin makes edits
   useEffect(() => {
@@ -994,6 +1144,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isAdminModalOpen,
         setIsAdminModalOpen,
         forceSyncToMongoDB,
+        loadStaticBackup,
+        saveAsStaticBackup,
+        selectStaticBackup,
+        staticBackupStats,
+        staticBackupFiles,
+        refreshStaticBackupInfo,
       }}
     >
       {children}

@@ -82,7 +82,23 @@ async function startServer() {
   // Vite Middleware in development / Static bundle in production
   if (process.env.NODE_ENV !== 'production') {
     const vite = await createViteServer({
-      server: { middlewareMode: true },
+      server: {
+        middlewareMode: true,
+        watch: {
+          ignored: [
+            '**/*.json',
+            '**/*.log',
+            '**/activity_logs.json',
+            '**/cms_backup.json',
+            '**/static_backup.json',
+            '**/static_backups/**',
+            '**/telegram_settings.json',
+            '**/pre_migration_snapshots/**',
+            '**/public/uploads/**',
+            '**/.env*',
+          ],
+        },
+      },
       appType: 'spa',
     });
     app.use(vite.middlewares);

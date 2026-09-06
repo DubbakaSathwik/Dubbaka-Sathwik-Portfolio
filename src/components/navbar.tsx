@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Menu, X, Code2, Film, Sparkles } from 'lucide-react';
+import { useCMS } from '../context/CMSContext';
 
 const navLinks = [
   { name: 'Home', href: '#home' },
@@ -15,6 +16,7 @@ const navLinks = [
 ];
 
 export function Navbar() {
+  const { loadStaticBackup } = useCMS();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [activeSection, setActiveSection] = useState('home');
@@ -76,8 +78,12 @@ export function Navbar() {
         <div className="flex-1 flex justify-start">
           <a
             href="#home"
-            onClick={(e) => handleNavClick(e, '#home')}
+            onClick={(e) => {
+              handleNavClick(e, '#home');
+              loadStaticBackup();
+            }}
             className="flex items-center gap-3 group cursor-pointer"
+            title="Dubbaka Sathwik Portfolio (Click to load Static Backup)"
           >
             <div className="flex flex-col">
               <span className="text-white font-bold text-base sm:text-lg tracking-tight group-hover:text-emerald-400 transition-colors">

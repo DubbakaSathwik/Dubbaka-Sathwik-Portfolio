@@ -48,14 +48,27 @@ function detectBrowserAndOS(): { browser: string; os: string; deviceType: 'Deskt
   return { browser, os, deviceType };
 }
 
+let hasTrackedThisSession = false;
+
 export const trackVisitorTelemetry = async (): Promise<boolean> => {
   try {
+    if (hasTrackedThisSession) return true;
+    if (typeof sessionStorage !== 'undefined' && sessionStorage.getItem('portfolio_telemetry_tracked')) {
+      hasTrackedThisSession = true;
+      return true;
+    }
+
     const { browser, os, deviceType } = detectBrowserAndOS();
     const screenRes = `${window.screen.width}x${window.screen.height} (Viewport: ${window.innerWidth}x${window.innerHeight})`;
     const language = navigator.language || 'en-US';
     const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone || 'Asia/Kolkata';
     const pageUrl = window.location.href;
     const referrer = document.referrer || 'Direct Visit / Bookmark / Reload';
+
+    if (typeof sessionStorage !== 'undefined') {
+      sessionStorage.setItem('portfolio_telemetry_tracked', 'true');
+    }
+    hasTrackedThisSession = true;
 
     const payload: TelemetryData = {
       deviceType,

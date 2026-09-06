@@ -1,8 +1,32 @@
 import { Router, Request, Response } from 'express';
-import { ActivityLogModel } from '../db/mongo';
+import fs from 'fs';
+import path from 'path';
+import { ActivityLogModel, isDatabaseConnected } from '../db/mongo';
 import { requireAuth } from '../middleware/auth';
 
 const router = Router();
+const LOGS_FILE_PATH = path.join(process.cwd(), 'activity_logs.json');
+
+function loadDiskLogs(): any[] {
+  try {
+    if (fs.existsSync(LOGS_FILE_PATH)) {
+      const raw = fs.readFileSync(LOGS_FILE_PATH, 'utf-8');
+      const parsed = JSON.parse(raw);
+      if (Array.isArray(parsed)) return parsed;
+    }
+  } catch (e) {
+    console.warn('[Logs Route] Failed to read activity_logs.json:', e);
+  }
+  return [];
+}
+
+function saveDiskLogs(logs: any[]) {
+  try {
+    fs.writeFileSync(LOGS_FILE_PATH, JSON.stringify(logs.slice(0, 500), null, 2), 'utf-8');
+  } catch (e) {
+    console.warn('[Logs Route] Failed to write activity_logs.json:', e);
+  }
+}
 
 // GET /api/logs - Fetch recent activity logs
 router.get('/', async (req: Request, res: Response): Promise<void> => {
@@ -15,25 +39,39 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       filter.category = category;
     }
 
-    const logs = await ActivityLogModel.find(filter)
-      .sort({ timestamp: -1 })
-      .limit(limit)
-      .lean()
-      .exec();
+    let logs: any[] = [];
+    if (isDatabaseConnected()) {
+      try {
+        logs = await ActivityLogModel.find(filter)
+          .sort({ timestamp: -1 })
+          .limit(limit)
+          .lean()
+          .exec();
+      } catch (dbErr) {
+        console.warn('[Logs Route] MongoDB query failed, falling back to disk logs:', dbErr);
+      }
+    }
+
+    if (logs.length === 0) {
+      const diskLogs = loadDiskLogs();
+      logs = diskLogs
+        .filter((l) => !category || category === 'all' || l.category === category)
+        .slice(0, limit);
+    }
 
     // Map to frontend expected shape
     const formattedLogs = logs.map((l) => ({
-      id: l.logId,
-      timestamp: new Date(l.timestamp).toLocaleTimeString('en-IN', {
+      id: l.logId || l.id || 'log_' + Math.random().toString(36).substring(2, 8),
+      timestamp: new Date(l.timestamp || Date.now()).toLocaleTimeString('en-IN', {
         timeZone: 'Asia/Kolkata',
         hour: '2-digit',
         minute: '2-digit',
         second: '2-digit',
       }),
-      event: l.event,
-      details: l.details,
-      level: l.level,
-      category: l.category,
+      event: l.event || 'System Event',
+      details: l.details || '',
+      level: l.level || 'info',
+      category: l.category || 'system',
       clientIp: l.clientIp,
     }));
 
@@ -62,7 +100,7 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       return;
     }
 
-    const newLog = await ActivityLogModel.create({
+    const logEntry = {
       logId: 'log_' + Date.now() + '_' + Math.random().toString(36).substring(2, 6),
       event,
       details: details || '',
@@ -70,9 +108,21 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
       level,
       clientIp,
       timestamp: new Date(),
-    });
+    };
 
-    res.json({ success: true, log: newLog });
+    // Save to disk backup
+    const diskLogs = loadDiskLogs();
+    diskLogs.unshift(logEntry);
+    saveDiskLogs(diskLogs);
+
+    // Save to MongoDB if connected
+    if (isDatabaseConnected()) {
+      try {
+        await ActivityLogModel.create(logEntry);
+      } catch (e) {}
+    }
+
+    res.json({ success: true, log: logEntry });
   } catch (err: any) {
     res.status(500).json({ success: false, error: { code: 'LOG_ERROR', message: err?.message } });
   }
@@ -81,7 +131,12 @@ router.post('/', async (req: Request, res: Response): Promise<void> => {
 // DELETE /api/logs - Clear logs (Protected Admin)
 router.delete('/', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
-    await ActivityLogModel.deleteMany({}).exec();
+    saveDiskLogs([]);
+    if (isDatabaseConnected()) {
+      try {
+        await ActivityLogModel.deleteMany({}).exec();
+      } catch (e) {}
+    }
     res.json({
       success: true,
       message: 'Activity logs successfully cleared',
