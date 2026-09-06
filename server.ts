@@ -110,7 +110,7 @@ async function startServer() {
         console.warn('[Startup Migration Warning]:', migErr?.message || migErr);
       }
     } else {
-      console.warn('[Server Startup] Running with database offline. API will return 503 for DB operations.');
+      console.warn('[Server Startup] MongoDB is currently offline or connecting in background. Resilient local persistent disk backup (cms_backup.json) active.');
     }
   });
 

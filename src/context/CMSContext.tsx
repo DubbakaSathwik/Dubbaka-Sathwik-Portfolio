@@ -94,6 +94,7 @@ interface CMSContextType {
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'sathwik_portfolio_auth_token';
+const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v2';
 
 const sanitizeJourney = (items: JourneyItem[]): JourneyItem[] => {
   return (items || []).map((item) => {
@@ -126,11 +127,74 @@ const isValidAvatarUrl = (url?: string): boolean => {
   return true;
 };
 
+// Helper to load cached CMS data instantly (0ms latency, zero flash)
+function getInitialCachedCMSData(): CMSData {
+  try {
+    const cached = localStorage.getItem(CMS_CACHE_KEY);
+    if (cached) {
+      const parsed = JSON.parse(cached);
+      if (parsed && typeof parsed === 'object' && parsed.hero && Array.isArray(parsed.projects)) {
+        return {
+          hero: { ...initialCMSData.hero, ...(parsed.hero || {}) },
+          about: {
+            ...initialCMSData.about,
+            ...(parsed.about || {}),
+            avatarUrl: isValidAvatarUrl(parsed.about?.avatarUrl)
+              ? parsed.about.avatarUrl
+              : initialCMSData.about.avatarUrl,
+          },
+          skills:
+            Array.isArray(parsed.skills) && parsed.skills.length > 0
+              ? parsed.skills
+              : initialCMSData.skills,
+          projects:
+            Array.isArray(parsed.projects) && parsed.projects.length > 0
+              ? parsed.projects
+              : initialCMSData.projects,
+          creativePortfolio:
+            Array.isArray(parsed.creativePortfolio) && parsed.creativePortfolio.length > 0
+              ? parsed.creativePortfolio
+              : initialCMSData.creativePortfolio,
+          gallery:
+            Array.isArray(parsed.gallery) && parsed.gallery.length > 0
+              ? parsed.gallery
+              : initialCMSData.gallery,
+          journey: sanitizeJourney(
+            Array.isArray(parsed.journey) && parsed.journey.length > 0
+              ? parsed.journey
+              : initialCMSData.journey
+          ),
+          resumes:
+            Array.isArray(parsed.resumes) && parsed.resumes.length > 0
+              ? parsed.resumes
+              : initialCMSData.resumes,
+          blogs:
+            Array.isArray(parsed.blogs) && parsed.blogs.length > 0
+              ? parsed.blogs
+              : initialCMSData.blogs,
+          contactInfo: { ...initialCMSData.contactInfo, ...(parsed.contactInfo || {}) },
+          messages: Array.isArray(parsed.messages) ? parsed.messages : [],
+        };
+      }
+    }
+  } catch (e) {}
+  return initialCMSData;
+}
+
 export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [data, setData] = useState<CMSData>(initialCMSData);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [dbConnected, setDbConnected] = useState<boolean>(false);
-  const [isInitialLoaded, setIsInitialLoaded] = useState<boolean>(false);
+  const [data, setData] = useState<CMSData>(getInitialCachedCMSData);
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [dbConnected, setDbConnected] = useState<boolean>(true);
+  const [isInitialLoaded, setIsInitialLoaded] = useState<boolean>(true);
+
+  // Helper to persist to localStorage whenever data changes
+  useEffect(() => {
+    try {
+      if (data && data.hero) {
+        localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(data));
+      }
+    } catch (e) {}
+  }, [data]);
 
   // Authentication State
   const [authToken, setAuthToken] = useState<string | null>(() => {
@@ -832,14 +896,23 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const resetToDefaults = () => {
     setData(initialCMSData);
+    try {
+      localStorage.removeItem(CMS_CACHE_KEY);
+    } catch (e) {}
   };
 
   const updateData = (newData: any) => {
     if (newData && typeof newData === 'object') {
-      setData((prev) => ({
-        ...prev,
-        ...newData,
-      }));
+      setData((prev) => {
+        const next = {
+          ...prev,
+          ...newData,
+        };
+        try {
+          localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(next));
+        } catch (e) {}
+        return next;
+      });
     }
   };
 
