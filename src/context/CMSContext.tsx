@@ -12,6 +12,7 @@ import {
   ResumeOption,
   ContactInfo,
   ContactMessage,
+  IntroData,
 } from '../types';
 import { initialCMSData } from '../data';
 import { sendTelegramConsoleLog } from '../utils/telegram';
@@ -26,6 +27,7 @@ interface CMSContextType {
   logout: () => void;
 
   updateHero: (hero: HeroData) => void;
+  updateIntro: (intro: IntroData) => void;
   updateAbout: (about: AboutData) => void;
   updateSkills: (skills: SkillCategory[]) => void;
 
@@ -181,6 +183,7 @@ function getInitialCachedCMSData(): CMSData {
               ? parsed.blogs
               : initialCMSData.blogs,
           contactInfo: { ...initialCMSData.contactInfo, ...(parsed.contactInfo || {}) },
+          intro: { ...initialCMSData.intro, ...(parsed.intro || {}) },
           messages: Array.isArray(parsed.messages) ? parsed.messages : [],
         };
       }
@@ -204,13 +207,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
   }, [data]);
 
-  // Authentication State
+  // Authentication State: Strictly locked on every page reload
   const [authToken, setAuthToken] = useState<string | null>(() => {
     try {
-      return localStorage.getItem(AUTH_STORAGE_KEY);
-    } catch (e) {
-      return null;
-    }
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+    } catch (e) {}
+    return null;
   });
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
@@ -226,33 +228,6 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Check auth session on startup
-  useEffect(() => {
-    if (!authToken) {
-      setIsAuthenticated(false);
-      return;
-    }
-
-    fetch('/api/auth/me', {
-      headers: { Authorization: `Bearer ${authToken}` },
-    })
-      .then((res) => res.json())
-      .then((json) => {
-        if (json.success && json.authenticated) {
-          setIsAuthenticated(true);
-        } else {
-          setIsAuthenticated(false);
-          setAuthToken(null);
-          try {
-            localStorage.removeItem(AUTH_STORAGE_KEY);
-          } catch (e) {}
-        }
-      })
-      .catch(() => {
-        // If network error, keep current state
-      });
-  }, [authToken]);
-
   // Login handler
   const login = async (password: string): Promise<{ success: boolean; message: string }> => {
     try {
@@ -266,9 +241,6 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (json.success && json.token) {
         setAuthToken(json.token);
         setIsAuthenticated(true);
-        try {
-          localStorage.setItem(AUTH_STORAGE_KEY, json.token);
-        } catch (e) {}
         return { success: true, message: 'Admin authentication successful' };
       } else {
         return {
@@ -338,6 +310,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ? rawData.blogs
           : initialCMSData.blogs,
       contactInfo: { ...initialCMSData.contactInfo, ...(rawData.contactInfo || {}) },
+      intro: { ...initialCMSData.intro, ...(rawData.intro || {}) },
       messages: Array.isArray(rawData.messages) ? rawData.messages : [],
     };
   };
@@ -999,6 +972,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
+  // Intro Loading Animation Data
+  const updateIntro = (intro: IntroData) => setData((prev) => ({ ...prev, intro }));
+
   // Contact Info
   const updateContactInfo = (contactInfo: ContactInfo) =>
     setData((prev) => ({ ...prev, contactInfo }));
@@ -1068,6 +1044,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
   const safeData = {
     ...data,
+    intro: data.intro || initialCMSData.intro,
     projects: data.projects || [],
     creativePortfolio: data.creativePortfolio || [],
     journey: data.journey || [],
@@ -1089,6 +1066,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         login,
         logout,
         updateHero,
+        updateIntro,
         updateAbout,
         updateSkills,
         updateProjects,

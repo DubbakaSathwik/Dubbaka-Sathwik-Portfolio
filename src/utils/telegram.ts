@@ -135,12 +135,28 @@ export const sendTelegramInboxMessage = async (msg: {
 
 export const testTelegramBot = async (): Promise<{ success: boolean; message: string }> => {
   try {
-    const res = await fetch('/api/telegram/test');
-    const data = await res.json();
-    return {
-      success: !!data.success,
-      message: data.message || 'Test complete',
-    };
+    const token = typeof window !== 'undefined' ? localStorage.getItem('sathwik_portfolio_auth_token') : null;
+    const res = await fetch('/api/telegram/test', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      },
+    });
+
+    const contentType = res.headers.get('content-type');
+    if (contentType && contentType.includes('application/json')) {
+      const data = await res.json();
+      return {
+        success: !!data.success,
+        message: data.message || 'Telegram test complete',
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Backend server not returning JSON. Please ensure backend server is running.',
+      };
+    }
   } catch (err: any) {
     console.warn('Failed to test Telegram bot:', err);
     return {

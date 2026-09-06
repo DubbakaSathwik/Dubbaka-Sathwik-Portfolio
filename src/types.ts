@@ -202,6 +202,17 @@ export interface ContactMessage {
   status: 'unread' | 'read' | 'archived';
 }
 
+export interface IntroData {
+  enabled: boolean;
+  firstName: string;
+  lastName: string;
+  welcomeText: string;
+  subtitleText: string;
+  floatingWords: string[];
+  wordsSpeedSeconds?: number;
+  nameDelaySeconds?: number;
+}
+
 export interface CMSData {
   hero: HeroData;
   about: AboutData;
@@ -213,5 +224,6 @@ export interface CMSData {
   blogs: BlogPost[];
   resumes: ResumeOption[];
   contactInfo: ContactInfo;
+  intro?: IntroData;
   messages: ContactMessage[];
 }

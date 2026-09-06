@@ -20,6 +20,7 @@ import { useCMS } from '../context/CMSContext';
 import { CreativeItem } from '../types';
 import { FormattedText } from '../lib/text-formatter';
 import { StackedCardDeck } from './ui/stacked-card-deck';
+import { DataLoadingState } from './ui/data-loading-state';
 
 export function EditingSection() {
   const { data } = useCMS();
@@ -160,11 +161,15 @@ export function EditingSection() {
           </div>
         </div>
 
-        {/* Mobile Stacked Cards Deck View */}
-        {mobileViewMode === 'stack' && (
-          <div className="md:hidden w-full my-2">
-            <StackedCardDeck
-              items={filteredItems}
+        {items.length === 0 ? (
+          <DataLoadingState message="Creative Portfolio Data is Loading....." />
+        ) : (
+          <>
+            {/* Mobile Stacked Cards Deck View */}
+            {mobileViewMode === 'stack' && (
+              <div className="md:hidden w-full my-2">
+                <StackedCardDeck
+                  items={filteredItems}
               keyExtractor={(item: any) => item.id}
               onCardClick={(item: any) => handleOpenItem(item)}
               cardHeightClass="h-[420px]"
@@ -379,6 +384,8 @@ export function EditingSection() {
               </button>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
 

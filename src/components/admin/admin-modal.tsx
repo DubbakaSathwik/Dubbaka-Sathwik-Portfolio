@@ -36,8 +36,11 @@ import {
   Bot,
   HardDrive,
   Terminal,
+  Film,
+  Play,
 } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
+import { initialIntroData } from '../../data';
 import { sendTelegramConsoleLog, testTelegramBot } from '../../utils/telegram';
 import { CreativeItem } from '../../types';
 import { TagSelector } from '../ui/tag-selector';
@@ -217,6 +220,7 @@ export function AdminPortalModal() {
     moveResumeItem,
     swapResumeItems,
     updateContactInfo,
+    updateIntro,
     markMessageRead,
     deleteMessage,
     isAdminModalOpen,
@@ -234,7 +238,7 @@ export function AdminPortalModal() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState<
-    'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'contact' | 'inbox' | 'backup' | 'logs'
+    'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'intro' | 'contact' | 'inbox' | 'backup' | 'logs'
   >('journey');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
@@ -421,6 +425,21 @@ export function AdminPortalModal() {
 
   // About form state
   const [aboutForm, setAboutForm] = useState(data.about);
+
+  // Intro & Loader form state
+  const [introForm, setIntroForm] = useState(data.intro || initialIntroData);
+
+  useEffect(() => {
+    if (data.intro) {
+      setIntroForm(data.intro);
+    }
+  }, [data.intro]);
+
+  const handleSaveIntro = (e: React.FormEvent) => {
+    e.preventDefault();
+    updateIntro(introForm);
+    showSaveToast('Cinematic Intro & Animation Settings');
+  };
 
   // Journey Form State
   const [editingJourneyId, setEditingJourneyId] = useState<string | null>(null);
@@ -1121,6 +1140,7 @@ export function AdminPortalModal() {
                     { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                     { id: 'hero', label: 'Hero Section', icon: Sparkles },
                     { id: 'about', label: 'About Details', icon: User },
+                    { id: 'intro', label: 'Intro & Loader', icon: Film },
                     { id: 'contact', label: 'Contact Details', icon: Mail },
                     {
                       id: 'inbox',
@@ -1167,6 +1187,7 @@ export function AdminPortalModal() {
                               { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                               { id: 'hero', label: 'Hero Section', icon: Sparkles },
                               { id: 'about', label: 'About Details', icon: User },
+                              { id: 'intro', label: 'Intro & Loader', icon: Film },
                               { id: 'contact', label: 'Contact Details', icon: Mail },
                               { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
                               { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
@@ -1185,6 +1206,7 @@ export function AdminPortalModal() {
                             { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                             { id: 'hero', label: 'Hero Section', icon: Sparkles },
                             { id: 'about', label: 'About Details', icon: User },
+                            { id: 'intro', label: 'Intro & Loader', icon: Film },
                             { id: 'contact', label: 'Contact Details', icon: Mail },
                             { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
                             { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
@@ -1215,7 +1237,7 @@ export function AdminPortalModal() {
                         >
                           <div className="px-3 py-1.5 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider border-b border-zinc-800 flex items-center justify-between">
                             <span>Select CMS Section</span>
-                            <span className="text-emerald-400 font-normal">11 Sections</span>
+                            <span className="text-emerald-400 font-normal">12 Sections</span>
                           </div>
                           {[
                             { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
@@ -1225,6 +1247,7 @@ export function AdminPortalModal() {
                             { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                             { id: 'hero', label: 'Hero Section', icon: Sparkles },
                             { id: 'about', label: 'About Details', icon: User },
+                            { id: 'intro', label: 'Intro & Loader', icon: Film },
                             { id: 'contact', label: 'Contact Details', icon: Mail },
                             { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
                             { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
@@ -1267,6 +1290,7 @@ export function AdminPortalModal() {
                       { id: 'resumes', label: 'Resumes', icon: FileText },
                       { id: 'hero', label: 'Hero', icon: Sparkles },
                       { id: 'about', label: 'About', icon: User },
+                      { id: 'intro', label: 'Intro & Loader', icon: Film },
                       { id: 'contact', label: 'Contact', icon: Mail },
                       { id: 'inbox', label: 'Inbox', icon: Inbox },
                       { id: 'backup', label: 'Backup', icon: HardDrive },
@@ -3648,6 +3672,265 @@ export function AdminPortalModal() {
                           className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
                         >
                           <Save className="w-4 h-4" /> Save About Page CMS (Syncs to MongoDB)
+                        </button>
+                      </div>
+                    </form>
+                  )}
+
+                  {/* INTRO & ANIMATION TAB */}
+                  {activeTab === 'intro' && (
+                    <form onSubmit={handleSaveIntro} className="space-y-8">
+                      <div className="border-b border-zinc-800 pb-4 flex items-center justify-between flex-wrap gap-2">
+                        <div>
+                          <h4 className="text-xl font-bold text-white flex items-center gap-2">
+                            <Film className="w-5 h-5 text-emerald-400" />
+                            <span>Intro & Cinematic Loader CMS</span>
+                          </h4>
+                          <p className="text-xs text-zinc-400">
+                            Configure the opening cinematic screen, animated floating tags, letter dispersal effects, and duration timings.
+                          </p>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              window.location.reload();
+                            }}
+                            className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-700/60 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                            title="Reload page to test full intro sequence"
+                          >
+                            <Play className="w-3.5 h-3.5 text-emerald-400" /> Preview / Replay
+                          </button>
+                          <span className="px-3 py-1 rounded-full text-xs font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
+                            <Sparkles className="w-3.5 h-3.5" />
+                            <span>Syncs with MongoDB</span>
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* 1. MASTER TOGGLE SWITCH */}
+                      <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 flex items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <span className="text-sm font-bold text-white font-mono">Cinematic Intro Loading Screen</span>
+                            <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                              introForm.enabled !== false
+                                ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                                : 'bg-zinc-900 text-zinc-500 border border-zinc-800'
+                            }`}>
+                              {introForm.enabled !== false ? 'ENABLED' : 'DISABLED'}
+                            </span>
+                          </div>
+                          <p className="text-xs text-zinc-400">
+                            When enabled, visitors will see the full cinematic animation when opening your portfolio. If disabled, visitors directly land on the Hero section.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => setIntroForm({ ...introForm, enabled: introForm.enabled === false ? true : false })}
+                          className={`shrink-0 px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                            introForm.enabled !== false
+                              ? 'bg-emerald-600 text-white shadow-[0_0_15px_rgba(16,185,129,0.4)]'
+                              : 'bg-zinc-900 text-zinc-500 border border-zinc-800 hover:text-zinc-300'
+                          }`}
+                        >
+                          {introForm.enabled !== false ? '✓ ENABLED' : '✕ DISABLED'}
+                        </button>
+                      </div>
+
+                      {/* 2. NAME STAGE CONFIGURATION */}
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
+                        <label className="text-xs font-mono text-emerald-400 font-bold block border-b border-zinc-800/80 pb-2">
+                          1. NAME SEQUENCE (1ST & 2ND STAGE)
+                        </label>
+                        <p className="text-xs text-zinc-400">
+                          The animation first displays the First Name in glowing emerald, then smoothly slides down to show the Last Name on top of First Name.
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-mono text-zinc-400 block mb-1">First Name (Bottom Word)</label>
+                            <input
+                              type="text"
+                              value={introForm.firstName || ''}
+                              onChange={(e) => setIntroForm({ ...introForm, firstName: e.target.value })}
+                              placeholder="e.g. Sathwik"
+                              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 focus:border-emerald-500 focus:outline-none text-xs text-white font-mono"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-mono text-zinc-400 block mb-1">Last Name (Top Word)</label>
+                            <input
+                              type="text"
+                              value={introForm.lastName || ''}
+                              onChange={(e) => setIntroForm({ ...introForm, lastName: e.target.value })}
+                              placeholder="e.g. Dubbaka"
+                              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 focus:border-emerald-500 focus:outline-none text-xs text-white font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 3. WELCOME STAGE & DISPERSAL */}
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
+                        <label className="text-xs font-mono text-emerald-400 font-bold block border-b border-zinc-800/80 pb-2">
+                          2. WELCOME STAGE & SCATTERING EFFECT
+                        </label>
+                        <p className="text-xs text-zinc-400">
+                          After the name fades, this single-line message appears in bold emerald and each individual letter slowly scatters into particles.
+                        </p>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div>
+                            <label className="text-xs font-mono text-zinc-400 block mb-1">Welcome Text Headline</label>
+                            <input
+                              type="text"
+                              value={introForm.welcomeText || ''}
+                              onChange={(e) => setIntroForm({ ...introForm, welcomeText: e.target.value })}
+                              placeholder="e.g. Welcome to my portfolio."
+                              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 focus:border-emerald-500 focus:outline-none text-xs text-white font-mono"
+                            />
+                          </div>
+
+                          <div>
+                            <label className="text-xs font-mono text-zinc-400 block mb-1">Subtitle Pill Badge Text</label>
+                            <input
+                              type="text"
+                              value={introForm.subtitleText || ''}
+                              onChange={(e) => setIntroForm({ ...introForm, subtitleText: e.target.value })}
+                              placeholder="e.g. ENTERING DEVELOPER PORTFOLIO"
+                              className="w-full px-4 py-3 rounded-xl bg-zinc-900 border border-zinc-800 focus:border-emerald-500 focus:outline-none text-xs text-white font-mono"
+                            />
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 4. FLOATING BACKGROUND WORDS */}
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
+                        <div className="flex items-center justify-between border-b border-zinc-800/80 pb-2">
+                          <label className="text-xs font-mono text-emerald-400 font-bold block">
+                            3. FLOATING BACKGROUND WORDS ({introForm.floatingWords?.length || 0})
+                          </label>
+                          <span className="text-[10px] font-mono text-zinc-500">
+                            Desktop: 360° perimeter • Mobile: Above & Below only
+                          </span>
+                        </div>
+                        <p className="text-xs text-zinc-400">
+                          These keywords float slowly into the center of the screen with glowing trails before dissolving:
+                        </p>
+
+                        <SmartTagInput
+                          tags={introForm.floatingWords || []}
+                          onChange={(words) => setIntroForm({ ...introForm, floatingWords: words })}
+                          label="Floating Keywords (Type and press comma or Enter)"
+                          placeholder="e.g. Full-Stack Developer, AI & ML, React..."
+                        />
+
+                        {/* Quick Presets */}
+                        <div className="space-y-1.5 pt-1">
+                          <span className="text-[10px] font-mono text-zinc-500 uppercase">Quick Add Suggestions:</span>
+                          <div className="flex items-center gap-1.5 flex-wrap">
+                            {[
+                              'Full-Stack Developer',
+                              'React & Node.js',
+                              'Creative Designer',
+                              'Artificial Intelligence',
+                              'Video Editor',
+                              'Digital Co-Lead',
+                              'Web Development',
+                              'Hackathon Lead',
+                              'NSS Volunteer',
+                              'Problem Solver',
+                              'IEEE Coordinator',
+                              'Student Coordinator',
+                            ].map((sug) => {
+                              const already = (introForm.floatingWords || []).includes(sug);
+                              return (
+                                <button
+                                  key={sug}
+                                  type="button"
+                                  disabled={already}
+                                  onClick={() => {
+                                    if (!already) {
+                                      setIntroForm({
+                                        ...introForm,
+                                        floatingWords: [...(introForm.floatingWords || []), sug],
+                                      });
+                                    }
+                                  }}
+                                  className={`text-[10px] font-mono px-2 py-0.5 rounded transition-all cursor-pointer ${
+                                    already
+                                      ? 'bg-zinc-900 text-zinc-600 border border-zinc-800/40 cursor-not-allowed'
+                                      : 'bg-emerald-950/60 text-emerald-300 border border-emerald-500/30 hover:bg-emerald-900/60 hover:text-white'
+                                  }`}
+                                >
+                                  + {sug}
+                                </button>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* 5. TIMINGS & SPEED SETTINGS */}
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 space-y-4">
+                        <label className="text-xs font-mono text-emerald-400 font-bold block border-b border-zinc-800/80 pb-2">
+                          4. ANIMATION TIMINGS & SLOW-MOTION CONTROLS
+                        </label>
+
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                          <div className="space-y-2 p-3.5 rounded-xl bg-zinc-900 border border-zinc-800">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-mono text-zinc-300 font-semibold">Floating Words Speed</label>
+                              <span className="text-xs font-mono font-bold text-emerald-400">
+                                {introForm.wordsSpeedSeconds || 4.8}s
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="2.5"
+                              max="8.0"
+                              step="0.1"
+                              value={introForm.wordsSpeedSeconds || 4.8}
+                              onChange={(e) => setIntroForm({ ...introForm, wordsSpeedSeconds: parseFloat(e.target.value) })}
+                              className="w-full accent-emerald-500 cursor-pointer"
+                            />
+                            <p className="text-[10px] text-zinc-500 font-mono">
+                              Higher value = slower, more cinematic convergence towards center.
+                            </p>
+                          </div>
+
+                          <div className="space-y-2 p-3.5 rounded-xl bg-zinc-900 border border-zinc-800">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-mono text-zinc-300 font-semibold">Name Delay After Words End</label>
+                              <span className="text-xs font-mono font-bold text-emerald-400">
+                                {introForm.nameDelaySeconds || 1.2}s
+                              </span>
+                            </div>
+                            <input
+                              type="range"
+                              min="0.4"
+                              max="4.0"
+                              step="0.1"
+                              value={introForm.nameDelaySeconds || 1.2}
+                              onChange={(e) => setIntroForm({ ...introForm, nameDelaySeconds: parseFloat(e.target.value) })}
+                              className="w-full accent-emerald-500 cursor-pointer"
+                            />
+                            <p className="text-[10px] text-zinc-500 font-mono">
+                              How long your name stays on screen after words disappear before welcome begins.
+                            </p>
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* SUBMIT BUTTON */}
+                      <div className="pt-2 flex items-center gap-3">
+                        <button
+                          type="submit"
+                          className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
+                        >
+                          <Save className="w-4 h-4" /> Save Intro Settings (Syncs to MongoDB)
                         </button>
                       </div>
                     </form>

@@ -56,12 +56,20 @@ export function Navbar() {
     setTimeout(() => {
       const element = document.getElementById(targetId);
       if (element) {
-        element.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        const header = document.getElementById('main-header');
+        const headerHeight = header ? header.getBoundingClientRect().height : 80;
+        const elementPosition = element.getBoundingClientRect().top;
+        const offsetPosition = elementPosition + window.pageYOffset - headerHeight;
+
+        window.scrollTo({
+          top: Math.max(0, offsetPosition),
+          behavior: 'smooth',
+        });
         setActiveSection(targetId);
       } else {
         window.location.hash = href;
       }
-    }, 50);
+    }, 30);
   };
 
   return (

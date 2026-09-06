@@ -31,6 +31,10 @@ canvas:active {
 }
 
 /* Custom Neon Emerald & Dark Cyberpunk Scrollbar across entire App */
+html {
+  scroll-behavior: smooth;
+}
+
 html, body {
   scrollbar-width: thin;
   scrollbar-color: rgba(16, 185, 129, 0.45) #09090b;

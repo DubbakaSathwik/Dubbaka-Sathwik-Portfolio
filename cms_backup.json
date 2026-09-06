@@ -1155,5 +1155,28 @@
       }
     ]
   },
+  "intro": {
+    "enabled": true,
+    "firstName": "Sathwik",
+    "lastName": "Dubbaka",
+    "welcomeText": "Welcome to my portfolio.",
+    "subtitleText": "ENTERING DEVELOPER PORTFOLIO",
+    "floatingWords": [
+      "Full-Stack Developer",
+      "React & Node.js",
+      "Creative Designer",
+      "Artificial Intelligence",
+      "Video Editor",
+      "Digital Co-Lead",
+      "Web Development",
+      "Hackathon Lead",
+      "NSS Volunteer",
+      "Problem Solver",
+      "IEEE Coordinator",
+      "Student Coordinator"
+    ],
+    "wordsSpeedSeconds": 4.8,
+    "nameDelaySeconds": 1.2
+  },
   "messages": []
 }

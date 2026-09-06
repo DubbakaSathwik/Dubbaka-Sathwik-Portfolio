@@ -5,6 +5,7 @@ import { useCMS } from '../context/CMSContext';
 import { GalleryItem } from '../types';
 import { FormattedText } from '../lib/text-formatter';
 import { StackedCardDeck } from './ui/stacked-card-deck';
+import { DataLoadingState } from './ui/data-loading-state';
 
 // Mini card slideshow with 4-second auto shift & sliding motion effect
 function GalleryCardSlideshow({ images, title }: { images: string[]; title: string }) {
@@ -217,11 +218,15 @@ export function GallerySection() {
           </div>
         </div>
 
-        {/* Mobile Stacked Cards Deck View */}
-        {mobileViewMode === 'stack' && (
-          <div className="md:hidden w-full my-2">
-            <StackedCardDeck
-              items={filteredItems}
+        {items.length === 0 ? (
+          <DataLoadingState message="Certificates & Credentials Data is Loading....." />
+        ) : (
+          <>
+            {/* Mobile Stacked Cards Deck View */}
+            {mobileViewMode === 'stack' && (
+              <div className="md:hidden w-full my-2">
+                <StackedCardDeck
+                  items={filteredItems}
               keyExtractor={(item: any) => item.id}
               onCardClick={(item: any) => handleOpenDetail(item)}
               cardHeightClass="h-[430px]"
@@ -435,6 +440,8 @@ export function GallerySection() {
               </button>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
 

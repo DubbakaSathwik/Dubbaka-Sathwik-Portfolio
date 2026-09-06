@@ -42,7 +42,7 @@ export function HeroSection() {
             initial={{ opacity: 0, x: -30 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.8, delay: 0.2 }}
-            className="lg:col-span-6 text-center lg:text-left space-y-6"
+            className="lg:col-span-6 text-center lg:text-left space-y-6 relative z-20 pointer-events-auto"
           >
             <h1 className="tracking-tight leading-[1.08] space-y-1">
               <span className="block text-lg sm:text-2xl font-mono text-white font-semibold tracking-wider">
@@ -66,31 +66,37 @@ export function HeroSection() {
             </p>
 
             {/* Action Buttons */}
-            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2">
-              <button
+            <div className="flex flex-wrap items-center justify-center lg:justify-start gap-3 pt-2 relative z-30 pointer-events-auto">
+              <motion.button
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => scrollToSection('projects')}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-sm shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:shadow-[0_0_35px_rgba(16,185,129,0.7)] transition-all transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-emerald-600 text-white font-semibold text-sm shadow-[0_0_25px_rgba(16,185,129,0.4)] hover:shadow-[0_0_35px_rgba(16,185,129,0.7)] transition-all duration-300 cursor-pointer"
               >
                 <Code2 className="w-4 h-4" />
                 <span>{hero.primaryBtnText || 'View My Work'}</span>
                 <ChevronRight className="w-4 h-4 text-emerald-200" />
-              </button>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => setIsResumeModalOpen(true)}
-                className="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800 text-white font-semibold text-sm border border-emerald-500/30 hover:border-emerald-500/60 shadow-lg transition-all transform hover:-translate-y-0.5"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800/90 text-white font-semibold text-sm border border-emerald-500/30 hover:border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-[0_0_25px_rgba(16,185,129,0.45)] transition-all duration-300 cursor-pointer group"
               >
-                <FileText className="w-4 h-4 text-emerald-400" />
-                <span>{hero.secondaryBtnText || 'Download Resume'}</span>
-              </button>
+                <FileText className="w-4 h-4 text-emerald-400 group-hover:scale-110 group-hover:text-emerald-300 transition-all duration-300" />
+                <span className="group-hover:text-emerald-300 transition-colors duration-300">{hero.secondaryBtnText || 'Download Resume'}</span>
+              </motion.button>
 
-              <button
+              <motion.button
+                whileHover={{ y: -2, scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
                 onClick={() => scrollToSection('contact')}
-                className="inline-flex items-center gap-2 px-5 py-3.5 rounded-xl bg-zinc-950/80 hover:bg-zinc-900 text-zinc-300 hover:text-white font-medium text-sm border border-white/10 hover:border-white/20 transition-all"
+                className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-xl bg-zinc-900/90 hover:bg-zinc-800/90 text-white font-semibold text-sm border border-emerald-500/30 hover:border-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-[0_0_25px_rgba(16,185,129,0.45)] transition-all duration-300 cursor-pointer group"
               >
-                <Mail className="w-4 h-4 text-zinc-400" />
-                <span>{hero.tertiaryBtnText || 'Contact Me'}</span>
-              </button>
+                <Mail className="w-4 h-4 text-emerald-400 group-hover:scale-110 group-hover:text-emerald-300 transition-all duration-300" />
+                <span className="group-hover:text-emerald-300 transition-colors duration-300">{hero.tertiaryBtnText || 'Contact Me'}</span>
+              </motion.button>
             </div>
 
             {/* Quick Metrics Bar - 2x2 Grid Layout */}
@@ -127,10 +133,10 @@ export function HeroSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, delay: 0.3 }}
-            className="hidden md:flex lg:col-span-6 relative items-center justify-center w-full min-h-[420px] sm:min-h-[500px] overflow-visible"
+            className="hidden md:flex lg:col-span-6 relative z-10 items-center justify-center w-full min-h-[420px] sm:min-h-[500px] overflow-visible pointer-events-none"
           >
-            <div className="relative w-full h-[420px] sm:h-[500px] lg:h-[560px] flex items-center justify-center pointer-events-auto overflow-visible">
-              <div className="absolute inset-0 -left-[25%] -right-[25%] -top-[15%] -bottom-[15%] flex items-center justify-center -translate-x-10 sm:-translate-x-16 lg:-translate-x-20">
+            <div className="relative w-full h-[420px] sm:h-[500px] lg:h-[560px] flex items-center justify-center pointer-events-none overflow-visible">
+              <div className="absolute inset-0 -left-[25%] -right-[25%] -top-[15%] -bottom-[15%] flex items-center justify-center -translate-x-10 sm:-translate-x-16 lg:-translate-x-20 pointer-events-auto">
                 <SplineScene
                   scene="https://prod.spline.design/tzncNju5E3SjXbxy/scene.splinecode"
                   className="w-full h-full flex items-center justify-center scale-80 sm:scale-85 lg:scale-90 transform transition-transform"

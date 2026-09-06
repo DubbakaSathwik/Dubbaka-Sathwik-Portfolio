@@ -6,6 +6,7 @@ import { Project } from '../types';
 import { FormattedText } from '../lib/text-formatter';
 import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
 import { StackedCardDeck } from './ui/stacked-card-deck';
+import { DataLoadingState } from './ui/data-loading-state';
 
 // Mini card slideshow with 4-second auto shift & sliding motion effect
 function ProjectCardSlideshow({ images, title }: { images: string[]; title: string }) {
@@ -198,70 +199,74 @@ export function ProjectsSection() {
           </div>
         </div>
 
-        {/* Mobile Stacked Cards Deck View */}
-        {mobileViewMode === 'stack' && (
-          <div className="md:hidden w-full my-2">
-            <StackedCardDeck
-              items={filteredProjects}
-              keyExtractor={(item: any) => item.id}
-              onCardClick={(project: any) => setSelectedProject(project)}
-              cardHeightClass="h-[440px]"
-              renderCard={(project: any) => {
-                const projectImageList = project.images && project.images.length > 0
-                  ? project.images
-                  : [project.thumbnail || (project as any).image].filter(Boolean);
+        {projects.length === 0 ? (
+          <DataLoadingState message="Projects Data is Loading....." />
+        ) : (
+          <>
+            {/* Mobile Stacked Cards Deck View */}
+            {mobileViewMode === 'stack' && (
+              <div className="md:hidden w-full my-2">
+                <StackedCardDeck
+                  items={filteredProjects}
+                  keyExtractor={(item: any) => item.id}
+                  onCardClick={(project: any) => setSelectedProject(project)}
+                  cardHeightClass="h-[440px]"
+                  renderCard={(project: any) => {
+                    const projectImageList = project.images && project.images.length > 0
+                      ? project.images
+                      : [project.thumbnail || (project as any).image].filter(Boolean);
 
-                return (
-                  <div className="w-full h-full p-4 flex flex-col justify-between bg-zinc-950 text-left">
-                    <div>
-                      <div className="relative h-36 w-full rounded-xl overflow-hidden bg-zinc-900 mb-3">
-                        <div className="pointer-events-none w-full h-full">
-                          <ProjectCardSlideshow images={projectImageList} title={project.title} />
+                    return (
+                      <div className="w-full h-full p-4 flex flex-col justify-between bg-zinc-950 text-left">
+                        <div>
+                          <div className="relative h-36 w-full rounded-xl overflow-hidden bg-zinc-900 mb-3">
+                            <div className="pointer-events-none w-full h-full">
+                              <ProjectCardSlideshow images={projectImageList} title={project.title} />
+                            </div>
+                            <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80 pointer-events-none" />
+                            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-zinc-950/80 text-emerald-400 border border-emerald-500/30">
+                              {project.category}
+                            </span>
+                            {project.featured && (
+                              <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-md">
+                                <Sparkles className="w-2.5 h-2.5" /> Featured
+                              </span>
+                            )}
+                          </div>
+
+                          <h3 className="text-base font-bold text-white hover:text-emerald-400 transition-colors flex items-center justify-between gap-1">
+                            <span className="line-clamp-1">{project.title}</span>
+                            <ArrowUpRight className="w-4 h-4 text-emerald-400 shrink-0" />
+                          </h3>
+
+                          <div className="text-zinc-400 text-xs line-clamp-3 mt-1.5 leading-relaxed">
+                            <FormattedText text={project.description} />
+                          </div>
+
+                          <div className="flex flex-wrap gap-1 pt-2">
+                            {(project.tags || project.technologies || []).slice(0, 4).map((tag) => (
+                              <span key={tag} className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[9px] font-mono border border-zinc-700/40">
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
                         </div>
-                        <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80 pointer-events-none" />
-                        <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-zinc-950/80 text-emerald-400 border border-emerald-500/30">
-                          {project.category}
-                        </span>
-                        {project.featured && (
-                          <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-md">
-                            <Sparkles className="w-2.5 h-2.5" /> Featured
+
+                        <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-400 mt-2">
+                          <span className="font-mono text-[10px] text-emerald-400 font-bold">{project.category}</span>
+                          <span className="text-emerald-400 text-[11px] font-bold flex items-center gap-1">
+                            View Details &rarr;
                           </span>
-                        )}
+                        </div>
                       </div>
+                    );
+                  }}
+                />
+              </div>
+            )}
 
-                      <h3 className="text-base font-bold text-white hover:text-emerald-400 transition-colors flex items-center justify-between gap-1">
-                        <span className="line-clamp-1">{project.title}</span>
-                        <ArrowUpRight className="w-4 h-4 text-emerald-400 shrink-0" />
-                      </h3>
-
-                      <div className="text-zinc-400 text-xs line-clamp-3 mt-1.5 leading-relaxed">
-                        <FormattedText text={project.description} />
-                      </div>
-
-                      <div className="flex flex-wrap gap-1 pt-2">
-                        {(project.tags || project.technologies || []).slice(0, 4).map((tag) => (
-                          <span key={tag} className="px-1.5 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[9px] font-mono border border-zinc-700/40">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="pt-2 border-t border-zinc-800/60 flex items-center justify-between text-xs text-zinc-400 mt-2">
-                      <span className="font-mono text-[10px] text-emerald-400 font-bold">{project.category}</span>
-                      <span className="text-emerald-400 text-[11px] font-bold flex items-center gap-1">
-                        View Details &rarr;
-                      </span>
-                    </div>
-                  </div>
-                );
-              }}
-            />
-          </div>
-        )}
-
-        {/* Projects Grid (Laptop & Mobile Grid View) */}
-        <div className={`${mobileViewMode === 'stack' ? 'hidden md:flex' : 'flex'} flex-wrap justify-center gap-3 sm:gap-6 lg:gap-8 min-h-[500px]`}>
+            {/* Projects Grid (Laptop & Mobile Grid View) */}
+            <div className={`${mobileViewMode === 'stack' ? 'hidden md:flex' : 'flex'} flex-wrap justify-center gap-3 sm:gap-6 lg:gap-8 min-h-[500px]`}>
           {currentProjects.map((project, idx) => {
             const projectImageList = project.images && project.images.length > 0
               ? project.images
@@ -378,6 +383,8 @@ export function ProjectsSection() {
               </button>
             </div>
           </div>
+        )}
+          </>
         )}
       </div>
 

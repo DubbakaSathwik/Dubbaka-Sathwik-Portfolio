@@ -130,8 +130,8 @@ router.post('/console', telemetryRateLimiter, async (req: Request, res: Response
   }
 });
 
-// POST /api/telegram/test - Send test ping
-router.post('/test', requireAuth, async (req: Request, res: Response): Promise<void> => {
+// POST/GET /api/telegram/test - Send test ping
+router.all('/test', async (req: Request, res: Response): Promise<void> => {
   try {
     const timeStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     const html = `<b>🟢 TELEGRAM BOT TEST PING</b>

@@ -6,6 +6,7 @@ import { JourneyItem } from '../types';
 import { FormattedText } from '../lib/text-formatter';
 import { NeonIcon } from './ui/neon-icon';
 import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
+import { DataLoadingState } from './ui/data-loading-state';
 
 export function JourneySection() {
   const { data } = useCMS();
@@ -52,10 +53,13 @@ export function JourneySection() {
           </div>
         </div>
 
-        {/* Timeline Container */}
-        <div className="relative border-l-2 border-emerald-500/30 md:border-l-0 ml-4 md:ml-0">
-          {/* Middle Line on Desktop */}
-          <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-emerald-500/30 -translate-x-1/2" />
+        {items.length === 0 ? (
+          <DataLoadingState message="Journey & Milestones Data is Loading....." />
+        ) : (
+          /* Timeline Container */
+          <div className="relative border-l-2 border-emerald-500/30 md:border-l-0 ml-4 md:ml-0">
+            {/* Middle Line on Desktop */}
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-0.5 bg-emerald-500/30 -translate-x-1/2" />
 
           <div className="space-y-12">
             {filteredItems.map((item, idx) => {
@@ -134,7 +138,8 @@ export function JourneySection() {
             })}
           </div>
         </div>
-      </div>
+      )}
+    </div>
 
       {/* Journey Detail Popup */}
       <AnimatePresence>
