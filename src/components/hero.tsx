@@ -136,10 +136,10 @@ export function HeroSection() {
             className="hidden md:flex lg:col-span-6 relative z-10 items-center justify-center w-full min-h-[420px] sm:min-h-[500px] overflow-visible pointer-events-none"
           >
             <div className="relative w-full h-[420px] sm:h-[500px] lg:h-[560px] flex items-center justify-center pointer-events-none overflow-visible">
-              <div className="absolute inset-0 flex items-center justify-center -translate-x-8 sm:-translate-x-12 lg:-translate-x-16 pointer-events-auto">
+              <div className="absolute inset-0 flex items-center justify-center -translate-x-8 sm:-translate-x-12 lg:-translate-x-16 pointer-events-none">
                 <SplineScene
                   scene="https://prod.spline.design/tzncNju5E3SjXbxy/scene.splinecode"
-                  className="w-full h-full flex items-center justify-center scale-80 sm:scale-85 lg:scale-90 transform transition-transform pointer-events-auto"
+                  className="w-full h-full flex items-center justify-center scale-80 sm:scale-85 lg:scale-90 transform transition-transform pointer-events-none"
                 />
               </div>
             </div>
