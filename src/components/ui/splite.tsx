@@ -71,8 +71,25 @@ export function SplineScene({ scene, className, style, onLoad }: SplineSceneProp
       const canvas = splineApp.canvas || containerRef.current?.querySelector('canvas')
       if (canvas) {
         canvas.style.setProperty('cursor', 'default', 'important')
-        canvas.style.setProperty('touch-action', 'auto', 'important')
-        canvas.style.setProperty('pointer-events', 'none', 'important')
+        canvas.style.setProperty('touch-action', 'pan-y', 'important')
+        canvas.style.setProperty('pointer-events', 'auto', 'important')
+
+        const handleWheel = (e: WheelEvent) => {
+          e.stopPropagation()
+          e.stopImmediatePropagation()
+          let deltaY = e.deltaY
+          if (e.deltaMode === 1) {
+            deltaY *= 33
+          } else if (e.deltaMode === 2) {
+            deltaY *= window.innerHeight
+          }
+          window.scrollBy({
+            top: deltaY,
+            left: 0,
+            behavior: 'auto',
+          })
+        }
+        canvas.addEventListener('wheel', handleWheel, { capture: true, passive: false })
       }
     }
     if (onLoad) {
@@ -81,7 +98,7 @@ export function SplineScene({ scene, className, style, onLoad }: SplineSceneProp
   }
 
   return (
-    <div ref={containerRef} className="w-full h-full relative select-none pointer-events-none">
+    <div ref={containerRef} className="w-full h-full relative select-none pointer-events-auto">
       <Suspense 
         fallback={
           <div className="w-full h-full flex items-center justify-center">
@@ -92,7 +109,7 @@ export function SplineScene({ scene, className, style, onLoad }: SplineSceneProp
         <Spline
           scene={scene}
           className={className}
-          style={{ cursor: 'default', touchAction: 'auto', pointerEvents: 'none', ...style }}
+          style={{ cursor: 'default', touchAction: 'pan-y', pointerEvents: 'auto', ...style }}
           onLoad={handleLoad}
         />
       </Suspense>
