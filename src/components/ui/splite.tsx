@@ -16,40 +16,50 @@ export function SplineScene({ scene, className, style, onLoad }: SplineSceneProp
     if (!container) return
 
     // Allow mouse interaction (hover, look, click), but ensure mouse wheel
-    // scrolls the page naturally across all OS/browsers with correct deltaMode scaling
+    // scrolls the page naturally across all OS/browsers without Spline hijacking zoom
     const handleWheel = (e: WheelEvent) => {
-      // Prevent Spline camera zoom from hijacking scroll
+      // Prevent Spline runtime from capturing wheel and zooming the camera
+      e.stopPropagation()
       e.stopImmediatePropagation()
 
       let deltaY = e.deltaY
-      let deltaX = e.deltaX
 
       // Normalize deltaMode: 0 = pixels, 1 = lines (common on Windows mouse wheel), 2 = pages
       if (e.deltaMode === 1) {
-        deltaY *= 38
-        deltaX *= 38
+        deltaY *= 33
       } else if (e.deltaMode === 2) {
         deltaY *= window.innerHeight
-        deltaX *= window.innerWidth
       }
 
       window.scrollBy({
         top: deltaY,
-        left: deltaX,
+        left: 0,
         behavior: 'auto',
       })
     }
 
-    container.addEventListener('wheel', handleWheel, { capture: true, passive: true })
+    // Attach wheel listener with capture: true & passive: false to override Spline camera zoom
+    container.addEventListener('wheel', handleWheel, { capture: true, passive: false })
 
-    // Also attach to canvas directly once mounted
-    const canvas = container.querySelector('canvas')
-    if (canvas) {
-      canvas.addEventListener('wheel', handleWheel, { capture: true, passive: true })
+    const attachCanvasEvents = () => {
+      const canvas = container.querySelector('canvas')
+      if (canvas) {
+        canvas.style.setProperty('touch-action', 'pan-y', 'important')
+        canvas.addEventListener('wheel', handleWheel, { capture: true, passive: false })
+      }
     }
 
+    attachCanvasEvents()
+
+    const observer = new MutationObserver(() => {
+      attachCanvasEvents()
+    })
+    observer.observe(container, { childList: true, subtree: true })
+
     return () => {
+      observer.disconnect()
       container.removeEventListener('wheel', handleWheel, { capture: true })
+      const canvas = container.querySelector('canvas')
       if (canvas) {
         canvas.removeEventListener('wheel', handleWheel, { capture: true })
       }
@@ -65,23 +75,21 @@ export function SplineScene({ scene, className, style, onLoad }: SplineSceneProp
         canvas.style.setProperty('pointer-events', 'auto', 'important')
 
         const handleWheel = (e: WheelEvent) => {
+          e.stopPropagation()
           e.stopImmediatePropagation()
           let deltaY = e.deltaY
-          let deltaX = e.deltaX
           if (e.deltaMode === 1) {
-            deltaY *= 38
-            deltaX *= 38
+            deltaY *= 33
           } else if (e.deltaMode === 2) {
             deltaY *= window.innerHeight
-            deltaX *= window.innerWidth
           }
           window.scrollBy({
             top: deltaY,
-            left: deltaX,
+            left: 0,
             behavior: 'auto',
           })
         }
-        canvas.addEventListener('wheel', handleWheel, { capture: true, passive: true })
+        canvas.addEventListener('wheel', handleWheel, { capture: true, passive: false })
       }
     }
     if (onLoad) {
