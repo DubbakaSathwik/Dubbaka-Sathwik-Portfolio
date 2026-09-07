@@ -88,7 +88,7 @@ export function ProjectsSection() {
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('stack');
+  const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('grid');
 
   const ITEMS_PER_PAGE = 6;
 

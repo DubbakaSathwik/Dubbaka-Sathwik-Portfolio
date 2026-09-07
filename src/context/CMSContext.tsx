@@ -104,7 +104,7 @@ interface CMSContextType {
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'sathwik_portfolio_auth_token';
-const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v2';
+const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v5';
 
 const sanitizeJourney = (items: JourneyItem[]): JourneyItem[] => {
   return (items || []).map((item) => {
@@ -202,32 +202,32 @@ function getInitialCachedCMSData(): CMSData {
               : initialCMSData.about.avatarUrl,
           },
           skills:
-            Array.isArray(parsed.skills) && parsed.skills.length > 0
+            Array.isArray(parsed.skills) && parsed.skills.length >= initialCMSData.skills.length
               ? parsed.skills
               : initialCMSData.skills,
           projects:
-            Array.isArray(parsed.projects) && parsed.projects.length > 0
+            Array.isArray(parsed.projects) && parsed.projects.length >= initialCMSData.projects.length
               ? parsed.projects
               : initialCMSData.projects,
           creativePortfolio:
-            Array.isArray(parsed.creativePortfolio) && parsed.creativePortfolio.length > 0
+            Array.isArray(parsed.creativePortfolio) && parsed.creativePortfolio.length >= initialCMSData.creativePortfolio.length
               ? parsed.creativePortfolio
               : initialCMSData.creativePortfolio,
           gallery:
-            Array.isArray(parsed.gallery) && parsed.gallery.length > 0
+            Array.isArray(parsed.gallery) && parsed.gallery.length >= initialCMSData.gallery.length
               ? parsed.gallery
               : initialCMSData.gallery,
           journey: sanitizeJourney(
-            Array.isArray(parsed.journey) && parsed.journey.length > 0
+            Array.isArray(parsed.journey) && parsed.journey.length >= initialCMSData.journey.length
               ? parsed.journey
               : initialCMSData.journey
           ),
           resumes:
-            Array.isArray(parsed.resumes) && parsed.resumes.length > 0
+            Array.isArray(parsed.resumes) && parsed.resumes.length >= initialCMSData.resumes.length
               ? parsed.resumes
               : initialCMSData.resumes,
           blogs:
-            Array.isArray(parsed.blogs) && parsed.blogs.length > 0
+            Array.isArray(parsed.blogs) && parsed.blogs.length >= initialCMSData.blogs.length
               ? parsed.blogs
               : initialCMSData.blogs,
           contactInfo: { ...initialCMSData.contactInfo, ...(parsed.contactInfo || {}) },
@@ -250,10 +250,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     getCachedCMSFromIDB()
       .then((cached) => {
-        if (cached && cached.hero && Array.isArray(cached.projects) && cached.projects.length > 0) {
+        if (cached && cached.hero && Array.isArray(cached.projects) && cached.projects.length >= initialCMSData.projects.length) {
           setData((prev) => {
-            // If already populated, keep it; otherwise hydrate from IDB
-            if (prev.projects && prev.projects.length > 0) return prev;
+            if (prev.projects && prev.projects.length >= initialCMSData.projects.length) return prev;
             return formatCMSPayload(cached);
           });
         }
@@ -349,32 +348,32 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           : initialCMSData.about.avatarUrl,
       },
       skills:
-        Array.isArray(rawData.skills) && rawData.skills.length > 0
+        Array.isArray(rawData.skills) && rawData.skills.length >= initialCMSData.skills.length
           ? rawData.skills
           : initialCMSData.skills,
       projects:
-        Array.isArray(rawData.projects) && rawData.projects.length > 0
+        Array.isArray(rawData.projects) && rawData.projects.length >= initialCMSData.projects.length
           ? rawData.projects
           : initialCMSData.projects,
       creativePortfolio:
-        Array.isArray(rawData.creativePortfolio) && rawData.creativePortfolio.length > 0
+        Array.isArray(rawData.creativePortfolio) && rawData.creativePortfolio.length >= initialCMSData.creativePortfolio.length
           ? rawData.creativePortfolio
           : initialCMSData.creativePortfolio,
       gallery:
-        Array.isArray(rawData.gallery) && rawData.gallery.length > 0
+        Array.isArray(rawData.gallery) && rawData.gallery.length >= initialCMSData.gallery.length
           ? rawData.gallery
           : initialCMSData.gallery,
       journey: sanitizeJourney(
-        Array.isArray(rawData.journey) && rawData.journey.length > 0
+        Array.isArray(rawData.journey) && rawData.journey.length >= initialCMSData.journey.length
           ? rawData.journey
           : initialCMSData.journey
       ),
       resumes:
-        Array.isArray(rawData.resumes) && rawData.resumes.length > 0
+        Array.isArray(rawData.resumes) && rawData.resumes.length >= initialCMSData.resumes.length
           ? rawData.resumes
           : initialCMSData.resumes,
       blogs:
-        Array.isArray(rawData.blogs) && rawData.blogs.length > 0
+        Array.isArray(rawData.blogs) && rawData.blogs.length >= initialCMSData.blogs.length
           ? rawData.blogs
           : initialCMSData.blogs,
       contactInfo: { ...initialCMSData.contactInfo, ...(rawData.contactInfo || {}) },

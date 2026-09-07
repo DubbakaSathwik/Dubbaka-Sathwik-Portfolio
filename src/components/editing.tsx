@@ -30,7 +30,7 @@ export function EditingSection() {
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [expandedImage, setExpandedImage] = useState<string | null>(null);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('stack');
+  const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('grid');
 
   const ITEMS_PER_PAGE = 6;
 

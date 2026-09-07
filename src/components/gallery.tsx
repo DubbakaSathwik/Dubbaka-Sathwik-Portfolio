@@ -87,7 +87,7 @@ export function GallerySection() {
   const [activeItem, setActiveItem] = useState<GalleryItem | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);
   const [currentPage, setCurrentPage] = useState<number>(1);
-  const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('stack');
+  const [mobileViewMode, setMobileViewMode] = useState<'stack' | 'grid'>('grid');
   const [expandedCertImage, setExpandedCertImage] = useState<string | null>(null);
   const [expandedCertTitle, setExpandedCertTitle] = useState<string>('');
 
