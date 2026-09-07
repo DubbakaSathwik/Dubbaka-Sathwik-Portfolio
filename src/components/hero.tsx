@@ -1,4 +1,4 @@
-import { motion } from 'framer-motion';
+import { motion, useScroll, useTransform } from 'framer-motion';
 import { SplineScene } from './ui/splite';
 import { Spotlight } from './ui/spotlight';
 import { ArrowDown, Code2, FileText, ChevronRight, Mail } from 'lucide-react';
@@ -7,6 +7,13 @@ import { useCMS } from '../context/CMSContext';
 export function HeroSection() {
   const { data, setIsResumeModalOpen } = useCMS();
   const hero = data.hero;
+
+  // Track page scroll and drive smooth 3D model rotation & parallax transformation on scroll
+  const { scrollY } = useScroll();
+  const rotateX = useTransform(scrollY, [0, 800], [0, 25]);
+  const rotateY = useTransform(scrollY, [0, 800], [0, 120]);
+  const modelScale = useTransform(scrollY, [0, 600], [1, 0.88]);
+  const modelY = useTransform(scrollY, [0, 800], [0, 80]);
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -136,12 +143,20 @@ export function HeroSection() {
             className="hidden md:flex lg:col-span-6 relative z-10 items-center justify-center w-full min-h-[420px] sm:min-h-[500px] overflow-visible pointer-events-none"
           >
             <div className="relative w-full h-[420px] sm:h-[500px] lg:h-[560px] flex items-center justify-center pointer-events-none overflow-visible">
-              <div className="absolute inset-0 flex items-center justify-center -translate-x-8 sm:-translate-x-12 lg:-translate-x-16 pointer-events-none">
+              <motion.div
+                style={{
+                  rotateX,
+                  rotateY,
+                  scale: modelScale,
+                  y: modelY,
+                }}
+                className="absolute inset-0 -left-[15%] -right-[30%] -top-[10%] -bottom-[10%] flex items-center justify-center -translate-x-[15%] pointer-events-none overflow-visible origin-center"
+              >
                 <SplineScene
                   scene="https://prod.spline.design/tzncNju5E3SjXbxy/scene.splinecode"
-                  className="w-full h-full flex items-center justify-center scale-80 sm:scale-85 lg:scale-90 transform transition-transform pointer-events-none"
+                  className="w-[150%] h-[120%] flex items-center justify-center scale-85 sm:scale-90 lg:scale-95 transform transition-transform pointer-events-none overflow-visible"
                 />
-              </div>
+              </motion.div>
             </div>
           </motion.div>
         </div>
