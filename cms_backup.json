@@ -16,7 +16,7 @@
     "department": "Computer Science and Information Technology",
     "location": "MVSR Engineering College • Hyderabad, Telangana, India",
     "yearOfStudy": "Third Year",
-    "avatarUrl": "/uploads/assets/static_about_avatarUrl_d3ba36cdd8.jpg",
+    "avatarUrl": "/uploads/assets/static_asset_about_avatarUrl_h7q1bxcr.jpg",
     "bioParagraph1": "My journey into technology started much earlier than I ever imagined. Back in school, I wasn't just interested in playing Minecraft—I wanted to understand how it worked. I began experimenting with {bold & highlight}Minecraft Mods{bold & highlight}, texture packs, and small game modifications. Without realizing it, those small experiments became my first introduction to programming and problem-solving.\n\nAs my curiosity grew, I started learning programming languages like C, Java, Python, and JavaScript. What began as simple experiments slowly transformed into a passion for building real applications. Discovering web development introduced me to React, Node.js, Express, MongoDB, and MySQL, allowing me to create complete full-stack applications that people could actually use. For me, development isn't just about writing code—it's about solving problems and turning ideas into reality through technology.\n\nOne of the projects I'm most proud of is my {bold & highlight}GFG Hackathon Project{bold & highlight}, where my team built an AI-powered SQL Query Generator capable of converting natural language prompts into SQL queries. That experience showed me how artificial intelligence can simplify complex tasks and inspired me to explore AI-powered development tools even further.\n\nAlongside development, creativity became another important part of my journey. I enjoy designing {bold & highlight}posters{bold & highlight}, editing photos, producing videos, creating{bold & highlight} social media content{bold & highlight}, and experimenting with AI-assisted creative workflows. What started as a hobby gradually became another way for me to communicate ideas visually. Whether I'm designing an event poster or editing a promotional reel, I approach every creative project with the same attention to detail that I bring to software development.\n\nOutside academics, I actively participate in {bold & highlight}NSS (National Service Scheme){bold & highlight} activities at my college. Joining NSS wasn't only about volunteering—it was also an opportunity to improve my digital skills, contribute to college events, build meaningful connections, and work toward becoming part of the college's creative and digital media team. It has helped me grow not only technically but also as a collaborator and communicator.\n\nAlongside my personal learning journey, I actively seek opportunities to grow beyond the classroom. As an {bold & highlight}IEEE Student Member{bold & highlight}, I've been involved in activities that strengthen both my technical knowledge and professional network. I also contributed to organizing {bold & highlight}Vision Genix{bold & highlight}, a college-level AI Video Generation Competition, where I helped bring together creativity and emerging AI technologies. In addition, participating in hackathons has given me valuable experience in teamwork, problem-solving, and building practical solutions under time constraints. These experiences have taught me that learning isn't limited to courses—it's also about collaborating with people, taking initiative, and creating opportunities for yourself and others.\n\nBeyond coding and design, gaming has always been one of my favorite hobbies. Having my own setup gives me a space to relax, explore new ideas, and stay inspired by the technology behind modern games. Many of those experiences continue to influence the way I think about software, user experience, and interactive design.\n\n",
     "bioParagraph2": "",
     "bioParagraph3": "",
@@ -174,13 +174,13 @@
         "SQL.js",
         "Chart JS"
       ],
-      "thumbnail": "/uploads/assets/static_projects_0_thumbnail_ae4790213b.png",
-      "image": "/uploads/assets/static_projects_0_image_ae4790213b.png",
+      "thumbnail": "/uploads/assets/static_asset_projects_0_thumbnail_0dp1t16c.png",
+      "image": "/uploads/assets/static_asset_projects_0_image_ily9vvan.png",
       "images": [
-        "/uploads/assets/static_projects_0_images_0_ae4790213b.png",
-        "/uploads/assets/static_projects_0_images_1_410ca9a700.png",
-        "/uploads/assets/static_projects_0_images_2_6cfa237658.png",
-        "/uploads/assets/static_projects_0_images_3_5ba416584f.png"
+        "/uploads/assets/static_asset_projects_0_images_0_00c3lhcu.png",
+        "/uploads/assets/static_asset_projects_0_images_1_mlbi2x0k.png",
+        "/uploads/assets/static_asset_projects_0_images_2_hctnw7ks.png",
+        "/uploads/assets/static_asset_projects_0_images_3_vyy90t81.png"
       ],
       "demoUrl": "https://intelli-query.onrender.com",
       "githubUrl": "https://github.com/DubbakaSathwik/INTELLI-Query.git",
@@ -211,13 +211,13 @@
         "API",
         "Express"
       ],
-      "thumbnail": "/uploads/assets/static_projects_1_thumbnail_1928cce5ad.jpg",
-      "image": "/uploads/assets/static_projects_1_image_1928cce5ad.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_1_thumbnail_nq5ldpxa.jpg",
+      "image": "/uploads/assets/static_asset_projects_1_image_k224lwhz.jpg",
       "images": [
-        "/uploads/assets/static_projects_1_images_0_1928cce5ad.jpg",
-        "/uploads/assets/static_projects_1_images_1_9d2b43b1d8.jpg",
-        "/uploads/assets/static_projects_1_images_2_9dcbcde1e5.jpg",
-        "/uploads/assets/static_projects_1_images_3_4e031e88eb.jpg"
+        "/uploads/assets/static_asset_projects_1_images_0_0ocvty2h.jpg",
+        "/uploads/assets/static_asset_projects_1_images_1_48hyfeef.jpg",
+        "/uploads/assets/static_asset_projects_1_images_2_cw9g9ysy.jpg",
+        "/uploads/assets/static_asset_projects_1_images_3_zvmejome.jpg"
       ],
       "githubUrl": "https://github.com/DubbakaSathwik/Multi-AI.git",
       "demoUrl": "https://multiai-6kx9.onrender.com",
@@ -246,13 +246,13 @@
         "HTML/CSS",
         "JavaScript"
       ],
-      "thumbnail": "/uploads/assets/static_projects_2_thumbnail_e0a9a6e09b.jpg",
-      "image": "/uploads/assets/static_projects_2_image_e0a9a6e09b.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_2_thumbnail_d5x6qmjg.jpg",
+      "image": "/uploads/assets/static_asset_projects_2_image_8fvcwfnm.jpg",
       "images": [
-        "/uploads/assets/static_projects_2_images_0_e0a9a6e09b.jpg",
-        "/uploads/assets/static_projects_2_images_1_46b6c6feb5.jpg",
-        "/uploads/assets/static_projects_2_images_2_7bcade42ad.jpg",
-        "/uploads/assets/static_projects_2_images_3_3051f474bb.jpg"
+        "/uploads/assets/static_asset_projects_2_images_0_ep7crczx.jpg",
+        "/uploads/assets/static_asset_projects_2_images_1_uvyj3e0x.jpg",
+        "/uploads/assets/static_asset_projects_2_images_2_92kpydx0.jpg",
+        "/uploads/assets/static_asset_projects_2_images_3_8t1lynit.jpg"
       ],
       "githubUrl": "https://github.com/DubbakaSathwik/FoodFlow-Connect.git",
       "demoUrl": "https://udayprakashchamakuri-beep.github.io/foodflow/",
@@ -281,10 +281,10 @@
         "LLaMA 3.1",
         "Multer"
       ],
-      "thumbnail": "/uploads/assets/static_projects_3_thumbnail_2191619dc1.jpg",
-      "image": "/uploads/assets/static_projects_3_image_2191619dc1.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_3_thumbnail_tz4eimhm.jpg",
+      "image": "/uploads/assets/static_asset_projects_3_image_rms7512w.jpg",
       "images": [
-        "/uploads/assets/static_projects_3_images_0_2191619dc1.jpg"
+        "/uploads/assets/static_asset_projects_3_images_0_9fjcry97.jpg"
       ],
       "demoUrl": "https://ai-hiring-assistant-85kv.onrender.com",
       "githubUrl": "https://github.com/DubbakaSathwik/AI-Hiring-Assistant.git",
@@ -293,67 +293,37 @@
       "year": "2026"
     },
     {
-      "id": "proj-1785859536070",
-      "title": "News Without the Noise",
-      "summary": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
-      "description": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
-      "longDescription": "{bold}News Without the Noise{bold} is an intelligent,{bold & highlight} AI-driven news dashboard{bold & highlight} that combats digital noise, clickbait, and misinformation. Featuring a{bold & highlight} personalized recommendation engine{bold & highlight}, it dynamically learns user preferences from actions like reading behavior. The platform integrates{bold & highlight} Google Gemini and OpenA{bold & highlight}I to analyze articles for bias, sensationalism, and source trust, while providing customized summaries. Built with Node.js, Express, MongoDB, and standard HTML/CSS/JS, it also features location-based weather, local headlines, and a deepfake media scanner, ensuring a clean, reliable, and secure information experience.",
-      "category": "Web Apps",
+      "id": "proj-1788716566911",
+      "title": "MedLens ",
+      "summary": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
+      "description": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
+      "longDescription": "{bold & highlight}MedLens{bold & highlight} is an{bold & highlight} AI clinical intelligence platform{bold & highlight} that transforms fragmented medical documents into structured, FHIR-compliant records. It prevents hallucinations through strict laboratory reference-range grounding, bidirectional document provenance, OCR ambiguity resolution, and deterministic non-diagnostic medical safety guardrails.",
+      "category": "Tools",
       "tags": [
-        "Web Apps",
-        "Node.js & Express.js",
-        "MongoDB & Mongoose",
-        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
-        "Google Gemini & OpenAI APIs"
-      ],
-      "technologies": [
-        "Web Apps",
-        "Node.js & Express.js",
-        "MongoDB & Mongoose",
-        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
-        "Google Gemini & OpenAI APIs"
-      ],
-      "thumbnail": "/uploads/assets/static_projects_4_thumbnail_40d744f6e9.jpg",
-      "image": "/uploads/assets/static_projects_4_image_40d744f6e9.jpg",
-      "images": [
-        "/uploads/assets/static_projects_4_images_0_40d744f6e9.jpg",
-        "/uploads/assets/static_projects_4_images_1_83ffa6b746.jpg",
-        "/uploads/assets/static_projects_4_images_2_638aadd501.jpg",
-        "/uploads/assets/static_projects_4_images_3_95f8228ac8.jpg"
-      ],
-      "githubUrl": "https://github.com/DubbakaSathwik/AA-Hackthon-online-.git",
-      "demoUrl": "https://news-without-the-noise.onrender.com",
-      "featured": false,
-      "status": "Completed",
-      "year": "2026"
-    },
-    {
-      "id": "proj-1785859703526",
-      "title": "VaultFlow",
-      "summary": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
-      "description": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
-      "longDescription": "{bold}VaultFlow{bold} is a comprehensive {bold & highlight}personal finance manager{bold & highlight} designed for Android with privacy and offline capabilities at its core. {highlight}Developed in Kotlin using Jetpack Compose{highlight}, the application allows users to manage multiple bank accounts, track recurring transactions, monitor savings goals, and track debts. The app integrates Google ML Kit for scanning receipts via OCR and leverages the Gemini API to deliver personalized financial insights directly on the device. All data is stored locally in a Room database, ensuring complete user privacy.",
-      "category": "Personal",
-      "tags": [
-        "Personal",
+        "Tools",
         "React",
         "Node.js",
-        "MongoDB"
+        "Tailwind CSS",
+        "Next.js"
       ],
       "technologies": [
-        "Personal",
+        "Tools",
         "React",
         "Node.js",
-        "MongoDB"
+        "Tailwind CSS",
+        "Next.js"
       ],
-      "thumbnail": "/uploads/assets/static_projects_5_thumbnail_6721fd50ed.jpg",
-      "image": "/uploads/assets/static_projects_5_image_6721fd50ed.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_4_thumbnail_alagwj1k.jpg",
+      "image": "/uploads/assets/static_asset_projects_4_image_i6j1nfe0.jpg",
       "images": [
-        "/uploads/assets/static_projects_5_images_0_6721fd50ed.jpg"
+        "/uploads/assets/static_asset_projects_4_images_0_35akrz0y.jpg",
+        "/uploads/assets/static_asset_projects_4_images_1_5vpn7quu.jpg",
+        "/uploads/assets/static_asset_projects_4_images_2_xep9l5j6.jpg",
+        "/uploads/assets/static_asset_projects_4_images_3_0qf362my.jpg"
       ],
-      "githubUrl": "https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git",
-      "demoUrl": "",
-      "featured": false,
+      "githubUrl": "https://github.com/DubbakaSathwik/medlens-prompt_wars.git",
+      "demoUrl": "https://medlens-8gan.onrender.com",
+      "featured": true,
       "status": "Completed",
       "year": "2026"
     },
@@ -380,16 +350,81 @@
         "Node.js & Express.js",
         "MongoDB & Mongoose"
       ],
-      "thumbnail": "/uploads/assets/static_projects_6_thumbnail_49ff32b377.jpg",
-      "image": "/uploads/assets/static_projects_6_image_49ff32b377.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_5_thumbnail_u8aqn8bc.jpg",
+      "image": "/uploads/assets/static_asset_projects_5_image_jv1rhc4h.jpg",
       "images": [
-        "/uploads/assets/static_projects_6_images_0_49ff32b377.jpg",
-        "/uploads/assets/static_projects_6_images_1_148973f5d3.jpg",
-        "/uploads/assets/static_projects_6_images_2_e503f90136.jpg",
-        "/uploads/assets/static_projects_6_images_3_ae74febbe6.jpg"
+        "/uploads/assets/static_asset_projects_5_images_0_uvnxg9xf.jpg",
+        "/uploads/assets/static_asset_projects_5_images_1_cbkxe9ou.jpg",
+        "/uploads/assets/static_asset_projects_5_images_2_ogm5naqx.jpg",
+        "/uploads/assets/static_asset_projects_5_images_3_1qgvaymc.jpg"
       ],
       "githubUrl": "https://github.com/DubbakaSathwik/COBRA-CORE-TECH-Website.git",
       "demoUrl": "cobracore.netlify.app",
+      "featured": false,
+      "status": "Completed",
+      "year": "2026"
+    },
+    {
+      "id": "proj-1785859703526",
+      "title": "VaultFlow",
+      "summary": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
+      "description": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
+      "longDescription": "{bold}VaultFlow{bold} is a comprehensive {bold & highlight}personal finance manager{bold & highlight} designed for Android with privacy and offline capabilities at its core. {highlight}Developed in Kotlin using Jetpack Compose{highlight}, the application allows users to manage multiple bank accounts, track recurring transactions, monitor savings goals, and track debts. The app integrates Google ML Kit for scanning receipts via OCR and leverages the Gemini API to deliver personalized financial insights directly on the device. All data is stored locally in a Room database, ensuring complete user privacy.",
+      "category": "Personal",
+      "tags": [
+        "Personal",
+        "React",
+        "Node.js",
+        "MongoDB"
+      ],
+      "technologies": [
+        "Personal",
+        "React",
+        "Node.js",
+        "MongoDB"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_6_thumbnail_a3rbhvs5.jpg",
+      "image": "/uploads/assets/static_asset_projects_6_image_0v1v1snt.jpg",
+      "images": [
+        "/uploads/assets/static_asset_projects_6_images_0_qto3cfw5.jpg"
+      ],
+      "githubUrl": "https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git",
+      "demoUrl": "",
+      "featured": false,
+      "status": "Completed",
+      "year": "2026"
+    },
+    {
+      "id": "proj-1785859536070",
+      "title": "News Without the Noise",
+      "summary": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
+      "description": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
+      "longDescription": "{bold}News Without the Noise{bold} is an intelligent,{bold & highlight} AI-driven news dashboard{bold & highlight} that combats digital noise, clickbait, and misinformation. Featuring a{bold & highlight} personalized recommendation engine{bold & highlight}, it dynamically learns user preferences from actions like reading behavior. The platform integrates{bold & highlight} Google Gemini and OpenA{bold & highlight}I to analyze articles for bias, sensationalism, and source trust, while providing customized summaries. Built with Node.js, Express, MongoDB, and standard HTML/CSS/JS, it also features location-based weather, local headlines, and a deepfake media scanner, ensuring a clean, reliable, and secure information experience.",
+      "category": "Web Apps",
+      "tags": [
+        "Web Apps",
+        "Node.js & Express.js",
+        "MongoDB & Mongoose",
+        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
+        "Google Gemini & OpenAI APIs"
+      ],
+      "technologies": [
+        "Web Apps",
+        "Node.js & Express.js",
+        "MongoDB & Mongoose",
+        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
+        "Google Gemini & OpenAI APIs"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_7_thumbnail_xe1oqe6c.jpg",
+      "image": "/uploads/assets/static_asset_projects_7_image_2ivqhuom.jpg",
+      "images": [
+        "/uploads/assets/static_asset_projects_7_images_0_cfhn8kb7.jpg",
+        "/uploads/assets/static_asset_projects_7_images_1_e5rkz3kq.jpg",
+        "/uploads/assets/static_asset_projects_7_images_2_deufo04c.jpg",
+        "/uploads/assets/static_asset_projects_7_images_3_302ttfy2.jpg"
+      ],
+      "githubUrl": "https://github.com/DubbakaSathwik/AA-Hackthon-online-.git",
+      "demoUrl": "https://news-without-the-noise.onrender.com",
       "featured": false,
       "status": "Completed",
       "year": "2026"
@@ -409,9 +444,9 @@
       "tags": [
         "Video Editing"
       ],
-      "thumbnail": "/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg",
+      "thumbnail": "/uploads/assets/static_asset_creativePortfolio_0_thumbnail_c6vaxhrd.jpg",
       "images": [
-        "/uploads/assets/static_creativePortfolio_0_ima_9ebbff8284.jpg"
+        "/uploads/assets/static_asset_creativePortfolio_0_images_0_164on3zl.jpg"
       ],
       "videoUrl": "",
       "platformUrl": "https://www.instagram.com/reel/DXGpBjBEhGS/?igsh=Y3h2eXhsZncyMHUw",
@@ -432,12 +467,12 @@
         "Instagram Creatives",
         "Design"
       ],
-      "thumbnail": "/uploads/assets/static_creativePortfolio_1_thu_3b559722e8.jpg",
+      "thumbnail": "/uploads/assets/static_asset_creativePortfolio_1_thumbnail_o7x33jqz.jpg",
       "images": [
-        "/uploads/assets/static_creativePortfolio_1_ima_3b559722e8.jpg",
-        "/uploads/assets/static_creativePortfolio_1_ima_c632c3099e.jpg",
-        "/uploads/assets/static_creativePortfolio_1_ima_1aa7663c1a.jpg",
-        "/uploads/assets/static_creativePortfolio_1_ima_3df3102882.jpg"
+        "/uploads/assets/static_asset_creativePortfolio_1_images_0_y3o66udq.jpg",
+        "/uploads/assets/static_asset_creativePortfolio_1_images_1_uvbdjnyg.jpg",
+        "/uploads/assets/static_asset_creativePortfolio_1_images_2_1nl2ivy1.jpg",
+        "/uploads/assets/static_asset_creativePortfolio_1_images_3_902e7k2v.jpg"
       ],
       "videoUrl": "",
       "platformUrl": "https://www.instagram.com/p/DY3xbbzEWZI/?img_index=3&igsh=YmJzMms1bWR5cGEy",
@@ -458,9 +493,9 @@
       "tags": [
         "NSS Works"
       ],
-      "thumbnail": "/uploads/assets/static_creativePortfolio_2_thu_c7b0a1905c.jpg",
+      "thumbnail": "/uploads/assets/static_asset_creativePortfolio_2_thumbnail_lmrdp7x8.jpg",
       "images": [
-        "/uploads/assets/static_creativePortfolio_2_ima_c7b0a1905c.jpg"
+        "/uploads/assets/static_asset_creativePortfolio_2_images_0_yjaylw0h.jpg"
       ],
       "videoUrl": "",
       "platformUrl": "https://www.instagram.com/reel/DZMojG3R6rl/?igsh=ZnppMHh6ZGt2MGt2",
@@ -480,9 +515,9 @@
       "tags": [
         "Poster Design"
       ],
-      "thumbnail": "/uploads/assets/static_creativePortfolio_3_thu_f6c922c1bf.jpg",
+      "thumbnail": "/uploads/assets/static_asset_creativePortfolio_3_thumbnail_rfp936dx.jpg",
       "images": [
-        "/uploads/assets/static_creativePortfolio_3_ima_f6c922c1bf.jpg"
+        "/uploads/assets/static_asset_creativePortfolio_3_images_0_pzz7nnkq.jpg"
       ],
       "videoUrl": "",
       "platformUrl": "",
@@ -503,9 +538,9 @@
       "tags": [
         "Poster Design"
       ],
-      "thumbnail": "/uploads/assets/static_creativePortfolio_4_thu_c88854f2ae.jpg",
+      "thumbnail": "/uploads/assets/static_asset_creativePortfolio_4_thumbnail_cqlokt8k.jpg",
       "images": [
-        "/uploads/assets/static_creativePortfolio_4_ima_c88854f2ae.jpg"
+        "/uploads/assets/static_asset_creativePortfolio_4_images_0_8gufrwda.jpg"
       ],
       "videoUrl": "",
       "platformUrl": "",
@@ -526,9 +561,9 @@
       "tags": [
         "Video Editing"
       ],
-      "thumbnail": "/uploads/assets/static_creativePortfolio_5_thu_97ef851a9c.jpg",
+      "thumbnail": "/uploads/assets/static_asset_creativePortfolio_5_thumbnail_bwnalrod.jpg",
       "images": [
-        "/uploads/assets/static_creativePortfolio_5_ima_97ef851a9c.jpg"
+        "/uploads/assets/static_asset_creativePortfolio_5_images_0_tvn4g027.jpg"
       ],
       "videoUrl": "",
       "platformUrl": "https://www.instagram.com/reel/DXrN50nkTU9/?igsh=bWdwN21sb2EzNHdm",
@@ -542,10 +577,10 @@
       "id": "g-1785862244982",
       "title": "Hackfest – Winning Team Captain & Round 2 Qualifier",
       "category": "Certificates",
-      "image": "/uploads/assets/static_gallery_0_image_4e182a45cd.jpg",
+      "image": "/uploads/assets/static_asset_gallery_0_image_j1sv285z.jpg",
       "images": [
-        "/uploads/assets/static_gallery_0_images_0_4e182a45cd.jpg",
-        "/uploads/assets/static_gallery_0_images_1_765a73ed72.jpg"
+        "/uploads/assets/static_asset_gallery_0_images_0_4hrai8i8.jpg",
+        "/uploads/assets/static_asset_gallery_0_images_1_bn4z0vbl.jpg"
       ],
       "description": "Won the {bold & highlight}Hackfest Hackathon{bold & highlight} as the {bold & highlight}Team Captain{bold & highlight}, secured a {bold & highlight}₹2,000 cash prize{bold & highlight}, and qualified for Round 2 through exceptional teamwork, innovation, and problem-solving.",
       "detailedDescription": "Led my team as the {bold & highlight}Captain{bold & highlight} in the {bold & highlight}Hackfest Hackathon{bold & highlight} organized by the GeeksforGeeks Classroom Program. Through effective collaboration, strategic problem-solving, and technical execution, our team emerged as the {bold & highlight}winning team{bold & highlight}, earning a {bold & highlight}₹2,000 cash prize{bold & highlight} and securing qualification for {bold & highlight}Round 2{bold &highlight}. This achievement strengthened my leadership, decision-making, and competitive programming abilities while demonstrating my capability to perform effectively under pressure in a fast-paced hackathon environment.",
@@ -572,10 +607,10 @@
       "date": "5–6 December 2025",
       "location": "MVSR Engineering College, Hyderabad, Telangana, India",
       "credentialUrl": "",
-      "image": "/uploads/assets/static_gallery_1_image_226657bd26.jpg",
+      "image": "/uploads/assets/static_asset_gallery_1_image_cvztnhmf.jpg",
       "images": [
-        "/uploads/assets/static_gallery_1_images_0_226657bd26.jpg",
-        "/uploads/assets/static_gallery_1_images_1_e7bb33ab3f.jpg"
+        "/uploads/assets/static_asset_gallery_1_images_0_vy2vor55.jpg",
+        "/uploads/assets/static_asset_gallery_1_images_1_cfou6d5b.jpg"
       ],
       "technologies": [
         "Cybersecurity Fundamentals",
@@ -598,10 +633,10 @@
       "date": "22 March 2025",
       "location": "CSI Student Body",
       "credentialUrl": "",
-      "image": "/uploads/assets/static_gallery_2_image_171c499a18.jpg",
+      "image": "/uploads/assets/static_asset_gallery_2_image_j1xv97qw.jpg",
       "images": [
-        "/uploads/assets/static_gallery_2_images_0_171c499a18.jpg",
-        "/uploads/assets/static_gallery_2_images_1_e0b901a2d1.jpg"
+        "/uploads/assets/static_asset_gallery_2_images_0_zkrty64c.jpg",
+        "/uploads/assets/static_asset_gallery_2_images_1_3g7btups.jpg"
       ],
       "technologies": [
         "Logo Design",
@@ -618,9 +653,9 @@
       "id": "g-1785862372270",
       "title": "IEEE Computer Society Student Membership 2026",
       "category": "NSS and IEEE",
-      "image": "/uploads/assets/static_gallery_3_image_85ada08cb0.jpg",
+      "image": "/uploads/assets/static_asset_gallery_3_image_89faq843.jpg",
       "images": [
-        "/uploads/assets/static_gallery_3_images_0_85ada08cb0.jpg"
+        "/uploads/assets/static_asset_gallery_3_images_0_iny2qezh.jpg"
       ],
       "description": "Received the {bold & highlight}IEEE Computer Society Student Membership{bold & highlight}, demonstrating a commitment to {bold & highlight}professional growth and technological advancement{bold & highlight} while becoming part of a global community of {bold & highlight}technology professionals{bold &highlight}.",
       "detailedDescription": "Earned the {bold & highlight}IEEE Computer Society Student Membership 2026{bold & highlight}, recognizing my commitment to continuous learning and professional development in the field of {bold & highlight}Computer Science and Engineering{bold & highlight}. As a member of the world's leading technical community, I gained access to industry resources, research publications, networking opportunities, and professional development programs. This membership reflects my dedication to {bold & highlight}innovation, emerging technologies, and lifelong learning{bold & highlight}, while strengthening my technical knowledge and expanding my global professional network.",
@@ -641,9 +676,9 @@
       "id": "g-1785863014437",
       "title": "FORGE INSPIRA 2026 – Hackathon Certificate of Participation",
       "category": "Certificates",
-      "image": "/uploads/assets/static_gallery_4_image_5954ed182d.jpg",
+      "image": "/uploads/assets/static_asset_gallery_4_image_570e2vga.jpg",
       "images": [
-        "/uploads/assets/static_gallery_4_images_0_5954ed182d.jpg"
+        "/uploads/assets/static_asset_gallery_4_images_0_0a7wgqjo.jpg"
       ],
       "description": "Participated in the {bold & highlight}FORGE INSPIRA 2026 Hackathon{bold & highlight}, applying {bold & highlight}innovation, teamwork, and problem-solving skills{bold & highlight} to develop creative solutions while collaborating in a {bold & highlight}competitive technology environment{bold & highlight}.",
       "detailedDescription": "Successfully participated in the {bold & highlight}FORGE INSPIRA 2026 Hackathon{bold & highlight} held at {bold & highlight}IIIT Hyderabad{bold & highlight}. The event provided an opportunity to collaborate with talented innovators, develop technology-driven solutions, and solve real-world challenges within a fast-paced hackathon environment. Through this experience, I strengthened my {bold & highlight}software development, analytical thinking, and teamwork skills{bold & highlight} while gaining valuable exposure to innovation, project development, technical collaboration, and industry-oriented problem-solving alongside participants from diverse engineering backgrounds.",
@@ -668,9 +703,9 @@
       "date": "12–13 March 2026",
       "location": "Gokaraju Rangaraju Institute of Engineering and Technology (GRIET)",
       "credentialUrl": "",
-      "image": "/uploads/assets/static_gallery_5_image_5999471839.jpg",
+      "image": "/uploads/assets/static_asset_gallery_5_image_bv1owzk4.jpg",
       "images": [
-        "/uploads/assets/static_gallery_5_images_0_5999471839.jpg"
+        "/uploads/assets/static_asset_gallery_5_images_0_y6nasu91.jpg"
       ],
       "technologies": [
         "Hackathon Participation",
@@ -686,9 +721,9 @@
       "id": "g-1785862597646",
       "title": "Hack Conquest 2.0 – National Level Hackathon Participation",
       "category": "Certificates",
-      "image": "/uploads/assets/static_gallery_6_image_df4517d18b.jpg",
+      "image": "/uploads/assets/static_asset_gallery_6_image_xbbpy3sa.jpg",
       "images": [
-        "/uploads/assets/static_gallery_6_images_0_df4517d18b.jpg"
+        "/uploads/assets/static_asset_gallery_6_images_0_h9pm1vwg.jpg"
       ],
       "description": "Participated in the {bold & highlight}Hack Conquest 2.0 National Level Hackathon{bold & highlight}, collaborating on {bold & highlight}innovative software solutions{bold & highlight} while strengthening technical expertise, teamwork, and {bold & highlight}problem-solving skills{bold & highlight} in a competitive environment.",
       "detailedDescription": "Successfully participated in the {bold & highlight}Hack Conquest 2.0 National Level Hackathon{bold & highlight} organized by the {bold & highlight}IEEE Student Branch, TKR College of Engineering and Technology{bold & highlight}. The event provided an opportunity to collaborate with talented participants, develop innovative solutions, and tackle real-world challenges within a competitive hackathon setting. Through this experience, I enhanced my {bold & highlight}software development, teamwork, and analytical thinking{bold & highlight} while gaining valuable exposure to project development, technical collaboration, and the fast-paced environment of national-level innovation competitions.",
@@ -708,9 +743,9 @@
       "id": "g-1785862089695",
       "title": "Aethronix 2026 Hackathon – Certificate of Participation",
       "category": "Hackathons",
-      "image": "/uploads/assets/static_gallery_7_image_5bd0fd83b7.jpg",
+      "image": "/uploads/assets/static_asset_gallery_7_image_mquikqwk.jpg",
       "images": [
-        "/uploads/assets/static_gallery_7_images_0_5bd0fd83b7.jpg"
+        "/uploads/assets/static_asset_gallery_7_images_0_jtlgyagi.jpg"
       ],
       "description": "Successfully participated in the {bold & highlight}Aethronix 2026 Hackathon{bold & highlight}, demonstrating {bold & highlight}innovation, teamwork, and problem-solving{bold & highlight} while collaborating on technology-driven solutions in a competitive {bold & highlight}hackathon environment{bold & highlight}.",
       "detailedDescription": "Successfully participated in the {bold & highlight}Aethronix 2026 Hackathon{bold & highlight} organized by {bold & highlight}Algorithm Aliens Private Limited{bold & highlight}. The event provided an opportunity to collaborate with teammates, solve real-world challenges, and enhance technical and analytical thinking through hands-on problem-solving. Participating in this {bold & highlight}technology-focused hackathon{bold & highlight} strengthened my ability to work in a collaborative environment, apply innovative ideas, and improve project development and presentation skills while gaining valuable experience in competitive technology events.",
@@ -733,9 +768,9 @@
       "id": "g-1785861967591",
       "title": "HTML & CSS Bootcamp Certificate",
       "category": "Certificates",
-      "image": "/uploads/assets/static_gallery_8_image_e75a8a671c.jpg",
+      "image": "/uploads/assets/static_asset_gallery_8_image_orm3mbvp.jpg",
       "images": [
-        "/uploads/assets/static_gallery_8_images_0_e75a8a671c.jpg"
+        "/uploads/assets/static_asset_gallery_8_images_0_k31w8ulw.jpg"
       ],
       "description": "Successfully completed the {bold & highlight}HTML & CSS Bootcamp{bold & highlight}, gaining practical knowledge of {bold & highlight}frontend web development{bold & highlight} while building a strong foundation in responsive website design using {bold & highlight}HTML5 and CSS3{bold & highlight}.",
       "detailedDescription": "Successfully completed the {bold & highlight}HTML & CSS Bootcamp{bold & highlight} conducted by {bold & highlight}LetsUpgrade EdTech Pvt. Ltd.{bold & highlight} in collaboration with NSDC, ITM Edutech Training Pvt. Ltd., and GDG MAD. The intensive three-day program strengthened my understanding of {bold & highlight}HTML5, CSS3, and responsive web development{bold &highlight}, enabling me to build structured, visually appealing, and user-friendly web pages. This certification enhanced my frontend development skills and provided a solid foundation for creating modern websites and progressing toward full-stack web development.",
@@ -773,10 +808,10 @@
         "Design"
       ],
       "images": [
-        "/uploads/assets/static_journey_0_images_0_e4ecfb2a63.jpg",
-        "/uploads/assets/static_journey_0_images_1_005d10c880.jpg"
+        "/uploads/assets/static_asset_journey_0_images_0_5lb02niz.jpg",
+        "/uploads/assets/static_asset_journey_0_images_1_upeea8pv.jpg"
       ],
-      "image": "/uploads/assets/static_journey_0_image_e4ecfb2a63.jpg"
+      "image": "/uploads/assets/static_asset_journey_0_image_1b7xtc15.jpg"
     },
     {
       "id": "j-1785525170186",
@@ -1178,5 +1213,6 @@
     "wordsSpeedSeconds": 4.8,
     "nameDelaySeconds": 1.2
   },
-  "messages": []
+  "messages": [],
+  "contactMessages": []
 }

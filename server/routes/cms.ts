@@ -13,6 +13,58 @@ import path from 'path';
 
 const router = Router();
 const BACKUP_FILE_PATH = path.join(process.cwd(), 'cms_backup.json');
+const STATIC_BACKUP_PATH = path.join(process.cwd(), 'static_backup.json');
+const SEED_DATA_PATH = path.join(process.cwd(), 'src', 'seed_data.json');
+const PUBLIC_UPLOADS_ASSETS_DIR = path.join(process.cwd(), 'public', 'uploads', 'assets');
+
+if (!fs.existsSync(PUBLIC_UPLOADS_ASSETS_DIR)) {
+  try {
+    fs.mkdirSync(PUBLIC_UPLOADS_ASSETS_DIR, { recursive: true });
+  } catch (e) {}
+}
+
+/**
+ * Extracts base64 images from JSON payload, saves them as static image files in public/uploads/assets,
+ * and replaces the base64 strings with lightweight relative asset links (/uploads/assets/...).
+ */
+function processBase64AndSanitize(obj: any, pathPrefix: string = 'asset'): any {
+  if (!obj) return obj;
+
+  if (typeof obj === 'string') {
+    if (obj.startsWith('data:image/')) {
+      const match = obj.match(/^data:image\/([a-zA-Z0-9]+);base64,(.*)$/);
+      if (match) {
+        const ext = match[1] === 'jpeg' ? 'jpg' : match[1];
+        const base64Data = match[2];
+        const buffer = Buffer.from(base64Data, 'base64');
+        const hash = Math.random().toString(36).substring(2, 10);
+        const fileName = `static_${pathPrefix}_${hash}.${ext}`;
+        const filePath = path.join(PUBLIC_UPLOADS_ASSETS_DIR, fileName);
+        try {
+          fs.writeFileSync(filePath, buffer);
+          return `/uploads/assets/${fileName}`;
+        } catch (err) {
+          console.error('[CMS Route] Error saving base64 image asset:', err);
+        }
+      }
+    }
+    return obj;
+  }
+
+  if (Array.isArray(obj)) {
+    return obj.map((item, index) => processBase64AndSanitize(item, `${pathPrefix}_${index}`));
+  }
+
+  if (typeof obj === 'object') {
+    const cleaned: any = {};
+    for (const key of Object.keys(obj)) {
+      cleaned[key] = processBase64AndSanitize(obj[key], `${pathPrefix}_${key}`);
+    }
+    return cleaned;
+  }
+
+  return obj;
+}
 
 // Helper to safely load local disk backup
 function loadLocalDiskData(): any {
@@ -30,14 +82,25 @@ function loadLocalDiskData(): any {
   return null;
 }
 
-// Helper to safely write local disk backup
-function saveLocalDiskData(payload: any): boolean {
+// Helper to safely write clean data directly to src/seed_data.json code & disk backup
+function saveLocalDiskData(payload: any): any {
   try {
-    fs.writeFileSync(BACKUP_FILE_PATH, JSON.stringify(payload, null, 2), 'utf-8');
-    return true;
+    const sanitized = processBase64AndSanitize(payload);
+    const jsonStr = JSON.stringify(sanitized, null, 2);
+
+    // 1. Persist directly into source code seed data (src/seed_data.json)
+    try {
+      fs.writeFileSync(SEED_DATA_PATH, jsonStr, 'utf-8');
+    } catch (err) {
+      console.error('[CMS Route] Error updating src/seed_data.json:', err);
+    }
+
+    // 2. Persist to root cms_backup.json
+    fs.writeFileSync(BACKUP_FILE_PATH, jsonStr, 'utf-8');
+    return sanitized;
   } catch (err) {
     console.error('[CMS Route] Error writing cms_backup.json:', err);
-    return false;
+    return payload;
   }
 }
 
@@ -391,7 +454,6 @@ router.get('/backups/list', requireAuth, async (req: Request, res: Response): Pr
 // ==========================================
 // STATIC BACKUP ENGINE
 // ==========================================
-const STATIC_BACKUP_PATH = path.join(process.cwd(), 'static_backup.json');
 const STATIC_BACKUPS_DIR = path.join(process.cwd(), 'static_backups');
 
 // Ensure static_backups folder exists
@@ -423,30 +485,38 @@ function loadStaticBackupData(): any {
   return initialCMSData;
 }
 
-// Helper to safely save active static backup
-function saveStaticBackupData(payload: any, snapshotFilename?: string): boolean {
+// Helper to safely save active static backup and sync directly to code (src/seed_data.json)
+function saveStaticBackupData(payload: any, snapshotFilename?: string): any {
   try {
-    const jsonStr = JSON.stringify(payload, null, 2);
+    const sanitized = processBase64AndSanitize(payload);
+    const jsonStr = JSON.stringify(sanitized, null, 2);
 
-    // 1. Write active static backup in root
+    // 1. Write clean text content directly into source code seed data (src/seed_data.json)
+    try {
+      fs.writeFileSync(SEED_DATA_PATH, jsonStr, 'utf-8');
+    } catch (err) {
+      console.error('[CMS Route] Error writing src/seed_data.json:', err);
+    }
+
+    // 2. Write active static backup in root
     fs.writeFileSync(STATIC_BACKUP_PATH, jsonStr, 'utf-8');
 
-    // 2. Write active static backup to public/ directory for direct static serving
+    // 3. Write active static backup to public/ directory for direct static serving
     try {
       const publicPath = path.join(process.cwd(), 'public', 'static_backup.json');
       fs.writeFileSync(publicPath, jsonStr, 'utf-8');
     } catch (e) {}
 
-    // 3. Also keep safety copy in static_backups folder
+    // 4. Also keep safety copy in static_backups folder
     if (snapshotFilename) {
       const cleanName = snapshotFilename.replace(/[^a-zA-Z0-9_.-]/g, '_');
       const snapshotPath = path.join(STATIC_BACKUPS_DIR, cleanName);
       fs.writeFileSync(snapshotPath, jsonStr, 'utf-8');
     }
-    return true;
+    return sanitized;
   } catch (err) {
     console.error('[CMS Route] Error writing static_backup.json:', err);
-    return false;
+    return payload;
   }
 }
 
