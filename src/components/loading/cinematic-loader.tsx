@@ -54,6 +54,18 @@ export function CinematicLoadingScreen() {
     };
   }, []);
 
+  // Manage body scroll overflow lock
+  useEffect(() => {
+    if (isVisible) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isVisible]);
+
   // Desktop lanes: distributed 360 degrees around perimeter converging towards outside of name boundary
   const desktopLanes = useMemo(() => {
     const words = intro.floatingWords && intro.floatingWords.length > 0 ? intro.floatingWords : initialIntroData.floatingWords;

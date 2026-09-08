@@ -1,4 +1,5 @@
-import { motion, useScroll, useTransform } from 'framer-motion';
+import React from 'react';
+import { motion, useScroll, useTransform, useMotionValue, useSpring } from 'framer-motion';
 import { SplineScene } from './ui/splite';
 import { Spotlight } from './ui/spotlight';
 import { ArrowDown, Code2, FileText, ChevronRight, Mail } from 'lucide-react';
@@ -8,12 +9,37 @@ export function HeroSection() {
   const { data, setIsResumeModalOpen } = useCMS();
   const hero = data.hero;
 
-  // Track page scroll and drive smooth 3D model rotation & parallax transformation on scroll
+  // Track page scroll and drive smooth 3D model scaling & scroll parallax
   const { scrollY } = useScroll();
-  const rotateX = useTransform(scrollY, [0, 800], [0, 25]);
-  const rotateY = useTransform(scrollY, [0, 800], [0, 120]);
-  const modelScale = useTransform(scrollY, [0, 600], [1, 0.88]);
-  const modelY = useTransform(scrollY, [0, 800], [0, 80]);
+  const modelScale = useTransform(scrollY, [0, 600], [1.4, 1.15]);
+  const scrollModelY = useTransform(scrollY, [0, 800], [0, 80]);
+
+  // Smooth Spring Mouse Tracking
+  const rawMouseX = useMotionValue(0);
+  const rawMouseY = useMotionValue(0);
+  const springConfig = { damping: 25, stiffness: 140 };
+  const smoothMouseX = useSpring(rawMouseX, springConfig);
+  const smoothMouseY = useSpring(rawMouseY, springConfig);
+
+  // Subtle upright head rotation (-18deg to +18deg) following cursor horizontally
+  const mouseRotateY = useTransform(smoothMouseX, [-0.5, 0.5], [-18, 18]);
+  // Subtle vertical pitch (-5deg to +5deg max) - keeps robot upright, NEVER dipping down!
+  const mouseRotateX = useTransform(smoothMouseY, [-0.5, 0.5], [5, -5]);
+  // Positional tracking offset towards mouse (x: -25px to +25px)
+  const mouseOffsetX = useTransform(smoothMouseX, [-0.5, 0.5], [-25, 25]);
+
+  const handleMouseMove = (e: React.MouseEvent<HTMLElement>) => {
+    const rect = e.currentTarget.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    rawMouseX.set(x);
+    rawMouseY.set(y);
+  };
+
+  const handleMouseLeave = () => {
+    rawMouseX.set(0);
+    rawMouseY.set(0);
+  };
 
   const scrollToSection = (id: string) => {
     const el = document.getElementById(id);
@@ -31,7 +57,12 @@ export function HeroSection() {
   };
 
   return (
-    <section id="home" className="relative min-h-screen pt-20 pb-16 sm:pt-28 flex flex-col justify-center overflow-hidden bg-[#050505] text-white scroll-mt-16 sm:scroll-mt-20">
+    <section
+      id="home"
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+      className="relative min-h-screen pt-20 pb-16 sm:pt-28 flex flex-col justify-center overflow-hidden bg-[#050505] text-white scroll-mt-16 sm:scroll-mt-20"
+    >
       {/* Green Ambient Background Lighting */}
       <Spotlight className="-top-40 left-0 md:left-60 md:-top-20" fill="rgba(16, 185, 129, 0.25)" />
       
@@ -135,26 +166,26 @@ export function HeroSection() {
             </div>
           </motion.div>
 
-          {/* Right Column (3D Spline Canvas - Frameless, Fully Unclipped & Centered in Right Half) */}
+          {/* Right Column (3D Spline Canvas - Frameless, Upright & Mouse-Tracking) */}
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, delay: 0.3 }}
-            className="hidden md:flex lg:col-span-6 relative z-10 items-center justify-center w-full min-h-[420px] sm:min-h-[500px] overflow-visible pointer-events-none"
+            className="flex lg:col-span-6 relative z-10 items-center justify-center w-full min-h-[450px] sm:min-h-[540px] lg:min-h-[640px] overflow-visible bg-transparent"
           >
-            <div className="relative w-full h-[420px] sm:h-[500px] lg:h-[560px] flex items-center justify-center pointer-events-none overflow-visible">
+            <div className="relative w-full h-[450px] sm:h-[540px] lg:h-[640px] flex items-center justify-center overflow-visible bg-transparent">
               <motion.div
                 style={{
-                  rotateX,
-                  rotateY,
                   scale: modelScale,
-                  y: modelY,
+                  y: scrollModelY,
+                  rotateY: mouseRotateY,
+                  x: mouseOffsetX,
                 }}
-                className="absolute inset-0 -left-[15%] -right-[30%] -top-[10%] -bottom-[10%] flex items-center justify-center -translate-x-[15%] pointer-events-none overflow-visible origin-center"
+                className="w-full h-full flex items-center justify-center overflow-visible origin-center bg-transparent"
               >
                 <SplineScene
                   scene="https://prod.spline.design/tzncNju5E3SjXbxy/scene.splinecode"
-                  className="w-[150%] h-[120%] flex items-center justify-center scale-85 sm:scale-90 lg:scale-95 transform transition-transform pointer-events-none overflow-visible"
+                  className="w-full h-full flex items-center justify-center overflow-visible bg-transparent"
                 />
               </motion.div>
             </div>

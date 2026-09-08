@@ -95,8 +95,13 @@ function saveLocalDiskData(payload: any): any {
       console.error('[CMS Route] Error updating src/seed_data.json:', err);
     }
 
-    // 2. Persist to root cms_backup.json
+    // 2. Persist to root cms_backup.json & static_backup.json & public/static_backup.json
     fs.writeFileSync(BACKUP_FILE_PATH, jsonStr, 'utf-8');
+    try {
+      fs.writeFileSync(STATIC_BACKUP_PATH, jsonStr, 'utf-8');
+      const publicStaticPath = path.join(process.cwd(), 'public', 'static_backup.json');
+      fs.writeFileSync(publicStaticPath, jsonStr, 'utf-8');
+    } catch (e) {}
     return sanitized;
   } catch (err) {
     console.error('[CMS Route] Error writing cms_backup.json:', err);

@@ -104,7 +104,7 @@ interface CMSContextType {
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'sathwik_portfolio_auth_token';
-const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v5';
+const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v8';
 
 const sanitizeJourney = (items: JourneyItem[]): JourneyItem[] => {
   return (items || []).map((item) => {
@@ -231,7 +231,7 @@ function getInitialCachedCMSData(): CMSData {
               ? parsed.blogs
               : initialCMSData.blogs,
           contactInfo: { ...initialCMSData.contactInfo, ...(parsed.contactInfo || {}) },
-          intro: { ...initialCMSData.intro, ...(parsed.intro || {}) },
+          intro: { ...initialCMSData.intro, ...(parsed.intro || {}), enabled: parsed.intro?.enabled !== false },
           messages: Array.isArray(parsed.messages) ? parsed.messages : [],
         };
       }
@@ -377,7 +377,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           ? rawData.blogs
           : initialCMSData.blogs,
       contactInfo: { ...initialCMSData.contactInfo, ...(rawData.contactInfo || {}) },
-      intro: { ...initialCMSData.intro, ...(rawData.intro || {}) },
+      intro: { ...initialCMSData.intro, ...(rawData.intro || {}), enabled: rawData.intro?.enabled !== false },
       messages: Array.isArray(rawData.messages) ? rawData.messages : [],
     };
   };
