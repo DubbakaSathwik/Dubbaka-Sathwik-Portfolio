@@ -134,14 +134,21 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
       try {
         let cmsDoc = await CMSModel.findOne({ key: 'portfolio_cms_v1' }).exec();
 
-        // If MongoDB document is missing or empty, auto-populate from cms_backup.json
-        if (!cmsDoc || !cmsDoc.data || !cmsDoc.data.hero) {
-          const diskData = loadLocalDiskData();
+        // Helper to check if dataset contains stale dummy photos or old unsplash URLs
+        const containsStaleData = (d: any) => {
+          if (!d) return true;
+          const str = JSON.stringify(d);
+          return str.includes('images.unsplash.com') || str.includes('photo-1539571696357') || str.includes('static_asset_about_avatarUrl');
+        };
+
+        // If MongoDB document is missing, empty, or contains stale dummy data, auto-populate from clean static code/backup
+        if (!cmsDoc || !cmsDoc.data || !cmsDoc.data.hero || containsStaleData(cmsDoc.data)) {
+          const diskData = loadLocalDiskData() || initialCMSData;
           if (diskData) {
-            console.log('[CMS Route] Populating empty MongoDB from cms_backup.json...');
+            console.log('[CMS Route] Auto-syncing clean static code/backup to MongoDB Atlas...');
             cmsDoc = await CMSModel.findOneAndUpdate(
               { key: 'portfolio_cms_v1' },
-              { schemaVersion: 1, version: 1, data: diskData, updatedAt: new Date() },
+              { schemaVersion: 1, version: (cmsDoc?.version || 0) + 1, data: diskData, updatedAt: new Date() },
               { upsert: true, returnDocument: 'after' }
             ).exec();
           }

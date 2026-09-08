@@ -104,7 +104,7 @@ interface CMSContextType {
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'sathwik_portfolio_auth_token';
-const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v8';
+const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v9';
 
 const sanitizeJourney = (items: JourneyItem[]): JourneyItem[] => {
   return (items || []).map((item) => {
