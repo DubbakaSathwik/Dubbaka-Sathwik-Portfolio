@@ -137,6 +137,16 @@ const isValidAvatarUrl = (url?: string): boolean => {
   return true;
 };
 
+const isStaleCMSData = (d: any): boolean => {
+  if (!d) return true;
+  const str = JSON.stringify(d);
+  return (
+    str.includes('images.unsplash.com') ||
+    str.includes('photo-1539571696357') ||
+    str.includes('static_asset_about_avatarUrl')
+  );
+};
+
 // Native Promise-based IndexedDB caching (zero quota limits, fast reload persistence)
 const IDB_DB_NAME = 'sathwik_portfolio_cms_idb';
 const IDB_STORE_NAME = 'cms_data_store';
@@ -192,6 +202,10 @@ function getInitialCachedCMSData(): CMSData {
     if (cached) {
       const parsed = JSON.parse(cached);
       if (parsed && typeof parsed === 'object' && parsed.hero && Array.isArray(parsed.projects)) {
+        if (isStaleCMSData(parsed)) {
+          localStorage.removeItem(CMS_CACHE_KEY);
+          return initialCMSData;
+        }
         return {
           hero: { ...initialCMSData.hero, ...(parsed.hero || {}) },
           about: {
@@ -250,6 +264,11 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   useEffect(() => {
     getCachedCMSFromIDB()
       .then((cached) => {
+        if (cached && isStaleCMSData(cached)) {
+          setCachedCMSToIDB(initialCMSData);
+          setData(initialCMSData);
+          return;
+        }
         if (cached && cached.hero && Array.isArray(cached.projects) && cached.projects.length >= initialCMSData.projects.length) {
           setData((prev) => {
             if (prev.projects && prev.projects.length >= initialCMSData.projects.length) return prev;
@@ -424,7 +443,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (staticRes && staticRes.ok) {
         const staticJson = await staticRes.json();
         const payloadData = staticJson.data || staticJson;
-        if (payloadData && typeof payloadData === 'object' && payloadData.hero) {
+        if (payloadData && typeof payloadData === 'object' && payloadData.hero && !isStaleCMSData(payloadData)) {
           const formatted = formatCMSPayload(payloadData);
           setData(formatted);
           setDbConnected(true);
@@ -460,10 +479,13 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (res.ok) {
         const json = await res.json();
         setDbConnected(json.database === 'MongoDB Atlas');
-        if (json.data && typeof json.data === 'object') {
+        if (json.data && typeof json.data === 'object' && !isStaleCMSData(json.data)) {
           const formatted = formatCMSPayload(json.data);
           setData(formatted);
           await setCachedCMSToIDB(formatted);
+        } else {
+          setData(initialCMSData);
+          await setCachedCMSToIDB(initialCMSData);
         }
       }
     } catch (e) {
