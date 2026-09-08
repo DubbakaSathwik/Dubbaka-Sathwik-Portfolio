@@ -58,7 +58,7 @@ export function HeroSection() {
           initial={{ opacity: 0, scale: 0.95 }}
           animate={{ opacity: 1, scale: 1 }}
           transition={{ duration: 0.8, delay: 0.2 }}
-          className="relative h-[500px] lg:h-[800px] w-full [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]"
+          className="hidden lg:block relative h-[800px] w-full [mask-image:radial-gradient(ellipse_at_center,black_40%,transparent_75%)]"
         >
           <SplineScene scene="https://prod.spline.design/tzncNju5E3SjXbxy/scene.splinecode" className="w-full h-full" />
         </motion.div>

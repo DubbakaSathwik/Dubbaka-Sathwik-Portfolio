@@ -171,7 +171,7 @@ export function HeroSection() {
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
             transition={{ duration: 0.9, delay: 0.3 }}
-            className="flex lg:col-span-6 relative z-10 items-center justify-center w-full min-h-[450px] sm:min-h-[540px] lg:min-h-[640px] overflow-visible bg-transparent"
+            className="hidden lg:flex lg:col-span-6 relative z-10 items-center justify-center w-full min-h-[640px] overflow-visible bg-transparent"
           >
             <div className="relative w-full h-[450px] sm:h-[540px] lg:h-[640px] flex items-center justify-center overflow-visible bg-transparent">
               <motion.div

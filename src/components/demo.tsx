@@ -25,7 +25,7 @@ export function SplineSceneBasic() {
         </div>
 
         {/* Right content */}
-        <div className="flex-1 relative min-h-[300px] md:min-h-full">
+        <div className="hidden md:block flex-1 relative min-h-full">
           <SplineScene 
             scene="https://prod.spline.design/tzncNju5E3SjXbxy/scene.splinecode"
             className="w-full h-full"
