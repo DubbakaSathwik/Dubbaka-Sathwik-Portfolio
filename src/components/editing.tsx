@@ -174,7 +174,7 @@ export function EditingSection() {
               onCardClick={(item: any) => handleOpenItem(item)}
               cardHeightClass="h-[420px]"
               renderCard={(item: any) => {
-                const cover = item.thumbnail || (item.images && item.images[0]) || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=800';
+                const cover = item.thumbnail || (item.images && item.images[0]) || '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
                 const photoCount = item.images ? item.images.length : 1;
 
                 return (
@@ -238,7 +238,7 @@ export function EditingSection() {
         {/* Creative Cards Grid */}
         <div className={`${mobileViewMode === 'stack' ? 'hidden md:flex' : 'flex'} flex-wrap justify-center gap-3 sm:gap-6`}>
           {currentItems.map((item, idx) => {
-            const cover = item.thumbnail || (item.images && item.images[0]) || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=800';
+            const cover = item.thumbnail || (item.images && item.images[0]) || '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
             const photoCount = item.images ? item.images.length : 1;
 
             return (
@@ -397,7 +397,7 @@ export function EditingSection() {
               ? activeItem.images
               : [activeItem.thumbnail].filter(Boolean);
 
-          const currentPhoto = creativeImageList[activeImageIndex] || activeItem.thumbnail || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=800';
+          const currentPhoto = creativeImageList[activeImageIndex] || activeItem.thumbnail || '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
 
           return (
             <motion.div

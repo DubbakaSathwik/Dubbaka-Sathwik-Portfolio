@@ -12,82 +12,82 @@ export const PRESET_PHOTOS: PresetPhoto[] = [
   {
     label: 'College Campus & Students',
     category: 'College',
-    url: 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_journey_0_image_e4ecfb2a63.jpg',
   },
   {
     label: 'University Library & Study Group',
     category: 'College',
-    url: 'https://images.unsplash.com/photo-1541339907198-e08756dedf3f?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg',
   },
   {
     label: 'Engineering Campus Building',
     category: 'College',
-    url: 'https://images.unsplash.com/photo-1562774053-701939374585?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_gallery_1_image_226657bd26.jpg',
   },
 
   // Computer Science & Coding
   {
     label: 'Full-Stack Code on Screen',
     category: 'Coding & Tech',
-    url: 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_projects_0_thumbnail_ae4790213b.png',
   },
   {
     label: 'Laptop Development Workspace',
     category: 'Coding & Tech',
-    url: 'https://images.unsplash.com/photo-1517694712202-14dd9538aa97?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_projects_1_thumbnail_1928cce5ad.jpg',
   },
   {
     label: 'Cyber Security & Data Analytics',
     category: 'Coding & Tech',
-    url: 'https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_projects_2_thumbnail_e0a9a6e09b.jpg',
   },
 
   // NSS & Community Service
   {
     label: 'NSS Community Volunteers',
     category: 'NSS & Community',
-    url: 'https://images.unsplash.com/photo-1532629345422-7515f3d16bb0?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_gallery_2_image_171c499a18.jpg',
   },
   {
     label: 'Blood Donation & Health Drive',
     category: 'NSS & Community',
-    url: 'https://images.unsplash.com/photo-1559027615-cd4628902d4a?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_gallery_3_image_85ada08cb0.jpg',
   },
   {
     label: 'Tree Plantation & Environmental Drive',
     category: 'NSS & Community',
-    url: 'https://images.unsplash.com/photo-1617870952220-431804d9a695?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_gallery_4_image_5954ed182d.jpg',
   },
 
   // Creative & Design
   {
     label: 'Video Editing & Creative Suite',
     category: 'Creative Design',
-    url: 'https://images.unsplash.com/photo-1574717024653-61fd2cf4d44d?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg',
   },
   {
     label: 'Graphic Poster Design Station',
     category: 'Creative Design',
-    url: 'https://images.unsplash.com/photo-1626785774573-4b799315345d?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_creativePortfolio_1_thu_3b559722e8.jpg',
   },
 
   // Events & Hackathons
   {
     label: 'College Auditorium Event & Stage',
     category: 'Events & Hackathons',
-    url: 'https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_gallery_5_image_5999471839.jpg',
   },
   {
     label: 'Hackathon Coding Team',
     category: 'Events & Hackathons',
-    url: 'https://images.unsplash.com/photo-1504384308090-c894fdcc538d?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_gallery_6_image_df4517d18b.jpg',
   },
 
   // Gaming & Minecraft
   {
     label: 'Minecraft & Gaming Rig Setup',
     category: 'Gaming',
-    url: 'https://images.unsplash.com/photo-1542751371-adc38448a05e?auto=format&fit=crop&q=80&w=1000',
+    url: '/uploads/assets/static_gallery_7_image_5bd0fd83b7.jpg',
   },
 ];
 
@@ -365,7 +365,7 @@ export function PhotoDropdownSelector({
               >
                 {/* Background Image */}
                 <img
-                  src={photoUrl || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400'}
+                  src={photoUrl || '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg'}
                   alt={`Photo ${idx + 1}`}
                   className="absolute inset-0 w-full h-full object-cover opacity-90 group-hover:opacity-100 transition-opacity"
                 />

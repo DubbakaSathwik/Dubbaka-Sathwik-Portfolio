@@ -660,7 +660,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       project.thumbnail ||
       project.image ||
       (project.images && project.images[0]) ||
-      'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000';
+      '/uploads/assets/static_projects_0_thumbnail_ae4790213b.png';
     const newProj: Project = {
       id: 'proj-' + Date.now(),
       title: project.title || 'Untitled Project',
@@ -738,7 +738,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       item.thumbnail ||
       item.image ||
       (item.images && item.images[0]) ||
-      'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000';
+      '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
     const newItem: CreativeItem = {
       id: 'cr-' + Date.now(),
       title: item.title || 'Untitled Work',
@@ -814,7 +814,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const firstImg =
       item.image ||
       (item.images && item.images[0]) ||
-      'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000';
+      '/uploads/assets/static_journey_0_image_e4ecfb2a63.jpg';
     const newItem: JourneyItem = {
       id: 'jour-' + Date.now(),
       year: item.year || '2026',
@@ -888,7 +888,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     const firstImg =
       item.image ||
       (item.images && item.images[0]) ||
-      'https://images.unsplash.com/photo-1517245386807-bb43f82c33c4?auto=format&fit=crop&q=80&w=1000';
+      '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg';
     const newItem: GalleryItem = {
       id: 'gal-' + Date.now(),
       title: item.title || 'Certificate / Award',
@@ -973,7 +973,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tags: post.tags || ['Article'],
       coverImage:
         post.coverImage ||
-        'https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000',
+        '/uploads/assets/static_creativePortfolio_1_ima_3b559722e8.jpg',
       status: post.status || 'Published',
     };
     setData((prev) => ({

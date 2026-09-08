@@ -710,7 +710,7 @@ export function AdminPortalModal() {
       .map((url) => url.trim())
       .filter((url) => url.length > 5);
 
-    const firstImage = photoList[0] || 'https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000';
+    const firstImage = photoList[0] || '/uploads/assets/static_projects_0_thumbnail_ae4790213b.png';
 
     if (editingProjectId) {
       updateProject({
@@ -778,7 +778,7 @@ export function AdminPortalModal() {
       .map((url) => url.trim())
       .filter((url) => url.length > 5);
 
-    const firstImage = photoList[0] || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=1000';
+    const firstImage = photoList[0] || '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
     const combinedTags = Array.from(new Set([newCreative.category, ...newCreative.tags])).filter(Boolean);
 
     if (editingCreativeId) {
@@ -916,7 +916,7 @@ export function AdminPortalModal() {
       .map((url) => url.trim())
       .filter((url) => url.length > 5);
 
-    const mainImage = photoList[0] || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=1000';
+    const mainImage = photoList[0] || '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg';
     const combinedTags = Array.from(new Set([newGallery.category, ...newGallery.tags])).filter(Boolean);
 
     if (editingGalleryId) {
@@ -2105,7 +2105,7 @@ export function AdminPortalModal() {
                           </label>
                           <textarea
                             rows={2}
-                            placeholder="https://images.unsplash.com/photo-..."
+                            placeholder="/uploads/assets/..."
                             value={newCreative.photoUrlsInput}
                             onChange={(e) => setNewCreative({ ...newCreative, photoUrlsInput: e.target.value })}
                             className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white font-mono focus:border-emerald-500/50 outline-none"
@@ -2180,11 +2180,11 @@ export function AdminPortalModal() {
                                     className="relative aspect-video rounded-xl overflow-hidden border border-zinc-800 hover:border-emerald-500/50 bg-black group shadow-md flex flex-col justify-between p-1.5 transition-all"
                                   >
                                     <img
-                                      src={url || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400'}
+                                      src={url || '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg'}
                                       alt={`Preview ${i + 1}`}
                                       className="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform"
                                       onError={(e) => {
-                                        (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400';
+                                        (e.target as HTMLImageElement).src = '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
                                       }}
                                     />
 
@@ -2355,7 +2355,7 @@ export function AdminPortalModal() {
 
                         {data.creativePortfolio.map((c, idx) => {
                           const isEditingThis = editingCreativeId === c.id;
-                          const thumbUrl = c.thumbnail || (c.images && c.images[0]) || 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400';
+                          const thumbUrl = c.thumbnail || (c.images && c.images[0]) || '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
 
                           return (
                             <div
@@ -2374,7 +2374,7 @@ export function AdminPortalModal() {
                                     alt={c.title}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400';
+                                      (e.target as HTMLImageElement).src = '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
                                     }}
                                   />
                                   {c.images && c.images.length > 1 && (
@@ -2729,7 +2729,7 @@ export function AdminPortalModal() {
 
                         {data.gallery.map((g, idx) => {
                           const isEditingThis = editingGalleryId === g.id;
-                          const thumbUrl = g.image || (g.images && g.images[0]) || 'https://images.unsplash.com/photo-1523240795612-9a054b0db644?auto=format&fit=crop&q=80&w=400';
+                          const thumbUrl = g.image || (g.images && g.images[0]) || '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg';
 
                           return (
                             <div
@@ -2748,7 +2748,7 @@ export function AdminPortalModal() {
                                     alt={g.title}
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      (e.target as HTMLImageElement).src = 'https://images.unsplash.com/photo-1579783900882-c0d3dad7b119?auto=format&fit=crop&q=80&w=400';
+                                      (e.target as HTMLImageElement).src = '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg';
                                     }}
                                   />
                                 </div>
@@ -3438,7 +3438,7 @@ export function AdminPortalModal() {
                             type="text"
                             value={aboutForm.avatarUrl || ''}
                             onChange={(e) => setAboutForm({ ...aboutForm, avatarUrl: e.target.value })}
-                            placeholder="https://images.unsplash.com/photo-..."
+                            placeholder="/profile/avatar.jpeg"
                             className="w-full px-4 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
                           />
                         </div>

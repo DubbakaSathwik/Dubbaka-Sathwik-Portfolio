@@ -1116,7 +1116,7 @@
         "Coding Journey",
         "MVSR"
       ],
-      "coverImage": "https://images.unsplash.com/photo-1550745165-9bc0b252726f?auto=format&fit=crop&q=80&w=1000",
+      "coverImage": "/uploads/assets/static_creativePortfolio_1_ima_3b559722e8.jpg",
       "status": "Published"
     },
     {
@@ -1134,7 +1134,7 @@
         "AI Tools",
         "Graphics"
       ],
-      "coverImage": "https://images.unsplash.com/photo-1618005182384-a83a8bd57fbe?auto=format&fit=crop&q=80&w=1000",
+      "coverImage": "/uploads/assets/static_creativePortfolio_2_ima_c7b0a1905c.jpg",
       "status": "Published"
     },
     {
@@ -1153,7 +1153,7 @@
         "Node.js",
         "Tailwind CSS"
       ],
-      "coverImage": "https://images.unsplash.com/photo-1555066931-4365d14bab8c?auto=format&fit=crop&q=80&w=1000",
+      "coverImage": "/uploads/assets/static_projects_0_images_2_6cfa237658.png",
       "status": "Published"
     }
   ],
