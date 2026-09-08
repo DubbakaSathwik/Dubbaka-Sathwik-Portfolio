@@ -45,15 +45,24 @@ async function startServer() {
   app.use(express.json({ limit: '25mb' }));
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
-  // Ensure uploads directory exists
+  // Ensure public, profile, and uploads directories exist
+  const publicDir = path.join(process.cwd(), 'public');
+  const publicProfileDir = path.join(process.cwd(), 'public', 'profile');
+  const rootProfileDir = path.join(process.cwd(), 'profile');
   const publicUploadsDir = path.join(process.cwd(), 'public', 'uploads');
-  if (!fs.existsSync(publicUploadsDir)) {
-    try {
-      fs.mkdirSync(publicUploadsDir, { recursive: true });
-    } catch (e) {}
-  }
 
-  // Serve static uploads
+  [publicDir, publicProfileDir, rootProfileDir, publicUploadsDir].forEach((dir) => {
+    if (!fs.existsSync(dir)) {
+      try {
+        fs.mkdirSync(dir, { recursive: true });
+      } catch (e) {}
+    }
+  });
+
+  // Serve static assets from public, profile, and uploads directories
+  app.use(express.static(publicDir));
+  app.use('/profile', express.static(publicProfileDir));
+  app.use('/profile', express.static(rootProfileDir));
   app.use('/uploads', express.static(publicUploadsDir));
   app.use('/public/uploads', express.static(publicUploadsDir));
 
