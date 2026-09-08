@@ -92,13 +92,28 @@ export async function runStorageMigration(force: boolean = false): Promise<Migra
   const currentMongoDoc = await CMSModel.findOne({ key: 'portfolio_cms_v1' }).exec();
   const mongoData = currentMongoDoc ? currentMongoDoc.data : null;
 
-  // 2. Discover local file data
-  const localDiskData = loadDiskBackup();
-
-  // Create pre-migration backup snapshot if data exists
-  if (mongoData || localDiskData) {
-    saveSafetySnapshot({ mongoData, localDiskData });
+  // If MongoDB document is already present and valid, skip unnecessary migration writes
+  if (mongoData && mongoData.hero && !force) {
+    return {
+      timestamp: new Date().toISOString(),
+      status: 'SKIPPED_ALREADY_MIGRATED',
+      details: {
+        hero: { status: 'EXISTS' },
+        about: { status: 'EXISTS' },
+        projects: { existingMongo: mongoData.projects?.length || 0, localSource: 0, mergedFinal: mongoData.projects?.length || 0 },
+        creative: { existingMongo: mongoData.creativePortfolio?.length || 0, localSource: 0, mergedFinal: mongoData.creativePortfolio?.length || 0 },
+        journey: { existingMongo: mongoData.journey?.length || 0, localSource: 0, mergedFinal: mongoData.journey?.length || 0 },
+        gallery: { existingMongo: mongoData.gallery?.length || 0, localSource: 0, mergedFinal: mongoData.gallery?.length || 0 },
+        resumes: { existingMongo: mongoData.resumes?.length || 0, localSource: 0, mergedFinal: mongoData.resumes?.length || 0 },
+        blogs: { existingMongo: mongoData.blogs?.length || 0, localSource: 0, mergedFinal: mongoData.blogs?.length || 0 },
+        messages: { existingMongo: mongoData.messages?.length || 0, localSource: 0, mergedFinal: mongoData.messages?.length || 0 },
+      },
+      databaseVersion: currentMongoDoc?.version || 1,
+    };
   }
+
+  console.log('[Migration] Starting idempotent MongoDB-first storage migration...');
+  const localDiskData = loadDiskBackup();
 
   // 3. Normalize and merge all datasets
   const mergedProjects = deduplicateAndMergeArrays(
