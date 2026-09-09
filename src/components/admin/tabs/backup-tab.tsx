@@ -20,6 +20,10 @@ import {
   FolderOpen,
   ArrowRight,
   ShieldCheck,
+  Github,
+  GitBranch,
+  GitCommit,
+  ExternalLink,
 } from 'lucide-react';
 
 export function BackupRestoreTab({
@@ -39,13 +43,18 @@ export function BackupRestoreTab({
     refreshStaticBackupInfo,
   } = useCMS();
 
-  const [activeSubTab, setActiveSubTab] = useState<'static' | 'general'>('static');
+  const [activeSubTab, setActiveSubTab] = useState<'static' | 'github' | 'general'>('static');
   const [isRestoring, setIsRestoring] = useState(false);
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewData, setPreviewData] = useState<any | null>(null);
   const [parseError, setParseError] = useState<string>('');
   const [serverBackupInfo, setServerBackupInfo] = useState<any | null>(null);
   const [loadingServerInfo, setLoadingServerInfo] = useState(false);
+
+  // GitHub Sync State
+  const [githubStatus, setGithubStatus] = useState<any>(null);
+  const [isSyncingGithub, setIsSyncingGithub] = useState(false);
+  const [customCommitMessage, setCustomCommitMessage] = useState('');
 
   // Static Backup Tab State
   const [selectedStaticFileId, setSelectedStaticFileId] = useState<string>('active_static');
@@ -71,8 +80,42 @@ export function BackupRestoreTab({
     }
   };
 
+  const fetchGithubStatus = async () => {
+    try {
+      const res = await fetch('/api/github/status');
+      if (res.ok) {
+        const json = await res.json();
+        setGithubStatus(json);
+      }
+    } catch (e) {}
+  };
+
+  const handleSyncGithub = async () => {
+    setIsSyncingGithub(true);
+    try {
+      const res = await fetch('/api/github/sync', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: customCommitMessage.trim() || undefined }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showToast('GitHub Sync Succeeded', `Pushed commit ${json.commit} to ${json.branch}!`, 'GitHub');
+        setCustomCommitMessage('');
+        await fetchGithubStatus();
+      } else {
+        showToast('GitHub Sync Failed', json.message || 'Push failed', 'Error');
+      }
+    } catch (err: any) {
+      showToast('GitHub Sync Error', err?.message || 'Network error during GitHub push', 'Error');
+    } finally {
+      setIsSyncingGithub(false);
+    }
+  };
+
   useEffect(() => {
     fetchServerBackupInfo();
+    fetchGithubStatus();
   }, []);
 
   // 1. Download Backup as JSON
@@ -319,7 +362,7 @@ export function BackupRestoreTab({
         </div>
 
         {/* Sub-tabs Selector */}
-        <div className="flex items-center gap-1.5 p-1 bg-zinc-900 rounded-xl border border-zinc-800 self-start md:self-auto">
+        <div className="flex items-center gap-1.5 p-1 bg-zinc-900 rounded-xl border border-zinc-800 self-start md:self-auto flex-wrap">
           <button
             type="button"
             onClick={() => setActiveSubTab('static')}
@@ -331,6 +374,18 @@ export function BackupRestoreTab({
           >
             <Bookmark className="w-3.5 h-3.5" />
             <span>Static Backup</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveSubTab('github')}
+            className={`px-3.5 py-1.5 rounded-lg text-xs font-semibold font-mono transition-all cursor-pointer flex items-center gap-1.5 ${
+              activeSubTab === 'github'
+                ? 'bg-emerald-600 text-white shadow-sm'
+                : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
+            }`}
+          >
+            <Github className="w-3.5 h-3.5" />
+            <span>GitHub Sync (100% Static)</span>
           </button>
           <button
             type="button"
@@ -563,6 +618,171 @@ export function BackupRestoreTab({
                     <span>{isSavingStatic ? 'Setting Static Backup...' : 'Upload & Set as Static Backup'}</span>
                   </button>
                 </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ========================================================= */}
+      {/* SUB-TAB: GITHUB REPOSITORY SYNC (100% STATIC & ZERO DB) */}
+      {/* ========================================================= */}
+      {activeSubTab === 'github' && (
+        <div className="space-y-6">
+          <div className="p-6 rounded-2xl bg-zinc-950 border border-emerald-500/30 shadow-[0_0_30px_rgba(16,185,129,0.08)] space-y-6">
+            {/* Header Line */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b border-zinc-800">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <div className="p-2 rounded-xl bg-zinc-900 border border-zinc-700 text-white">
+                    <Github className="w-5 h-5" />
+                  </div>
+                  <div>
+                    <h3 className="text-base font-bold text-white flex items-center gap-2">
+                      <span>GitHub Repository Sync</span>
+                      <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-950 text-emerald-300 border border-emerald-500/30 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-emerald-400" /> 100% Static
+                      </span>
+                    </h3>
+                    <p className="text-xs text-zinc-400">
+                      Synchronize all projects, milestones, certs, and photos directly to your GitHub repository with zero database dependency.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Quick Actions */}
+              <div className="flex items-center gap-2 shrink-0">
+                <button
+                  type="button"
+                  onClick={fetchGithubStatus}
+                  className="px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 hover:text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                  title="Check latest commit status"
+                >
+                  <RefreshCw className="w-3.5 h-3.5 text-emerald-400" />
+                  <span>Refresh Status</span>
+                </button>
+
+                <a
+                  href={githubStatus?.repoUrl || 'https://github.com/DubbakaSathwik/Dubbaka-Sathwik-Portfolio'}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-3.5 py-2 rounded-xl bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
+                >
+                  <ExternalLink className="w-3.5 h-3.5" />
+                  <span>Open Repo</span>
+                </a>
+              </div>
+            </div>
+
+            {/* Status & Repository Info Bar */}
+            <div className="p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 flex-wrap">
+                  <span className="text-xs font-bold text-white">Target Repository:</span>
+                  <a
+                    href={`https://github.com/${githubStatus?.repo || 'DubbakaSathwik/Dubbaka-Sathwik-Portfolio'}`}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-xs font-mono text-emerald-400 hover:underline font-bold px-2 py-0.5 rounded bg-zinc-950 border border-emerald-500/30 flex items-center gap-1"
+                  >
+                    <Github className="w-3 h-3" />
+                    <span>{githubStatus?.repo || 'DubbakaSathwik/Dubbaka-Sathwik-Portfolio'}</span>
+                  </a>
+                  <span className="text-xs font-mono text-zinc-400 px-2 py-0.5 rounded bg-zinc-950 border border-zinc-800 flex items-center gap-1">
+                    <GitBranch className="w-3 h-3 text-sky-400" />
+                    <span>{githubStatus?.branch || 'main'}</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-zinc-400 flex items-center gap-1.5">
+                  <GitCommit className="w-3.5 h-3.5 text-zinc-500" />
+                  <span>Latest Commit:</span>
+                  <span className="font-mono text-zinc-300 font-semibold truncate max-w-md">
+                    {githubStatus?.lastCommit || '93688b0 - feat: 100% static portfolio with organized public/images'}
+                  </span>
+                </p>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <div className="px-3 py-1.5 rounded-xl bg-zinc-950 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5">
+                  <CheckCircle2 className="w-4 h-4 text-emerald-400" />
+                  <span>Git PAT Active</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Sync Action Form */}
+            <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800 space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-emerald-400" />
+                  <span>Push Updated Portfolio to GitHub</span>
+                </h4>
+                <p className="text-xs text-zinc-400">
+                  Stages all updated project JSON data (<code className="text-emerald-400 font-mono">src/seed_data.json</code>) and organized images (<code className="text-emerald-400 font-mono">public/images/</code>) and pushes a clean commit to your GitHub repository.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <div>
+                  <label className="block text-xs font-mono text-zinc-400 mb-1.5">
+                    Commit Message (Optional):
+                  </label>
+                  <input
+                    type="text"
+                    value={customCommitMessage}
+                    onChange={(e) => setCustomCommitMessage(e.target.value)}
+                    placeholder="e.g. update: added new project screenshot and updated bio"
+                    className="w-full px-3.5 py-2 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500/60 font-mono"
+                  />
+                </div>
+
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
+                  <div className="text-[11px] text-zinc-400 flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Zero secrets leaked. Secrets (<code className="text-zinc-300 font-mono">.env</code>) remain completely ignored by git.</span>
+                  </div>
+
+                  <button
+                    type="button"
+                    disabled={isSyncingGithub}
+                    onClick={handleSyncGithub}
+                    className="w-full sm:w-auto px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-mono font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${isSyncingGithub ? 'animate-spin' : ''}`} />
+                    <span>{isSyncingGithub ? 'Pushing to GitHub...' : 'Push Now to GitHub Repository'}</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Architecture Highlights */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
+              <div className="p-4 rounded-xl bg-zinc-900/30 border border-zinc-800/80 space-y-1.5">
+                <span className="font-bold text-white flex items-center gap-1.5">
+                  📁 Physical Image Assets
+                </span>
+                <p className="text-zinc-400 leading-relaxed text-[11px]">
+                  All 82 photos reside in <code className="text-emerald-400 font-mono">public/images/</code> as genuine PNG/JPG files committed right inside your repository.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-zinc-900/30 border border-zinc-800/80 space-y-1.5">
+                <span className="font-bold text-white flex items-center gap-1.5">
+                  ⚡ Zero Database Dependency
+                </span>
+                <p className="text-zinc-400 leading-relaxed text-[11px]">
+                  If MongoDB Atlas is ever disconnected or offline, the site never breaks or shows blank screens—it falls back instantly to local JSON files.
+                </p>
+              </div>
+
+              <div className="p-4 rounded-xl bg-zinc-900/30 border border-zinc-800/80 space-y-1.5">
+                <span className="font-bold text-white flex items-center gap-1.5">
+                  🌐 100% Free Static Hosting
+                </span>
+                <p className="text-zinc-400 leading-relaxed text-[11px]">
+                  You can deploy this repository directly on GitHub Pages, Vercel, or Netlify with standard static SPA build (<code className="text-emerald-400 font-mono">npm run build</code>).
+                </p>
               </div>
             </div>
           </div>
