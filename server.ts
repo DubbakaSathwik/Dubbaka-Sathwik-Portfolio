@@ -2,7 +2,6 @@ import express from 'express';
 import path from 'path';
 import fs from 'fs';
 import cookieParser from 'cookie-parser';
-import helmet from 'helmet';
 import { createServer as createViteServer } from 'vite';
 
 import { config, validateConfig } from './server/config/env';
@@ -19,6 +18,7 @@ import uploadRouter from './server/routes/upload';
 import telegramRouter from './server/routes/telegram';
 import telemetryRouter from './server/routes/telemetry';
 import logsRouter from './server/routes/logs';
+import githubRouter from './server/routes/github';
 
 async function startServer() {
   const envValidation = validateConfig();
@@ -33,13 +33,15 @@ async function startServer() {
   // Trust proxy for reverse proxies (nginx, Cloud Run, preview container)
   app.set('trust proxy', 1);
 
-  // Security Headers (Helmet) - configured to allow Spline 3D, Unsplash, Google Fonts, and inline styles for Tailwind
-  app.use(
-    helmet({
-      contentSecurityPolicy: false, // Vite and Spline 3D scripts require dynamic inline script/eval in preview
-      crossOriginEmbedderPolicy: false,
-    })
-  );
+  // Permissive CORS and iframe headers for AI Studio preview
+  app.use((req, res, next) => {
+    res.removeHeader('X-Frame-Options');
+    res.removeHeader('Origin-Agent-Cluster');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', '*');
+    next();
+  });
 
   app.use(cookieParser());
   app.use(express.json({ limit: '25mb' }));
@@ -66,6 +68,59 @@ async function startServer() {
   app.use('/uploads', express.static(publicUploadsDir));
   app.use('/public/uploads', express.static(publicUploadsDir));
 
+  // Intelligent fallback asset resolver for /uploads/assets/
+  app.use(['/uploads/assets/:file', '/public/uploads/assets/:file'], (req, res, next) => {
+    const requestedFile = req.params.file;
+    const directPath = path.join(publicUploadsDir, 'assets', requestedFile);
+    if (fs.existsSync(directPath)) {
+      return res.sendFile(directPath);
+    }
+
+    try {
+      const assetsDir = path.join(publicUploadsDir, 'assets');
+      if (fs.existsSync(assetsDir)) {
+        const diskFiles = fs.readdirSync(assetsDir);
+        const cleaned = requestedFile.replace(/^static_asset_/, 'static_');
+        const parts = cleaned.split('_');
+        if (parts.length >= 4) {
+          const category = parts[1];
+          const idx = parts[2];
+          const field = parts[3];
+          const subIdx = parts.length > 5 ? parts[4] : null;
+
+          const match =
+            diskFiles.find((df) => {
+              if (df.startsWith(`static_${category}_${idx}_`)) {
+                if (
+                  subIdx !== null &&
+                  (df.includes(`images_${subIdx}_`) ||
+                    (category === 'creativePortfolio' && df.includes('ima_')))
+                ) {
+                  return true;
+                }
+                if (field === 'thumbnail' && (df.includes('thumbnail') || df.includes('thu_'))) {
+                  return true;
+                }
+                if (field === 'image' && (df.includes('_image_') || df.includes('ima_'))) {
+                  return true;
+                }
+              }
+              return false;
+            }) ||
+            diskFiles.find((df) => df.startsWith(`static_${category}_${idx}_`)) ||
+            diskFiles.find((df) => df.startsWith(`static_${category}_`));
+
+          if (match) {
+            return res.sendFile(path.join(assetsDir, match));
+          }
+        }
+      }
+    } catch (e) {}
+
+    // Never fall through to Vite SPA index.html for image requests
+    return res.status(404).end();
+  });
+
   // Health check endpoint
   app.get('/api/health', (req, res) => {
     res.json({
@@ -84,6 +139,7 @@ async function startServer() {
   app.use('/api/telegram', telegramRouter);
   app.use('/api/telemetry', telemetryRouter);
   app.use('/api/logs', logsRouter);
+  app.use('/api/github', githubRouter);
 
   // Central error handler for API routes
   app.use(errorHandler);

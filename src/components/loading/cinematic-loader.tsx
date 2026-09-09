@@ -54,18 +54,6 @@ export function CinematicLoadingScreen() {
     };
   }, []);
 
-  // Manage body scroll overflow lock
-  useEffect(() => {
-    if (isVisible) {
-      document.body.style.overflow = 'hidden';
-    } else {
-      document.body.style.overflow = 'unset';
-    }
-    return () => {
-      document.body.style.overflow = 'unset';
-    };
-  }, [isVisible]);
-
   // Desktop lanes: distributed 360 degrees around perimeter converging towards outside of name boundary
   const desktopLanes = useMemo(() => {
     const words = intro.floatingWords && intro.floatingWords.length > 0 ? intro.floatingWords : initialIntroData.floatingWords;
@@ -232,6 +220,16 @@ export function CinematicLoadingScreen() {
     setPhase('phase7_complete');
   };
 
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape' || e.key === ' ' || e.key === 'Enter') {
+        handleSkip();
+      }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, []);
+
   const isNameVisible =
     phase === 'phase1_sathwik' ||
     phase === 'phase2_dubbaka' ||
@@ -250,7 +248,8 @@ export function CinematicLoadingScreen() {
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
           transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
-          className="fixed inset-0 z-[99999] bg-[#050505] text-white select-none overflow-hidden"
+          onClick={handleSkip}
+          className="fixed inset-0 z-[99999] bg-[#050505] text-white select-none overflow-hidden cursor-pointer"
           style={{ willChange: 'opacity' }}
         >
           {/* Subtle Ambient Emerald-Infused Radial Glow */}

@@ -34,7 +34,7 @@ export const initialAboutData: AboutData = (seedData.about as AboutData) || {
   department: 'Computer Science and Information Technology',
   location: 'MVSR Engineering College • Hyderabad, Telangana, India',
   yearOfStudy: '3rd Year',
-  avatarUrl: (seedData.about as AboutData)?.avatarUrl || '/profile/avatar.jpeg',
+  avatarUrl: '',
   bioParagraph1:
     "My journey into technology started with exploring programming and experimentation. As my curiosity grew, I learned full-stack web development with React, Node.js, Express, MongoDB, and MySQL, alongside creating digital designs, poster artworks, video editing, and contributing to college initiatives.",
   bioParagraph2: '',
@@ -143,7 +143,7 @@ export const initialIntroData: IntroData = {
   ],
   wordsSpeedSeconds: 4.8,
   nameDelaySeconds: 1.2,
-  ...(seedData.intro || {}),
+  ...((seedData as any).intro || {}),
 };
 
 export const initialCMSData: CMSData = {

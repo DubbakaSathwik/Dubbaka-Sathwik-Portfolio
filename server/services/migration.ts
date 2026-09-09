@@ -12,6 +12,7 @@ export interface MigrationReport {
   details: {
     hero: { status: string };
     about: { status: string };
+    intro?: { status: string };
     projects: { existingMongo: number; localSource: number; mergedFinal: number };
     creative: { existingMongo: number; localSource: number; mergedFinal: number };
     journey: { existingMongo: number; localSource: number; mergedFinal: number };
@@ -29,8 +30,18 @@ function loadDiskBackup(): any {
       const raw = fs.readFileSync(BACKUP_FILE_PATH, 'utf-8');
       return JSON.parse(raw);
     }
+    const staticBackupPath = path.join(process.cwd(), 'static_backup.json');
+    if (fs.existsSync(staticBackupPath)) {
+      const raw = fs.readFileSync(staticBackupPath, 'utf-8');
+      return JSON.parse(raw);
+    }
+    const publicBackupPath = path.join(process.cwd(), 'public', 'static_backup.json');
+    if (fs.existsSync(publicBackupPath)) {
+      const raw = fs.readFileSync(publicBackupPath, 'utf-8');
+      return JSON.parse(raw);
+    }
   } catch (err) {
-    console.warn('[Migration] Could not parse cms_backup.json:', err);
+    console.warn('[Migration] Could not parse disk backup:', err);
   }
   return null;
 }
@@ -100,6 +111,7 @@ export async function runStorageMigration(force: boolean = false): Promise<Migra
       details: {
         hero: { status: 'EXISTS' },
         about: { status: 'EXISTS' },
+        intro: { status: 'EXISTS' },
         projects: { existingMongo: mongoData.projects?.length || 0, localSource: 0, mergedFinal: mongoData.projects?.length || 0 },
         creative: { existingMongo: mongoData.creativePortfolio?.length || 0, localSource: 0, mergedFinal: mongoData.creativePortfolio?.length || 0 },
         journey: { existingMongo: mongoData.journey?.length || 0, localSource: 0, mergedFinal: mongoData.journey?.length || 0 },
@@ -112,8 +124,13 @@ export async function runStorageMigration(force: boolean = false): Promise<Migra
     };
   }
 
-  console.log('[Migration] Starting idempotent MongoDB-first storage migration...');
+  // 2. Discover local file data
   const localDiskData = loadDiskBackup();
+
+  // Create pre-migration backup snapshot if data exists
+  if (mongoData || localDiskData) {
+    saveSafetySnapshot({ mongoData, localDiskData });
+  }
 
   // 3. Normalize and merge all datasets
   const mergedProjects = deduplicateAndMergeArrays(
@@ -183,6 +200,12 @@ export async function runStorageMigration(force: boolean = false): Promise<Migra
     ...(mongoData?.contactInfo || {}),
   };
 
+  const mergedIntro = {
+    ...initialCMSData.intro,
+    ...(localDiskData?.intro || {}),
+    ...(mongoData?.intro || {}),
+  };
+
   const canonicalCMSData = {
     hero: mergedHero,
     about: mergedAbout,
@@ -194,6 +217,7 @@ export async function runStorageMigration(force: boolean = false): Promise<Migra
     blogs: mergedBlogs,
     resumes: mergedResumes,
     contactInfo: mergedContactInfo,
+    intro: mergedIntro,
     messages: mergedMessages,
   };
 
@@ -220,6 +244,7 @@ export async function runStorageMigration(force: boolean = false): Promise<Migra
     details: {
       hero: { status: 'Preserved & Synced' },
       about: { status: 'Preserved & Synced' },
+      intro: { status: 'Preserved & Synced' },
       projects: {
         existingMongo: mongoData?.projects?.length || 0,
         localSource: localDiskData?.projects?.length || 0,
@@ -256,7 +281,7 @@ export async function runStorageMigration(force: boolean = false): Promise<Migra
         mergedFinal: canonicalCMSData.messages.length,
       },
     },
-    databaseVersion: updatedDoc.version,
+    databaseVersion: updatedDoc?.version ?? nextVersion,
   };
 
   return report;

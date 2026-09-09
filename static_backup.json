@@ -293,37 +293,67 @@
       "year": "2026"
     },
     {
-      "id": "proj-1788716566911",
-      "title": "MedLens ",
-      "summary": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
-      "description": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
-      "longDescription": "{bold & highlight}MedLens{bold & highlight} is an{bold & highlight} AI clinical intelligence platform{bold & highlight} that transforms fragmented medical documents into structured, FHIR-compliant records. It prevents hallucinations through strict laboratory reference-range grounding, bidirectional document provenance, OCR ambiguity resolution, and deterministic non-diagnostic medical safety guardrails.",
-      "category": "Tools",
+      "id": "proj-1785859536070",
+      "title": "News Without the Noise",
+      "summary": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
+      "description": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
+      "longDescription": "{bold}News Without the Noise{bold} is an intelligent,{bold & highlight} AI-driven news dashboard{bold & highlight} that combats digital noise, clickbait, and misinformation. Featuring a{bold & highlight} personalized recommendation engine{bold & highlight}, it dynamically learns user preferences from actions like reading behavior. The platform integrates{bold & highlight} Google Gemini and OpenA{bold & highlight}I to analyze articles for bias, sensationalism, and source trust, while providing customized summaries. Built with Node.js, Express, MongoDB, and standard HTML/CSS/JS, it also features location-based weather, local headlines, and a deepfake media scanner, ensuring a clean, reliable, and secure information experience.",
+      "category": "Web Apps",
       "tags": [
-        "Tools",
-        "React",
-        "Node.js",
-        "Tailwind CSS",
-        "Next.js"
+        "Web Apps",
+        "Node.js & Express.js",
+        "MongoDB & Mongoose",
+        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
+        "Google Gemini & OpenAI APIs"
       ],
       "technologies": [
-        "Tools",
+        "Web Apps",
+        "Node.js & Express.js",
+        "MongoDB & Mongoose",
+        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
+        "Google Gemini & OpenAI APIs"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_7_thumbnail_aepz6d1h.jpg",
+      "image": "/uploads/assets/static_asset_projects_7_image_s4es00xn.jpg",
+      "images": [
+        "/uploads/assets/static_asset_projects_7_images_0_q5g1s18p.jpg",
+        "/uploads/assets/static_asset_projects_7_images_1_bmlqiptn.jpg",
+        "/uploads/assets/static_asset_projects_7_images_2_bhnadvju.jpg",
+        "/uploads/assets/static_asset_projects_7_images_3_mmbgfu9x.jpg"
+      ],
+      "githubUrl": "https://github.com/DubbakaSathwik/AA-Hackthon-online-.git",
+      "demoUrl": "https://news-without-the-noise.onrender.com",
+      "featured": false,
+      "status": "Completed",
+      "year": "2026"
+    },
+    {
+      "id": "proj-1785859703526",
+      "title": "VaultFlow",
+      "summary": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
+      "description": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
+      "longDescription": "{bold}VaultFlow{bold} is a comprehensive {bold & highlight}personal finance manager{bold & highlight} designed for Android with privacy and offline capabilities at its core. {highlight}Developed in Kotlin using Jetpack Compose{highlight}, the application allows users to manage multiple bank accounts, track recurring transactions, monitor savings goals, and track debts. The app integrates Google ML Kit for scanning receipts via OCR and leverages the Gemini API to deliver personalized financial insights directly on the device. All data is stored locally in a Room database, ensuring complete user privacy.",
+      "category": "Personal",
+      "tags": [
+        "Personal",
         "React",
         "Node.js",
-        "Tailwind CSS",
-        "Next.js"
+        "MongoDB"
       ],
-      "thumbnail": "/uploads/assets/static_asset_projects_4_thumbnail_h8jc7u5p.jpg",
-      "image": "/uploads/assets/static_asset_projects_4_image_tszid3ku.jpg",
+      "technologies": [
+        "Personal",
+        "React",
+        "Node.js",
+        "MongoDB"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_6_thumbnail_ysen8dtl.jpg",
+      "image": "/uploads/assets/static_asset_projects_6_image_9ep65o9x.jpg",
       "images": [
-        "/uploads/assets/static_asset_projects_4_images_0_7wp6o0hc.jpg",
-        "/uploads/assets/static_asset_projects_4_images_1_enx36dk5.jpg",
-        "/uploads/assets/static_asset_projects_4_images_2_uru7o2ag.jpg",
-        "/uploads/assets/static_asset_projects_4_images_3_tfk8gx4e.jpg"
+        "/uploads/assets/static_asset_projects_6_images_0_5aebtmaf.jpg"
       ],
-      "githubUrl": "https://github.com/DubbakaSathwik/medlens-prompt_wars.git",
-      "demoUrl": "https://medlens-8gan.onrender.com",
-      "featured": true,
+      "githubUrl": "https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git",
+      "demoUrl": "",
+      "featured": false,
       "status": "Completed",
       "year": "2026"
     },
@@ -365,67 +395,37 @@
       "year": "2026"
     },
     {
-      "id": "proj-1785859703526",
-      "title": "VaultFlow",
-      "summary": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
-      "description": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
-      "longDescription": "{bold}VaultFlow{bold} is a comprehensive {bold & highlight}personal finance manager{bold & highlight} designed for Android with privacy and offline capabilities at its core. {highlight}Developed in Kotlin using Jetpack Compose{highlight}, the application allows users to manage multiple bank accounts, track recurring transactions, monitor savings goals, and track debts. The app integrates Google ML Kit for scanning receipts via OCR and leverages the Gemini API to deliver personalized financial insights directly on the device. All data is stored locally in a Room database, ensuring complete user privacy.",
-      "category": "Personal",
+      "id": "proj-1788716566911",
+      "title": "MedLens ",
+      "summary": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
+      "description": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
+      "longDescription": "{bold & highlight}MedLens{bold & highlight} is an{bold & highlight} AI clinical intelligence platform{bold & highlight} that transforms fragmented medical documents into structured, FHIR-compliant records. It prevents hallucinations through strict laboratory reference-range grounding, bidirectional document provenance, OCR ambiguity resolution, and deterministic non-diagnostic medical safety guardrails.",
+      "category": "Tools",
       "tags": [
-        "Personal",
+        "Tools",
         "React",
         "Node.js",
-        "MongoDB"
+        "Tailwind CSS",
+        "Next.js"
       ],
       "technologies": [
-        "Personal",
+        "Tools",
         "React",
         "Node.js",
-        "MongoDB"
+        "Tailwind CSS",
+        "Next.js"
       ],
-      "thumbnail": "/uploads/assets/static_asset_projects_6_thumbnail_ysen8dtl.jpg",
-      "image": "/uploads/assets/static_asset_projects_6_image_9ep65o9x.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_4_thumbnail_h8jc7u5p.jpg",
+      "image": "/uploads/assets/static_asset_projects_4_image_tszid3ku.jpg",
       "images": [
-        "/uploads/assets/static_asset_projects_6_images_0_5aebtmaf.jpg"
+        "/uploads/assets/static_asset_projects_4_images_0_7wp6o0hc.jpg",
+        "/uploads/assets/static_asset_projects_4_images_1_enx36dk5.jpg",
+        "/uploads/assets/static_asset_projects_4_images_2_uru7o2ag.jpg",
+        "/uploads/assets/static_asset_projects_4_images_3_tfk8gx4e.jpg"
       ],
-      "githubUrl": "https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git",
-      "demoUrl": "",
-      "featured": false,
-      "status": "Completed",
-      "year": "2026"
-    },
-    {
-      "id": "proj-1785859536070",
-      "title": "News Without the Noise",
-      "summary": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
-      "description": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
-      "longDescription": "{bold}News Without the Noise{bold} is an intelligent,{bold & highlight} AI-driven news dashboard{bold & highlight} that combats digital noise, clickbait, and misinformation. Featuring a{bold & highlight} personalized recommendation engine{bold & highlight}, it dynamically learns user preferences from actions like reading behavior. The platform integrates{bold & highlight} Google Gemini and OpenA{bold & highlight}I to analyze articles for bias, sensationalism, and source trust, while providing customized summaries. Built with Node.js, Express, MongoDB, and standard HTML/CSS/JS, it also features location-based weather, local headlines, and a deepfake media scanner, ensuring a clean, reliable, and secure information experience.",
-      "category": "Web Apps",
-      "tags": [
-        "Web Apps",
-        "Node.js & Express.js",
-        "MongoDB & Mongoose",
-        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
-        "Google Gemini & OpenAI APIs"
-      ],
-      "technologies": [
-        "Web Apps",
-        "Node.js & Express.js",
-        "MongoDB & Mongoose",
-        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
-        "Google Gemini & OpenAI APIs"
-      ],
-      "thumbnail": "/uploads/assets/static_asset_projects_7_thumbnail_aepz6d1h.jpg",
-      "image": "/uploads/assets/static_asset_projects_7_image_s4es00xn.jpg",
-      "images": [
-        "/uploads/assets/static_asset_projects_7_images_0_q5g1s18p.jpg",
-        "/uploads/assets/static_asset_projects_7_images_1_bmlqiptn.jpg",
-        "/uploads/assets/static_asset_projects_7_images_2_bhnadvju.jpg",
-        "/uploads/assets/static_asset_projects_7_images_3_mmbgfu9x.jpg"
-      ],
-      "githubUrl": "https://github.com/DubbakaSathwik/AA-Hackthon-online-.git",
-      "demoUrl": "https://news-without-the-noise.onrender.com",
-      "featured": false,
+      "githubUrl": "https://github.com/DubbakaSathwik/medlens-prompt_wars.git",
+      "demoUrl": "https://medlens-8gan.onrender.com",
+      "featured": true,
       "status": "Completed",
       "year": "2026"
     }

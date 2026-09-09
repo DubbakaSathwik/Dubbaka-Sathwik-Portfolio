@@ -8,4 +8,7 @@ activity_logs.json
 portfolio.zip
 .env*
 !.env.example
+pre_migration_snapshots/
+static_backups/
+backups/
 
