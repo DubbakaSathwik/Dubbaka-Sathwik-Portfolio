@@ -9,6 +9,18 @@ export function HeroSection() {
   const { data, setIsResumeModalOpen } = useCMS();
   const hero = data.hero;
 
+  // Track if screen is desktop (>= 1024px) to avoid mounting 3D WebGPU canvas on mobile/hidden containers
+  const [isDesktop, setIsDesktop] = React.useState(false);
+
+  React.useEffect(() => {
+    const checkDesktop = () => {
+      setIsDesktop(typeof window !== 'undefined' && window.innerWidth >= 1024);
+    };
+    checkDesktop();
+    window.addEventListener('resize', checkDesktop, { passive: true });
+    return () => window.removeEventListener('resize', checkDesktop);
+  }, []);
+
   // Track page scroll and drive smooth 3D model scaling & scroll parallax
   const { scrollY } = useScroll();
   const modelScale = useTransform(scrollY, [0, 600], [1.4, 1.15]);
@@ -167,29 +179,31 @@ export function HeroSection() {
           </motion.div>
 
           {/* Right Column (3D Spline Canvas - Frameless, Upright & Mouse-Tracking) */}
-          <motion.div
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ duration: 0.9, delay: 0.3 }}
-            className="hidden lg:flex lg:col-span-6 relative z-10 items-center justify-center w-full min-h-[640px] overflow-visible bg-transparent"
-          >
-            <div className="relative w-full h-[450px] sm:h-[540px] lg:h-[640px] flex items-center justify-center overflow-visible bg-transparent">
-              <motion.div
-                style={{
-                  scale: modelScale,
-                  y: scrollModelY,
-                  rotateY: mouseRotateY,
-                  x: mouseOffsetX,
-                }}
-                className="w-full h-full flex items-center justify-center overflow-visible origin-center bg-transparent"
-              >
-                <SplineScene
-                  scene="https://prod.spline.design/tzncNju5E3SjXbxy/scene.splinecode"
-                  className="w-full h-full flex items-center justify-center overflow-visible bg-transparent"
-                />
-              </motion.div>
-            </div>
-          </motion.div>
+          {isDesktop && (
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.9, delay: 0.3 }}
+              className="lg:col-span-6 relative z-10 flex items-center justify-center w-full min-h-[640px] overflow-visible bg-transparent"
+            >
+              <div className="relative w-full h-[450px] sm:h-[540px] lg:h-[640px] flex items-center justify-center overflow-visible bg-transparent">
+                <motion.div
+                  style={{
+                    scale: modelScale,
+                    y: scrollModelY,
+                    rotateY: mouseRotateY,
+                    x: mouseOffsetX,
+                  }}
+                  className="w-full h-full flex items-center justify-center overflow-visible origin-center bg-transparent"
+                >
+                  <SplineScene
+                    scene="https://prod.spline.design/tzncNju5E3SjXbxy/scene.splinecode"
+                    className="w-full h-full flex items-center justify-center overflow-visible bg-transparent"
+                  />
+                </motion.div>
+              </div>
+            </motion.div>
+          )}
         </div>
 
         {/* Scroll indicator */}
