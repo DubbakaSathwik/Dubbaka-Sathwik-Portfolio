@@ -478,7 +478,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const res = await fetch('/api/cms');
       if (res.ok) {
         const json = await res.json();
-        setDbConnected(json.database === 'MongoDB Atlas');
+        setDbConnected(!!json.data);
         if (json.data && typeof json.data === 'object' && !isStaleCMSData(json.data)) {
           const formatted = formatCMSPayload(json.data);
           setData(formatted);
@@ -644,27 +644,27 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (json.success) {
         setDbConnected(true);
         sendTelegramConsoleLog(
-          'CMS Content Saved & Synced',
-          `Portfolio content updated by Admin.\nTarget DB: MongoDB Atlas\nTotal Projects: ${data.projects?.length || 0}\nTotal Messages: ${data.messages?.length || 0}`,
+          'CMS Content Saved',
+          `Portfolio content updated by Admin.\nTotal Projects: ${data.projects?.length || 0}\nTotal Messages: ${data.messages?.length || 0}`,
           'info'
         );
         return {
           success: true,
-          message: 'Data saved and synced with MongoDB Atlas',
-          database: 'MongoDB Atlas',
+          message: 'Data saved successfully to portfolio storage',
+          database: 'Portfolio Storage',
         };
       } else {
         return {
           success: false,
-          message: json.error?.message || 'Failed to save to MongoDB',
-          database: 'MongoDB Atlas',
+          message: json.error?.message || 'Failed to save portfolio data',
+          database: 'Storage Error',
         };
       }
     } catch (err: any) {
-      console.error('Failed to sync to MongoDB Atlas:', err);
+      console.error('Failed to save portfolio data:', err);
       return {
         success: false,
-        message: err?.message || 'Network error while syncing to MongoDB Atlas',
+        message: err?.message || 'Network error while saving portfolio data',
         database: 'Offline',
       };
     }

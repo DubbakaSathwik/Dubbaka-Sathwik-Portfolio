@@ -5,9 +5,10 @@ import { motion, AnimatePresence } from 'framer-motion';
 interface JourneyImageSlideshowProps {
   images?: string[];
   title?: string;
+  className?: string;
 }
 
-export function JourneyImageSlideshow({ images = [], title = '' }: JourneyImageSlideshowProps) {
+export function JourneyImageSlideshow({ images = [], title = '', className }: JourneyImageSlideshowProps) {
   // Filter out empty strings
   const validImages = images.filter((img) => img && img.trim() !== '');
 
@@ -67,7 +68,9 @@ export function JourneyImageSlideshow({ images = [], title = '' }: JourneyImageS
       <div
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
-        className="relative w-full h-72 sm:h-96 md:h-[420px] lg:h-[460px] rounded-2xl overflow-hidden bg-black/90 border border-emerald-500/40 group shadow-[0_0_30px_rgba(16,185,129,0.15)] flex items-center justify-center"
+        className={`relative w-full rounded-2xl overflow-hidden bg-black/90 border border-emerald-500/40 group shadow-[0_0_30px_rgba(16,185,129,0.15)] flex items-center justify-center ${
+          className || 'h-72 sm:h-96 md:h-[420px] lg:h-[460px]'
+        }`}
       >
         {/* Background Blurred Image Fill for aesthetics */}
         <AnimatePresence mode="wait">

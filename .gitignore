@@ -11,4 +11,6 @@ portfolio.zip
 pre_migration_snapshots/
 static_backups/
 backups/
+.git_token
+git_settings.json
 

@@ -38,6 +38,12 @@ import {
   Terminal,
   Film,
   Play,
+  Check,
+  Search,
+  Github,
+  History,
+  AlertCircle,
+  AlertTriangle,
 } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
 import { initialIntroData } from '../../data';
@@ -240,6 +246,7 @@ export function AdminPortalModal() {
   const [activeTab, setActiveTab] = useState<
     'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'intro' | 'contact' | 'inbox' | 'backup' | 'logs'
   >('journey');
+  const [backupSubTab, setBackupSubTab] = useState<'github' | 'history' | 'export'>('github');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
   const [toast, setToast] = useState<{
@@ -253,8 +260,8 @@ export function AdminPortalModal() {
     setToast({
       visible: true,
       sectionName,
-      message: `Saving "${sectionName}" & syncing with MongoDB Atlas...`,
-      database: 'Syncing...',
+      message: `Saving "${sectionName}" to portfolio storage...`,
+      database: 'Saving...',
     });
 
     const res = await forceSyncToMongoDB();
@@ -262,13 +269,13 @@ export function AdminPortalModal() {
     setToast({
       visible: true,
       sectionName,
-      message: `"${sectionName}" saved successfully! Synced to ${res.database || 'MongoDB Atlas'}.`,
-      database: res.database || (dbConnected ? 'MongoDB Atlas' : 'Server Memory'),
+      message: `"${sectionName}" saved successfully!`,
+      database: res.database || 'Portfolio Storage',
     });
 
     setTimeout(() => {
       setToast(null);
-    }, 4500);
+    }, 3500);
   };
 
   const [isTestingBot, setIsTestingBot] = useState(false);
@@ -1040,90 +1047,155 @@ export function AdminPortalModal() {
             >
               {/* Toast Notification Banner */}
               <AnimatePresence>
-                {toast && toast.visible && (
-                  <motion.div
-                    initial={{ opacity: 0, y: -20, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, y: -20, scale: 0.95 }}
-                    className="absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3.5 px-6 py-3.5 rounded-2xl bg-zinc-950/95 border border-emerald-500/80 shadow-[0_0_35px_rgba(16,185,129,0.45)] backdrop-blur-2xl text-white font-mono text-xs max-w-lg w-[90%]"
-                  >
-                    <div className="w-9 h-9 rounded-xl bg-emerald-950 border border-emerald-500/50 text-emerald-400 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                      <CheckCircle2 className="w-5 h-5 animate-pulse" />
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <div className="font-bold text-sm text-emerald-400 flex items-center gap-2 flex-wrap">
-                        <span>{toast.sectionName} Saved Successfully!</span>
-                        <span className="text-[10px] px-2 py-0.5 rounded-md bg-emerald-950/90 text-emerald-300 border border-emerald-500/40 flex items-center gap-1 font-mono">
-                          <Database className="w-3 h-3" /> {toast.database || 'MongoDB Atlas'}
-                        </span>
-                      </div>
-                      <p className="text-[11px] text-zinc-300 mt-0.5 truncate">
-                        {toast.message}
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setToast(null)}
-                      className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors"
+                {toast && toast.visible && (() => {
+                  const isError =
+                    toast.database === 'Error' ||
+                    toast.sectionName.toLowerCase().includes('fail') ||
+                    toast.sectionName.toLowerCase().includes('error');
+                  const isAlert = toast.database === 'Alert' || toast.database === 'Notice';
+
+                  const heading =
+                    isError ||
+                    isAlert ||
+                    toast.sectionName.toLowerCase().includes('saved') ||
+                    toast.sectionName.toLowerCase().includes('pushed') ||
+                    toast.sectionName.toLowerCase().includes('copied') ||
+                    toast.sectionName.toLowerCase().includes('succeeded') ||
+                    toast.sectionName.toLowerCase().includes('inserted') ||
+                    toast.sectionName.toLowerCase().includes('removed')
+                      ? toast.sectionName
+                      : `${toast.sectionName} Saved Successfully`;
+
+                  return (
+                    <motion.div
+                      initial={{ opacity: 0, y: -20, scale: 0.95 }}
+                      animate={{ opacity: 1, y: 0, scale: 1 }}
+                      exit={{ opacity: 0, y: -20, scale: 0.95 }}
+                      className={`absolute top-16 left-1/2 -translate-x-1/2 z-50 flex items-center gap-3.5 px-6 py-3.5 rounded-2xl bg-zinc-950/95 border backdrop-blur-2xl text-white font-mono text-xs max-w-lg w-[90%] ${
+                        isError
+                          ? 'border-rose-500/80 shadow-[0_0_35px_rgba(244,63,94,0.35)]'
+                          : isAlert
+                          ? 'border-amber-500/80 shadow-[0_0_35px_rgba(245,158,11,0.35)]'
+                          : 'border-emerald-500/80 shadow-[0_0_35px_rgba(16,185,129,0.45)]'
+                      }`}
                     >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </motion.div>
-                )}
+                      <div
+                        className={`w-9 h-9 rounded-xl border flex items-center justify-center shrink-0 ${
+                          isError
+                            ? 'bg-rose-950 border-rose-500/50 text-rose-400 shadow-[0_0_15px_rgba(244,63,94,0.3)]'
+                            : isAlert
+                            ? 'bg-amber-950 border-amber-500/50 text-amber-400 shadow-[0_0_15px_rgba(245,158,11,0.3)]'
+                            : 'bg-emerald-950 border-emerald-500/50 text-emerald-400 shadow-[0_0_15px_rgba(16,185,129,0.3)]'
+                        }`}
+                      >
+                        {isError ? (
+                          <AlertCircle className="w-5 h-5" />
+                        ) : isAlert ? (
+                          <AlertTriangle className="w-5 h-5" />
+                        ) : (
+                          <CheckCircle2 className="w-5 h-5" />
+                        )}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <div
+                          className={`font-bold text-sm flex items-center gap-2 flex-wrap ${
+                            isError ? 'text-rose-400' : isAlert ? 'text-amber-400' : 'text-emerald-400'
+                          }`}
+                        >
+                          <span>{heading}</span>
+                          <span
+                            className={`text-[10px] px-2 py-0.5 rounded-md border flex items-center gap-1 font-mono ${
+                              isError
+                                ? 'bg-rose-950/90 text-rose-300 border-rose-500/40'
+                                : isAlert
+                                ? 'bg-amber-950/90 text-amber-300 border-amber-500/40'
+                                : 'bg-emerald-950/90 text-emerald-300 border-emerald-500/40'
+                            }`}
+                          >
+                            {isError ? (
+                              <X className="w-3 h-3 text-rose-400" />
+                            ) : isAlert ? (
+                              <AlertTriangle className="w-3 h-3 text-amber-400" />
+                            ) : (
+                              <Check className="w-3 h-3 text-emerald-400" />
+                            )}
+                            {toast.database || (isError ? 'Error' : 'Portfolio Storage')}
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-zinc-300 mt-0.5 break-words">
+                          {toast.message}
+                        </p>
+                      </div>
+                      <button
+                        onClick={() => setToast(null)}
+                        className="p-1 rounded-lg hover:bg-zinc-800 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </motion.div>
+                  );
+                })()}
               </AnimatePresence>
 
               {/* Header */}
-              <div className="px-4 py-3 sm:px-8 sm:py-4 border-b border-zinc-800 bg-zinc-950 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              <div className="px-4 py-3 sm:px-6 sm:py-3.5 border-b border-zinc-800 bg-zinc-950 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 <div className="flex items-center justify-between lg:justify-start gap-2.5">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="p-1.5 sm:p-2 rounded-xl bg-emerald-950 border border-emerald-500/40 text-emerald-400 shrink-0">
-                      <LayoutDashboard className="w-4 h-4 sm:w-5 sm:h-5" />
+                  <div className="flex items-center gap-3 min-w-0">
+                    <div className="p-2 rounded-xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 shrink-0 shadow-[0_0_12px_rgba(16,185,129,0.2)]">
+                      <LayoutDashboard className="w-5 h-5" />
                     </div>
                     <div className="min-w-0">
-                      <h3 className="text-sm sm:text-lg font-bold text-white flex items-center gap-1.5 flex-wrap truncate">
-                        <span>Smart CMS Portal</span>
-                        <span className="text-[9px] sm:text-[10px] font-mono font-medium px-1.5 py-0.5 rounded bg-emerald-950 text-emerald-400 border border-emerald-500/30 flex items-center gap-1 shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h3 className="text-sm sm:text-base font-bold text-white tracking-tight">
+                          Sathwik Studio CMS
+                        </h3>
+                        <span className="text-[9px] sm:text-[10px] font-mono font-medium px-2 py-0.5 rounded-full bg-emerald-950 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5 shrink-0">
                           <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                          {dbConnected ? '⚡ MongoDB Atlas Live' : 'MongoDB Sync Active'}
+                          Portfolio Active
                         </span>
-                      </h3>
-                      <p className="text-[10px] sm:text-xs text-zinc-400 font-mono truncate hidden sm:block">Dynamic Content Management for Dubbaka Sathwik</p>
+                      </div>
+                      <p className="text-[10px] sm:text-xs text-zinc-400 font-mono truncate hidden sm:block">
+                        Fast static content editing • Push directly to GitHub
+                      </p>
                     </div>
                   </div>
                   {/* Mobile & Tablet Close Button */}
                   <button
                     onClick={handleClose}
-                    className="lg:hidden p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white shrink-0 cursor-pointer"
+                    className="lg:hidden p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white shrink-0 cursor-pointer border border-zinc-800"
                   >
                     <X className="w-4 h-4" />
                   </button>
                 </div>
-                <div className="flex items-center justify-between lg:justify-end gap-2 shrink-0 border-t lg:border-t-0 border-zinc-800/60 pt-2.5 lg:pt-0">
+
+                <div className="flex items-center justify-between lg:justify-end gap-2 shrink-0 border-t lg:border-t-0 border-zinc-800/60 pt-2 lg:pt-0">
                   <button
-                    onClick={handleTestBot}
-                    disabled={isTestingBot}
-                    className="flex-1 lg:flex-none px-3 py-1.5 rounded-lg bg-sky-950 hover:bg-sky-900 border border-sky-500/40 text-sky-300 hover:text-white text-[11px] sm:text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_0_12px_rgba(14,165,233,0.25)] cursor-pointer disabled:opacity-50"
-                    title="Send instant test message to Sathwik's Telegram Bot"
+                    onClick={() => setActiveTab('backup')}
+                    className="flex-1 lg:flex-none px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 hover:text-white text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                    title="Open GitHub Sync to push to repository"
                   >
-                    <Send className={`w-3.5 h-3.5 ${isTestingBot ? 'animate-bounce' : ''}`} />
-                    {isTestingBot ? 'Testing Bot...' : 'Test Bot'}
+                    <Github className="w-3.5 h-3.5 text-emerald-400" /> Push to GitHub
                   </button>
                   <button
                     onClick={() => showSaveToast('All Portfolio Data')}
-                    className="flex-1 lg:flex-none px-3 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 hover:text-white text-[11px] sm:text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_0_12px_rgba(16,185,129,0.2)] cursor-pointer"
+                    className="flex-1 lg:flex-none px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all shadow-[0_0_15px_rgba(16,185,129,0.3)] cursor-pointer"
+                    title="Save all changes to static storage"
                   >
-                    <Save className="w-3.5 h-3.5" /> Sync MongoDB
+                    <Save className="w-3.5 h-3.5" /> Save Changes
                   </button>
                   <button
                     onClick={handleLogout}
-                    className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 text-zinc-300 text-[11px] sm:text-xs font-mono cursor-pointer"
+                    className="px-3 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-mono cursor-pointer border border-zinc-800"
+                    title="Lock CMS and log out"
                   >
                     Lock CMS
                   </button>
                   <button
                     onClick={handleClose}
-                    className="hidden lg:flex p-1.5 rounded-full bg-zinc-900 text-zinc-400 hover:text-white cursor-pointer"
+                    className="hidden lg:flex p-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-white cursor-pointer border border-zinc-800"
+                    title="Close CMS Portal"
                   >
-                    <X className="w-5 h-5" />
+                    <X className="w-4 h-4" />
                   </button>
                 </div>
               </div>
@@ -1131,41 +1203,131 @@ export function AdminPortalModal() {
               {/* Main Content Area */}
               <div className="flex flex-col lg:grid lg:grid-cols-12 flex-1 overflow-hidden">
                 {/* Desktop Left Sidebar */}
-                <div className="hidden lg:block lg:col-span-3 bg-zinc-950/90 border-r border-zinc-800 p-4 space-y-1 overflow-y-auto">
-                  {[
-                    { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
-                    { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
-                    { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
-                    { id: 'gallery', label: `Certificates & Awards (${(data.gallery || []).length})`, icon: Award },
-                    { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
-                    { id: 'hero', label: 'Hero Section', icon: Sparkles },
-                    { id: 'about', label: 'About Details', icon: User },
-                    { id: 'intro', label: 'Intro & Loader', icon: Film },
-                    { id: 'contact', label: 'Contact Details', icon: Mail },
-                    {
-                      id: 'inbox',
-                      label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`,
-                      icon: Inbox,
-                    },
-                    { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
-                    { id: 'logs', label: 'Activity Console Log', icon: Terminal },
-                  ].map((tab) => {
-                    const Icon = tab.icon;
-                    return (
-                      <button
-                        key={tab.id}
-                        onClick={() => setActiveTab(tab.id as any)}
-                        className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl text-xs font-medium transition-all text-left ${
-                          activeTab === tab.id
-                            ? 'bg-emerald-600 text-white font-semibold shadow-lg shadow-emerald-950/50'
-                            : 'text-zinc-400 hover:text-white hover:bg-zinc-900'
-                        }`}
-                      >
-                        <Icon className="w-4 h-4" />
-                        <span>{tab.label}</span>
-                      </button>
-                    );
-                  })}
+                <div className="hidden lg:block lg:col-span-3 bg-zinc-950/95 border-r border-zinc-800 p-3 space-y-4 overflow-y-auto">
+                  {/* Category 1: Portfolio Content */}
+                  <div className="space-y-1">
+                    <div className="px-3 py-1 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
+                      Content Sections
+                    </div>
+                    {[
+                      { id: 'journey', label: 'Journey Milestones', count: (data.journey || []).length, icon: Calendar },
+                      { id: 'projects', label: 'Technical Projects', count: (data.projects || []).length, icon: FolderPlus },
+                      { id: 'creative', label: 'Creative Work', count: (data.creativePortfolio || []).length, icon: Palette },
+                      { id: 'gallery', label: 'Certificates & Awards', count: (data.gallery || []).length, icon: Award },
+                      { id: 'resumes', label: 'Resumes & PDFs', count: (data.resumes || []).length, icon: FileText },
+                    ].map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id as any)}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                            isActive
+                              ? 'bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-950/60'
+                              : 'text-zinc-400 hover:text-white hover:bg-zinc-900/90'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
+                            <span className="truncate">{tab.label}</span>
+                          </div>
+                          <span className={`text-[10px] font-mono px-1.5 py-0.5 rounded ${
+                            isActive ? 'bg-emerald-700 text-emerald-100' : 'bg-zinc-900 text-zinc-500'
+                          }`}>
+                            {tab.count}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Category 2: Page Settings */}
+                  <div className="space-y-1">
+                    <div className="px-3 py-1 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
+                      Page Settings
+                    </div>
+                    {[
+                      { id: 'hero', label: 'Hero & Headlines', icon: Sparkles },
+                      { id: 'about', label: 'About Details', icon: User },
+                      { id: 'intro', label: 'Intro & Loader', icon: Film },
+                      { id: 'contact', label: 'Contact Details', icon: Mail },
+                    ].map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive = activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => setActiveTab(tab.id as any)}
+                          className={`w-full flex items-center gap-2.5 px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                            isActive
+                              ? 'bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-950/60'
+                              : 'text-zinc-400 hover:text-white hover:bg-zinc-900/90'
+                          }`}
+                        >
+                          <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
+                          <span className="truncate">{tab.label}</span>
+                        </button>
+                      );
+                    })}
+                  </div>
+
+                  {/* Category 3: System & Data */}
+                  <div className="space-y-1">
+                    <div className="px-3 py-1 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider">
+                      System & Sync
+                    </div>
+                    {[
+                      {
+                        id: 'inbox',
+                        label: 'Inbox Messages',
+                        icon: Inbox,
+                        badge: (data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length,
+                      },
+                      { id: 'backup', label: 'GitHub & Backups', icon: Github },
+                      { id: 'git-history', label: 'Git Push History', icon: History },
+                      { id: 'logs', label: 'Activity Logs', icon: Terminal },
+                    ].map((tab) => {
+                      const Icon = tab.icon;
+                      const isActive =
+                        tab.id === 'git-history'
+                          ? activeTab === 'backup' && backupSubTab === 'history'
+                          : tab.id === 'backup'
+                          ? activeTab === 'backup' && backupSubTab !== 'history'
+                          : activeTab === tab.id;
+                      return (
+                        <button
+                          key={tab.id}
+                          onClick={() => {
+                            if (tab.id === 'git-history') {
+                              setActiveTab('backup');
+                              setBackupSubTab('history');
+                            } else if (tab.id === 'backup') {
+                              setActiveTab('backup');
+                              setBackupSubTab('github');
+                            } else {
+                              setActiveTab(tab.id as any);
+                            }
+                          }}
+                          className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-medium transition-all text-left cursor-pointer ${
+                            isActive
+                              ? 'bg-emerald-600 text-white font-semibold shadow-md shadow-emerald-950/60'
+                              : 'text-zinc-400 hover:text-white hover:bg-zinc-900/90'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2.5 min-w-0">
+                            <Icon className={`w-4 h-4 shrink-0 ${isActive ? 'text-white' : 'text-zinc-400'}`} />
+                            <span className="truncate">{tab.label}</span>
+                          </div>
+                          {tab.badge !== undefined && tab.badge > 0 && (
+                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500 text-zinc-950">
+                              {tab.badge}
+                            </span>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
                 </div>
 
                 {/* Mobile & Tablet CMS Navigation Bar */}
@@ -1174,7 +1336,7 @@ export function AdminPortalModal() {
                     <button
                       type="button"
                       onClick={() => setMobileNavOpen(!mobileNavOpen)}
-                      className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-emerald-500/50 text-white font-mono text-xs font-semibold shadow-md active:scale-[0.99] transition-all cursor-pointer"
+                      className="w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-700 text-white font-mono text-xs font-semibold shadow-md active:scale-[0.99] transition-all cursor-pointer"
                     >
                       <div className="flex items-center gap-2.5 min-w-0">
                         <div className="p-1 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-500/30 shrink-0">
@@ -1183,43 +1345,43 @@ export function AdminPortalModal() {
                               { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
                               { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
                               { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
-                              { id: 'gallery', label: `Certificates & Awards (${(data.gallery || []).length})`, icon: Award },
+                              { id: 'gallery', label: `Certificates (${(data.gallery || []).length})`, icon: Award },
                               { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                               { id: 'hero', label: 'Hero Section', icon: Sparkles },
                               { id: 'about', label: 'About Details', icon: User },
                               { id: 'intro', label: 'Intro & Loader', icon: Film },
                               { id: 'contact', label: 'Contact Details', icon: Mail },
                               { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
-                              { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
-                              { id: 'logs', label: 'Activity Console Log', icon: Terminal },
+                              { id: 'backup', label: 'GitHub & Backups', icon: Github },
+                              { id: 'logs', label: 'Activity Logs', icon: Terminal },
                             ].find((t) => t.id === activeTab)?.icon || LayoutDashboard,
                             { className: 'w-4 h-4' }
                           )}
                         </div>
-                        <span className="text-zinc-400 font-normal">CMS Nav:</span>
+                        <span className="text-zinc-400 font-normal">Section:</span>
                         <span className="text-emerald-400 font-bold truncate">
                           {[
                             { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
                             { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
                             { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
-                            { id: 'gallery', label: `Certificates & Awards (${(data.gallery || []).length})`, icon: Award },
+                            { id: 'gallery', label: `Certificates (${(data.gallery || []).length})`, icon: Award },
                             { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                             { id: 'hero', label: 'Hero Section', icon: Sparkles },
                             { id: 'about', label: 'About Details', icon: User },
                             { id: 'intro', label: 'Intro & Loader', icon: Film },
                             { id: 'contact', label: 'Contact Details', icon: Mail },
                             { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
-                            { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
-                            { id: 'logs', label: 'Activity Console Log', icon: Terminal },
+                            { id: 'backup', label: 'GitHub & Backups', icon: Github },
+                            { id: 'logs', label: 'Activity Logs', icon: Terminal },
                           ].find((t) => t.id === activeTab)?.label}
                         </span>
                       </div>
                       <div className="flex items-center gap-1.5 shrink-0">
-                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950/80 text-emerald-300 border border-emerald-500/30">
+                        <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 border border-zinc-700">
                           {mobileNavOpen ? 'Close Menu' : 'Switch Tab'}
                         </span>
                         <ChevronDown
-                          className={`w-4 h-4 text-emerald-400 transition-transform duration-200 ${
+                          className={`w-4 h-4 text-zinc-400 transition-transform duration-200 ${
                             mobileNavOpen ? 'rotate-180' : ''
                           }`}
                         />
@@ -1233,7 +1395,7 @@ export function AdminPortalModal() {
                           initial={{ opacity: 0, y: -8 }}
                           animate={{ opacity: 1, y: 0 }}
                           exit={{ opacity: 0, y: -8 }}
-                          className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl bg-zinc-950 border border-emerald-500/40 shadow-2xl p-2 space-y-1 backdrop-blur-2xl max-h-[60vh] overflow-y-auto"
+                          className="absolute top-full left-0 right-0 mt-2 z-50 rounded-2xl bg-zinc-950 border border-zinc-700 shadow-2xl p-2 space-y-1 backdrop-blur-2xl max-h-[60vh] overflow-y-auto"
                         >
                           <div className="px-3 py-1.5 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider border-b border-zinc-800 flex items-center justify-between">
                             <span>Select CMS Section</span>
@@ -1250,8 +1412,8 @@ export function AdminPortalModal() {
                             { id: 'intro', label: 'Intro & Loader', icon: Film },
                             { id: 'contact', label: 'Contact Details', icon: Mail },
                             { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
-                            { id: 'backup', label: 'Backup & Restore', icon: HardDrive },
-                            { id: 'logs', label: 'Activity Console Log', icon: Terminal },
+                            { id: 'backup', label: 'GitHub & Backups', icon: Github },
+                            { id: 'logs', label: 'Activity Logs', icon: Terminal },
                           ].map((tab) => {
                             const Icon = tab.icon;
                             const isCurrent = activeTab === tab.id;
@@ -1263,7 +1425,7 @@ export function AdminPortalModal() {
                                   setActiveTab(tab.id as any);
                                   setMobileNavOpen(false);
                                 }}
-                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-mono transition-all text-left ${
+                                className={`w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-xs font-mono transition-all text-left cursor-pointer ${
                                   isCurrent
                                     ? 'bg-emerald-600 text-white font-bold shadow-md shadow-emerald-950/50'
                                     : 'text-zinc-300 hover:text-white hover:bg-zinc-900'
@@ -1290,23 +1452,37 @@ export function AdminPortalModal() {
                       { id: 'resumes', label: 'Resumes', icon: FileText },
                       { id: 'hero', label: 'Hero', icon: Sparkles },
                       { id: 'about', label: 'About', icon: User },
-                      { id: 'intro', label: 'Intro & Loader', icon: Film },
+                      { id: 'intro', label: 'Intro', icon: Film },
                       { id: 'contact', label: 'Contact', icon: Mail },
                       { id: 'inbox', label: 'Inbox', icon: Inbox },
-                      { id: 'backup', label: 'Backup', icon: HardDrive },
-                      { id: 'logs', label: 'Console', icon: Terminal },
+                      { id: 'backup', label: 'GitHub', icon: Github },
+                      { id: 'git-history', label: 'Push History', icon: History },
+                      { id: 'logs', label: 'Logs', icon: Terminal },
                     ].map((tab) => {
-                      const isCurrent = activeTab === tab.id;
+                      const isCurrent =
+                        tab.id === 'git-history'
+                          ? activeTab === 'backup' && backupSubTab === 'history'
+                          : tab.id === 'backup'
+                          ? activeTab === 'backup' && backupSubTab !== 'history'
+                          : activeTab === tab.id;
                       const Icon = tab.icon;
                       return (
                         <button
                           key={tab.id}
                           type="button"
                           onClick={() => {
-                            setActiveTab(tab.id as any);
+                            if (tab.id === 'git-history') {
+                              setActiveTab('backup');
+                              setBackupSubTab('history');
+                            } else if (tab.id === 'backup') {
+                              setActiveTab('backup');
+                              setBackupSubTab('github');
+                            } else {
+                              setActiveTab(tab.id as any);
+                            }
                             setMobileNavOpen(false);
                           }}
-                          className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] transition-all flex items-center gap-1.5 ${
+                          className={`shrink-0 px-3 py-1.5 rounded-lg text-[11px] transition-all flex items-center gap-1.5 cursor-pointer ${
                             isCurrent
                               ? 'bg-emerald-600 text-white font-bold shadow-sm'
                               : 'bg-zinc-900 text-zinc-400 hover:text-white border border-zinc-800'
@@ -3286,7 +3462,7 @@ export function AdminPortalModal() {
                         </div>
                         <span className="px-3 py-1 rounded-full text-xs font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>Syncs with MongoDB</span>
+                          <span>Portfolio Active</span>
                         </span>
                       </div>
 
@@ -3671,7 +3847,7 @@ export function AdminPortalModal() {
                           type="submit"
                           className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
                         >
-                          <Save className="w-4 h-4" /> Save About Page CMS (Syncs to MongoDB)
+                          <Save className="w-4 h-4" /> Save About Details
                         </button>
                       </div>
                     </form>
@@ -3703,7 +3879,7 @@ export function AdminPortalModal() {
                           </button>
                           <span className="px-3 py-1 rounded-full text-xs font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
                             <Sparkles className="w-3.5 h-3.5" />
-                            <span>Syncs with MongoDB</span>
+                            <span>Portfolio Active</span>
                           </span>
                         </div>
                       </div>
@@ -3930,7 +4106,7 @@ export function AdminPortalModal() {
                           type="submit"
                           className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
                         >
-                          <Save className="w-4 h-4" /> Save Intro Settings (Syncs to MongoDB)
+                          <Save className="w-4 h-4" /> Save Intro & Animation Settings
                         </button>
                       </div>
                     </form>
@@ -3951,7 +4127,7 @@ export function AdminPortalModal() {
                         </div>
                         <span className="px-3 py-1 rounded-full text-xs font-mono bg-emerald-950/80 text-emerald-400 border border-emerald-500/30 flex items-center gap-1.5">
                           <Sparkles className="w-3.5 h-3.5" />
-                          <span>Syncs Live with Portfolio & MongoDB</span>
+                          <span>Portfolio Active</span>
                         </span>
                       </div>
 
@@ -4146,13 +4322,37 @@ export function AdminPortalModal() {
                         </div>
                       </div>
 
+                      {/* Telegram Notification Bot Tester */}
+                      <div className="p-5 rounded-2xl bg-zinc-950 border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                        <div className="space-y-1">
+                          <div className="flex items-center gap-2">
+                            <Send className="w-4 h-4 text-sky-400" />
+                            <span className="text-xs font-mono text-white font-bold uppercase tracking-wider">
+                              Telegram Contact Bot Integration
+                            </span>
+                          </div>
+                          <p className="text-xs text-zinc-400">
+                            When visitors submit inquiries via your contact form, instant alerts are routed directly to your personal Telegram account.
+                          </p>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={handleTestBot}
+                          disabled={isTestingBot}
+                          className="px-4 py-2 rounded-xl bg-sky-950 hover:bg-sky-900 border border-sky-500/40 text-sky-300 hover:text-white text-xs font-mono font-bold flex items-center justify-center gap-2 transition-all cursor-pointer shrink-0 disabled:opacity-50"
+                        >
+                          <Send className={`w-3.5 h-3.5 ${isTestingBot ? 'animate-bounce' : ''}`} />
+                          <span>{isTestingBot ? 'Sending Test...' : 'Send Test Ping to Bot'}</span>
+                        </button>
+                      </div>
+
                       {/* Submit Button */}
                       <div className="pt-2">
                         <button
                           type="submit"
                           className="w-full sm:w-auto px-8 py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
                         >
-                          <Save className="w-4 h-4" /> Save Contact Details & Follow Links (Syncs to MongoDB)
+                          <Save className="w-4 h-4" /> Save Contact Details & Socials
                         </button>
                       </div>
                     </form>
@@ -4267,6 +4467,8 @@ export function AdminPortalModal() {
                       </div>
 
                       <BackupRestoreTab
+                        initialSubTab={backupSubTab}
+                        onSubTabChange={(sub) => setBackupSubTab(sub)}
                         showToast={(sec, msg, db) =>
                           setToast({ visible: true, sectionName: sec, message: msg, database: db })
                         }
