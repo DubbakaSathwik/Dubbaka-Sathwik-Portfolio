@@ -226,6 +226,41 @@
       "year": "2026"
     },
     {
+      "id": "proj-1788716566911",
+      "title": "MedLens ",
+      "summary": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
+      "description": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
+      "longDescription": "{bold & highlight}MedLens{bold & highlight} is an{bold & highlight} AI clinical intelligence platform{bold & highlight} that transforms fragmented medical documents into structured, FHIR-compliant records. It prevents hallucinations through strict laboratory reference-range grounding, bidirectional document provenance, OCR ambiguity resolution, and deterministic non-diagnostic medical safety guardrails.",
+      "category": "Tools",
+      "tags": [
+        "Tools",
+        "React",
+        "Node.js",
+        "Tailwind CSS",
+        "Next.js"
+      ],
+      "technologies": [
+        "Tools",
+        "React",
+        "Node.js",
+        "Tailwind CSS",
+        "Next.js"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_7_thumbnail_sxtsijmg.jpg",
+      "image": "/uploads/assets/static_asset_projects_7_image_lwztz5bf.jpg",
+      "images": [
+        "/uploads/assets/static_asset_projects_7_images_0_d3cle6pr.jpg",
+        "/uploads/assets/static_asset_projects_7_images_1_nd6knmgc.jpg",
+        "/uploads/assets/static_asset_projects_7_images_2_mtc5n4a9.jpg",
+        "/uploads/assets/static_asset_projects_7_images_3_eqqg2ozy.jpg"
+      ],
+      "demoUrl": "https://medlens-8gan.onrender.com",
+      "githubUrl": "https://github.com/DubbakaSathwik/medlens-prompt_wars.git",
+      "featured": true,
+      "status": "Completed",
+      "year": "2026"
+    },
+    {
       "id": "proj-1785858907457",
       "title": "FoodFlow Connect",
       "summary": "{bold}FoodFlow Connect{bold} is a role-based{bold & highlight} food rescue web application{bold & highlight} connecting surplus food providers, NGOs, and consumers to streamline food redistribution, minimize community waste, and track donation impact.",
@@ -256,104 +291,6 @@
       ],
       "githubUrl": "https://github.com/DubbakaSathwik/FoodFlow-Connect.git",
       "demoUrl": "https://udayprakashchamakuri-beep.github.io/foodflow/",
-      "featured": false,
-      "status": "Completed",
-      "year": "2026"
-    },
-    {
-      "id": "proj-1785859211876",
-      "title": "AI Hiring Assistant",
-      "summary": "{bold}AI Hiring Assistant{bold} is a full-stack web application that uses OCR to extract text from candidate certificates and leverages LLaMA 3.1 to{bold & highlight} perform fraud analysis and ranking{bold & highlight}.",
-      "description": "{bold}AI Hiring Assistant{bold} is a full-stack web application that uses OCR to extract text from candidate certificates and leverages LLaMA 3.1 to{bold & highlight} perform fraud analysis and ranking{bold & highlight}.",
-      "longDescription": "{bold}AI Hiring Assistant{bold} is a modular full-stack application designed to streamline recruiting. The backend is built with Node.js and Express, while the frontend is constructed using clean, responsive HTML, CSS, and Vanilla JavaScript. The system utilizes Tesseract.js to extract text from candidate certificates, executes simulated academic institution validation, and leverages LLaMA 3.1 via the Featherless API to analyze fraud risk. Finally, a{bold & highlight} ranking service computes score metrics to provide automated, reliable recommendations for hiring teams.{bold & highlight}",
-      "category": "Full-Stack",
-      "tags": [
-        "Full-Stack",
-        "Node.js & Express.js",
-        "Tesseract.js",
-        "LLaMA 3.1",
-        "Multer"
-      ],
-      "technologies": [
-        "Full-Stack",
-        "Node.js & Express.js",
-        "Tesseract.js",
-        "LLaMA 3.1",
-        "Multer"
-      ],
-      "thumbnail": "/uploads/assets/static_asset_projects_3_thumbnail_69eo69to.jpg",
-      "image": "/uploads/assets/static_asset_projects_3_image_mmot5cu5.jpg",
-      "images": [
-        "/uploads/assets/static_asset_projects_3_images_0_3bgvcovp.jpg"
-      ],
-      "demoUrl": "https://ai-hiring-assistant-85kv.onrender.com",
-      "githubUrl": "https://github.com/DubbakaSathwik/AI-Hiring-Assistant.git",
-      "featured": false,
-      "status": "Completed",
-      "year": "2026"
-    },
-    {
-      "id": "proj-1785859536070",
-      "title": "News Without the Noise",
-      "summary": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
-      "description": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
-      "longDescription": "{bold}News Without the Noise{bold} is an intelligent,{bold & highlight} AI-driven news dashboard{bold & highlight} that combats digital noise, clickbait, and misinformation. Featuring a{bold & highlight} personalized recommendation engine{bold & highlight}, it dynamically learns user preferences from actions like reading behavior. The platform integrates{bold & highlight} Google Gemini and OpenA{bold & highlight}I to analyze articles for bias, sensationalism, and source trust, while providing customized summaries. Built with Node.js, Express, MongoDB, and standard HTML/CSS/JS, it also features location-based weather, local headlines, and a deepfake media scanner, ensuring a clean, reliable, and secure information experience.",
-      "category": "Web Apps",
-      "tags": [
-        "Web Apps",
-        "Node.js & Express.js",
-        "MongoDB & Mongoose",
-        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
-        "Google Gemini & OpenAI APIs"
-      ],
-      "technologies": [
-        "Web Apps",
-        "Node.js & Express.js",
-        "MongoDB & Mongoose",
-        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
-        "Google Gemini & OpenAI APIs"
-      ],
-      "thumbnail": "/uploads/assets/static_asset_projects_4_thumbnail_xg400vsk.jpg",
-      "image": "/uploads/assets/static_asset_projects_4_image_up73ptmd.jpg",
-      "images": [
-        "/uploads/assets/static_asset_projects_4_images_0_u4rumclh.jpg",
-        "/uploads/assets/static_asset_projects_4_images_1_1p823c5p.jpg",
-        "/uploads/assets/static_asset_projects_4_images_2_m5sz8ae3.jpg",
-        "/uploads/assets/static_asset_projects_4_images_3_amxm45qb.jpg"
-      ],
-      "demoUrl": "https://news-without-the-noise.onrender.com",
-      "githubUrl": "https://github.com/DubbakaSathwik/AA-Hackthon-online-.git",
-      "featured": false,
-      "status": "Completed",
-      "year": "2026"
-    },
-    {
-      "id": "proj-1785859703526",
-      "title": "VaultFlow",
-      "summary": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
-      "description": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
-      "longDescription": "{bold}VaultFlow{bold} is a comprehensive {bold & highlight}personal finance manager{bold & highlight} designed for Android with privacy and offline capabilities at its core. {highlight}Developed in Kotlin using Jetpack Compose{highlight}, the application allows users to manage multiple bank accounts, track recurring transactions, monitor savings goals, and track debts. The app integrates Google ML Kit for scanning receipts via OCR and leverages the Gemini API to deliver personalized financial insights directly on the device. All data is stored locally in a Room database, ensuring complete user privacy.",
-      "category": "Personal",
-      "tags": [
-        "Personal",
-        "React",
-        "Node.js",
-        "MongoDB"
-      ],
-      "technologies": [
-        "Personal",
-        "React",
-        "Node.js",
-        "MongoDB"
-      ],
-      "thumbnail": "/uploads/assets/static_asset_projects_5_thumbnail_l4052g2u.jpg",
-      "image": "/uploads/assets/static_asset_projects_5_image_y5yf5spm.jpg",
-      "images": [
-        "/uploads/assets/static_asset_projects_5_images_0_rr1lnou4.jpg",
-        "/uploads/assets/static_asset_projects_5_images_1_79r87wyi.jpg"
-      ],
-      "demoUrl": "",
-      "githubUrl": "https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git",
       "featured": false,
       "status": "Completed",
       "year": "2026"
@@ -396,37 +333,100 @@
       "year": "2026"
     },
     {
-      "id": "proj-1788716566911",
-      "title": "MedLens ",
-      "summary": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
-      "description": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
-      "longDescription": "{bold & highlight}MedLens{bold & highlight} is an{bold & highlight} AI clinical intelligence platform{bold & highlight} that transforms fragmented medical documents into structured, FHIR-compliant records. It prevents hallucinations through strict laboratory reference-range grounding, bidirectional document provenance, OCR ambiguity resolution, and deterministic non-diagnostic medical safety guardrails.",
-      "category": "Tools",
+      "id": "proj-1785859536070",
+      "title": "News Without the Noise",
+      "summary": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
+      "description": "{bold}News Without the Noise{bold} is an{bold & highlight} AI-powered personalized news ecosystem{bold & highlight} that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and adaptive news tailored to user interests.",
+      "longDescription": "{bold}News Without the Noise{bold} is an intelligent,{bold & highlight} AI-driven news dashboard{bold & highlight} that combats digital noise, clickbait, and misinformation. Featuring a{bold & highlight} personalized recommendation engine{bold & highlight}, it dynamically learns user preferences from actions like reading behavior. The platform integrates{bold & highlight} Google Gemini and OpenA{bold & highlight}I to analyze articles for bias, sensationalism, and source trust, while providing customized summaries. Built with Node.js, Express, MongoDB, and standard HTML/CSS/JS, it also features location-based weather, local headlines, and a deepfake media scanner, ensuring a clean, reliable, and secure information experience.",
+      "category": "Web Apps",
       "tags": [
-        "Tools",
-        "React",
-        "Node.js",
-        "Tailwind CSS",
-        "Next.js"
+        "Web Apps",
+        "Node.js & Express.js",
+        "MongoDB & Mongoose",
+        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
+        "Google Gemini & OpenAI APIs"
       ],
       "technologies": [
-        "Tools",
+        "Web Apps",
+        "Node.js & Express.js",
+        "MongoDB & Mongoose",
+        "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
+        "Google Gemini & OpenAI APIs"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_4_thumbnail_xg400vsk.jpg",
+      "image": "/uploads/assets/static_asset_projects_4_image_up73ptmd.jpg",
+      "images": [
+        "/uploads/assets/static_asset_projects_4_images_0_u4rumclh.jpg",
+        "/uploads/assets/static_asset_projects_4_images_1_1p823c5p.jpg",
+        "/uploads/assets/static_asset_projects_4_images_2_m5sz8ae3.jpg",
+        "/uploads/assets/static_asset_projects_4_images_3_amxm45qb.jpg"
+      ],
+      "demoUrl": "https://news-without-the-noise.onrender.com",
+      "githubUrl": "https://github.com/DubbakaSathwik/AA-Hackthon-online-.git",
+      "featured": false,
+      "status": "Completed",
+      "year": "2026"
+    },
+    {
+      "id": "proj-1785859211876",
+      "title": "AI Hiring Assistant",
+      "summary": "{bold}AI Hiring Assistant{bold} is a full-stack web application that uses OCR to extract text from candidate certificates and leverages LLaMA 3.1 to{bold & highlight} perform fraud analysis and ranking{bold & highlight}.",
+      "description": "{bold}AI Hiring Assistant{bold} is a full-stack web application that uses OCR to extract text from candidate certificates and leverages LLaMA 3.1 to{bold & highlight} perform fraud analysis and ranking{bold & highlight}.",
+      "longDescription": "{bold}AI Hiring Assistant{bold} is a modular full-stack application designed to streamline recruiting. The backend is built with Node.js and Express, while the frontend is constructed using clean, responsive HTML, CSS, and Vanilla JavaScript. The system utilizes Tesseract.js to extract text from candidate certificates, executes simulated academic institution validation, and leverages LLaMA 3.1 via the Featherless API to analyze fraud risk. Finally, a{bold & highlight} ranking service computes score metrics to provide automated, reliable recommendations for hiring teams.{bold & highlight}",
+      "category": "Full-Stack",
+      "tags": [
+        "Full-Stack",
+        "Node.js & Express.js",
+        "Tesseract.js",
+        "LLaMA 3.1",
+        "Multer"
+      ],
+      "technologies": [
+        "Full-Stack",
+        "Node.js & Express.js",
+        "Tesseract.js",
+        "LLaMA 3.1",
+        "Multer"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_3_thumbnail_69eo69to.jpg",
+      "image": "/uploads/assets/static_asset_projects_3_image_mmot5cu5.jpg",
+      "images": [
+        "/uploads/assets/static_asset_projects_3_images_0_3bgvcovp.jpg"
+      ],
+      "demoUrl": "https://ai-hiring-assistant-85kv.onrender.com",
+      "githubUrl": "https://github.com/DubbakaSathwik/AI-Hiring-Assistant.git",
+      "featured": false,
+      "status": "Completed",
+      "year": "2026"
+    },
+    {
+      "id": "proj-1785859703526",
+      "title": "VaultFlow",
+      "summary": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
+      "description": "{bold}VaultFlow{bold} is a local Android{bold & highlight} personal finance application{bold & highlight} built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting insights powered by the Gemini API.",
+      "longDescription": "{bold}VaultFlow{bold} is a comprehensive {bold & highlight}personal finance manager{bold & highlight} designed for Android with privacy and offline capabilities at its core. {highlight}Developed in Kotlin using Jetpack Compose{highlight}, the application allows users to manage multiple bank accounts, track recurring transactions, monitor savings goals, and track debts. The app integrates Google ML Kit for scanning receipts via OCR and leverages the Gemini API to deliver personalized financial insights directly on the device. All data is stored locally in a Room database, ensuring complete user privacy.",
+      "category": "Personal",
+      "tags": [
+        "Personal",
         "React",
         "Node.js",
-        "Tailwind CSS",
-        "Next.js"
+        "MongoDB"
       ],
-      "thumbnail": "/uploads/assets/static_asset_projects_7_thumbnail_sxtsijmg.jpg",
-      "image": "/uploads/assets/static_asset_projects_7_image_lwztz5bf.jpg",
+      "technologies": [
+        "Personal",
+        "React",
+        "Node.js",
+        "MongoDB"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_5_thumbnail_l4052g2u.jpg",
+      "image": "/uploads/assets/static_asset_projects_5_image_y5yf5spm.jpg",
       "images": [
-        "/uploads/assets/static_asset_projects_7_images_0_d3cle6pr.jpg",
-        "/uploads/assets/static_asset_projects_7_images_1_nd6knmgc.jpg",
-        "/uploads/assets/static_asset_projects_7_images_2_mtc5n4a9.jpg",
-        "/uploads/assets/static_asset_projects_7_images_3_eqqg2ozy.jpg"
+        "/uploads/assets/static_asset_projects_5_images_0_rr1lnou4.jpg",
+        "/uploads/assets/static_asset_projects_5_images_1_79r87wyi.jpg"
       ],
-      "demoUrl": "https://medlens-8gan.onrender.com",
-      "githubUrl": "https://github.com/DubbakaSathwik/medlens-prompt_wars.git",
-      "featured": true,
+      "demoUrl": "",
+      "githubUrl": "https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git",
+      "featured": false,
       "status": "Completed",
       "year": "2026"
     }
@@ -1214,5 +1214,6 @@
     "wordsSpeedSeconds": 4.8,
     "nameDelaySeconds": 1.2
   },
-  "messages": []
+  "messages": [],
+  "contactMessages": []
 }
