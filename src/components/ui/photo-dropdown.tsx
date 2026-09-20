@@ -212,10 +212,26 @@ export function PhotoDropdownSelector({
   const uploadToServerOrFallback = async (fileName: string, dataUrl: string): Promise<string> => {
     if (!dataUrl || !dataUrl.startsWith('data:')) return dataUrl;
     try {
+      const token =
+        typeof window !== 'undefined'
+          ? localStorage.getItem('sathwik_portfolio_auth_token')
+          : null;
+      const headers: Record<string, string> = {
+        'Content-Type': 'application/json',
+      };
+      if (token) {
+        headers['Authorization'] = `Bearer ${token}`;
+      }
+
       const res = await fetch('/api/upload', {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: fileName, dataUrl }),
+        headers,
+        body: JSON.stringify({
+          filename: fileName,
+          name: fileName,
+          fileData: dataUrl,
+          dataUrl,
+        }),
       });
       if (res.ok) {
         const json = await res.json();

@@ -340,6 +340,7 @@ export function BackupRestoreTab({
         token: effectiveToken,
         message: customCommitMessage.trim() || undefined,
         saveToken: rememberKey,
+        data,
       };
 
       // Also ensure it's saved if rememberKey is true

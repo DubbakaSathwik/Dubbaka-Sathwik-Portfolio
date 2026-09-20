@@ -83,7 +83,7 @@ function loadLocalDiskData(): any {
 }
 
 // Helper to safely write clean data directly to src/seed_data.json code & disk backup
-function saveLocalDiskData(payload: any): any {
+export function saveLocalDiskData(payload: any): any {
   try {
     const sanitized = processBase64AndSanitize(payload);
     const jsonStr = JSON.stringify(sanitized, null, 2);
@@ -138,7 +138,7 @@ router.get('/', async (req: Request, res: Response): Promise<void> => {
         const containsStaleData = (d: any) => {
           if (!d) return true;
           const str = JSON.stringify(d);
-          return str.includes('images.unsplash.com') || str.includes('photo-1539571696357') || str.includes('static_asset_about_avatarUrl');
+          return str.includes('images.unsplash.com') || str.includes('photo-1539571696357');
         };
 
         // If MongoDB document is missing, empty, or contains stale dummy data, auto-populate from clean static code/backup

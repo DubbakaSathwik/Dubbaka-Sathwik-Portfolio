@@ -23,9 +23,11 @@ const ALLOWED_MIME_TYPES: Record<string, string> = {
 // POST /api/upload - Secure file upload endpoint
 router.post('/', requireAuth, uploadRateLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { filename, fileData, mimeType } = req.body || {};
+    const rawFilename = req.body?.filename || req.body?.name || '';
+    const rawFileData = req.body?.fileData || req.body?.dataUrl || '';
+    const mimeType = req.body?.mimeType || '';
 
-    if (!fileData || typeof fileData !== 'string') {
+    if (!rawFileData || typeof rawFileData !== 'string') {
       res.status(400).json({
         success: false,
         error: { code: 'MISSING_DATA', message: 'No file data provided' },
@@ -35,10 +37,10 @@ router.post('/', requireAuth, uploadRateLimiter, async (req: Request, res: Respo
 
     // Determine MIME type from prefix if not provided
     let detectedMime = mimeType || '';
-    let base64Content = fileData;
+    let base64Content = rawFileData;
 
-    if (fileData.startsWith('data:')) {
-      const match = fileData.match(/^data:([^;]+);base64,(.*)$/);
+    if (rawFileData.startsWith('data:')) {
+      const match = rawFileData.match(/^data:([^;]+);base64,(.*)$/);
       if (match) {
         detectedMime = match[1];
         base64Content = match[2];
@@ -70,8 +72,8 @@ router.post('/', requireAuth, uploadRateLimiter, async (req: Request, res: Respo
       return;
     }
 
-    const ext = ALLOWED_MIME_TYPES[detectedMime] || path.extname(filename || '') || '.bin';
-    const cleanBaseName = (filename || 'upload')
+    const ext = ALLOWED_MIME_TYPES[detectedMime] || path.extname(rawFilename || '') || '.bin';
+    const cleanBaseName = (rawFilename || 'upload')
       .replace(/[^a-zA-Z0-9_-]/g, '_')
       .substring(0, 40);
     const uniqueFileName = `${cleanBaseName}_${Date.now()}_${Math.random()

@@ -142,8 +142,7 @@ const isStaleCMSData = (d: any): boolean => {
   const str = JSON.stringify(d);
   return (
     str.includes('images.unsplash.com') ||
-    str.includes('photo-1539571696357') ||
-    str.includes('static_asset_about_avatarUrl')
+    str.includes('photo-1539571696357')
   );
 };
 
@@ -670,13 +669,68 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Instantly persist data to memory, IDB, localStorage, and backend disk/db
+  const persistCMSDataInstantly = (newData: CMSData) => {
+    setCachedCMSToIDB(newData).catch(() => {});
+    try {
+      localStorage.setItem(CMS_CACHE_KEY, JSON.stringify(newData));
+    } catch (e) {}
+
+    const token =
+      authToken ||
+      (typeof window !== 'undefined' ? localStorage.getItem(AUTH_STORAGE_KEY) : null);
+    if (token) {
+      fetch('/api/cms', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(newData),
+      })
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success) {
+            setDbConnected(true);
+          }
+        })
+        .catch((err) => {
+          console.warn('[CMS Instant Persist Warning]:', err);
+        });
+    }
+  };
+
   // Section update handlers
-  const updateHero = (hero: HeroData) => setData((prev) => ({ ...prev, hero }));
-  const updateAbout = (about: AboutData) => setData((prev) => ({ ...prev, about }));
-  const updateSkills = (skills: SkillCategory[]) => setData((prev) => ({ ...prev, skills }));
+  const updateHero = (hero: HeroData) => {
+    setData((prev) => {
+      const next = { ...prev, hero };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const updateAbout = (about: AboutData) => {
+    setData((prev) => {
+      const next = { ...prev, about };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const updateSkills = (skills: SkillCategory[]) => {
+    setData((prev) => {
+      const next = { ...prev, skills };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
 
   // Projects
-  const updateProjects = (projects: Project[]) => setData((prev) => ({ ...prev, projects }));
+  const updateProjects = (projects: Project[]) => {
+    setData((prev) => {
+      const next = { ...prev, projects };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
   const addProject = (project: any) => {
     const firstImg =
       project.thumbnail ||
@@ -701,19 +755,31 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       status: project.status || 'Completed',
       year: project.year || '2026',
     };
-    setData((prev) => ({ ...prev, projects: [newProj, ...(prev.projects || [])] }));
+    setData((prev) => {
+      const next = { ...prev, projects: [newProj, ...(prev.projects || [])] };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const updateProject = (project: Project) => {
-    setData((prev) => ({
-      ...prev,
-      projects: (prev.projects || []).map((p) => (p.id === project.id ? project : p)),
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        projects: (prev.projects || []).map((p) => (p.id === project.id ? project : p)),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const deleteProject = (id: string) => {
-    setData((prev) => ({
-      ...prev,
-      projects: (prev.projects || []).filter((p) => p.id !== id),
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        projects: (prev.projects || []).filter((p) => p.id !== id),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const reorderProjectItem = (index: number, direction: 'up' | 'down') => {
     setData((prev) => {
@@ -722,7 +788,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
       const [moved] = items.splice(index, 1);
       items.splice(targetIndex, 0, moved);
-      return { ...prev, projects: items };
+      const next = { ...prev, projects: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const moveProjectItem = (fromIndex: number, toIndex: number) => {
@@ -738,7 +806,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
-      return { ...prev, projects: items };
+      const next = { ...prev, projects: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const swapProjectItems = (index1: number, index2: number) => {
@@ -748,7 +818,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const temp = items[index1];
       items[index1] = items[index2];
       items[index2] = temp;
-      return { ...prev, projects: items };
+      const next = { ...prev, projects: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
 
@@ -799,7 +871,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
       const [moved] = items.splice(index, 1);
       items.splice(targetIndex, 0, moved);
-      return { ...prev, creativePortfolio: items };
+      const next = { ...prev, creativePortfolio: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const moveCreativeItem = (fromIndex: number, toIndex: number) => {
@@ -815,7 +889,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
-      return { ...prev, creativePortfolio: items };
+      const next = { ...prev, creativePortfolio: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const swapCreativeItems = (index1: number, index2: number) => {
@@ -825,7 +901,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const temp = items[index1];
       items[index1] = items[index2];
       items[index2] = temp;
-      return { ...prev, creativePortfolio: items };
+      const next = { ...prev, creativePortfolio: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
 
@@ -874,7 +952,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
       const [moved] = items.splice(index, 1);
       items.splice(targetIndex, 0, moved);
-      return { ...prev, journey: items };
+      const next = { ...prev, journey: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const moveJourneyItem = (fromIndex: number, toIndex: number) => {
@@ -890,7 +970,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
-      return { ...prev, journey: items };
+      const next = { ...prev, journey: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const swapJourneyItems = (index1: number, index2: number) => {
@@ -900,12 +982,20 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const temp = items[index1];
       items[index1] = items[index2];
       items[index2] = temp;
-      return { ...prev, journey: items };
+      const next = { ...prev, journey: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
 
   // Gallery / Certificates
-  const updateGallery = (gallery: GalleryItem[]) => setData((prev) => ({ ...prev, gallery }));
+  const updateGallery = (gallery: GalleryItem[]) => {
+    setData((prev) => {
+      const next = { ...prev, gallery };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
   const addGalleryItem = (item: any) => {
     const firstImg =
       item.image ||
@@ -926,22 +1016,34 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       tags: item.tags || [item.category || 'Certificates'],
       technologies: item.technologies || [],
     };
-    setData((prev) => ({
-      ...prev,
-      gallery: [newItem, ...(prev.gallery || [])],
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        gallery: [newItem, ...(prev.gallery || [])],
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const updateGalleryItem = (item: GalleryItem) => {
-    setData((prev) => ({
-      ...prev,
-      gallery: (prev.gallery || []).map((g) => (g.id === item.id ? item : g)),
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        gallery: (prev.gallery || []).map((g) => (g.id === item.id ? item : g)),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const deleteGalleryItem = (id: string) => {
-    setData((prev) => ({
-      ...prev,
-      gallery: (prev.gallery || []).filter((g) => g.id !== id),
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        gallery: (prev.gallery || []).filter((g) => g.id !== id),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const reorderGalleryItem = (index: number, direction: 'up' | 'down') => {
     setData((prev) => {
@@ -950,7 +1052,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
       const [moved] = items.splice(index, 1);
       items.splice(targetIndex, 0, moved);
-      return { ...prev, gallery: items };
+      const next = { ...prev, gallery: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const moveGalleryItem = (fromIndex: number, toIndex: number) => {
@@ -966,7 +1070,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
-      return { ...prev, gallery: items };
+      const next = { ...prev, gallery: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const swapGalleryItems = (index1: number, index2: number) => {
@@ -976,7 +1082,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const temp = items[index1];
       items[index1] = items[index2];
       items[index2] = temp;
-      return { ...prev, gallery: items };
+      const next = { ...prev, gallery: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
 
@@ -1066,7 +1174,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
       const [moved] = items.splice(index, 1);
       items.splice(targetIndex, 0, moved);
-      return { ...prev, resumes: items };
+      const next = { ...prev, resumes: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const moveResumeItem = (fromIndex: number, toIndex: number) => {
@@ -1082,7 +1192,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
-      return { ...prev, resumes: items };
+      const next = { ...prev, resumes: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
   const swapResumeItems = (index1: number, index2: number) => {
@@ -1092,7 +1204,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const temp = items[index1];
       items[index1] = items[index2];
       items[index2] = temp;
-      return { ...prev, resumes: items };
+      const next = { ...prev, resumes: items };
+      persistCMSDataInstantly(next);
+      return next;
     });
   };
 

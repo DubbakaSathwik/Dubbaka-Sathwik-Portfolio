@@ -2,6 +2,9 @@ import { Router, Request, Response } from 'express';
 import { execSync } from 'child_process';
 import fs from 'fs';
 import path from 'path';
+import crypto from 'crypto';
+import { saveLocalDiskData } from './cms';
+import { CMSModel, isDatabaseConnected } from '../db/mongo';
 
 const router = Router();
 
@@ -9,6 +12,12 @@ const GITHUB_REPO = process.env.GITHUB_REPO || 'DubbakaSathwik/Dubbaka-Sathwik-P
 const GITHUB_BRANCH = process.env.GITHUB_BRANCH || 'main';
 const TOKEN_FILE_PATH = path.join(process.cwd(), '.git_token');
 const PUSH_HISTORY_FILE = path.join(process.cwd(), 'git_push_history.json');
+
+// Compute standard Git Blob SHA-1 (equivalent to git hash-object)
+function computeGitBlobSha(buffer: Buffer): string {
+  const header = `blob ${buffer.length}\0`;
+  return crypto.createHash('sha1').update(Buffer.concat([Buffer.from(header), buffer])).digest('hex');
+}
 
 // Helper to resolve currently available token
 function getActiveToken(): string {
@@ -109,8 +118,9 @@ async function pushViaGitHubRestApi(token: string, message: string) {
     throw new Error('Could not find base tree SHA for commit');
   }
 
-  // 3. Inspect existing files on remote tree (so we don't re-upload existing images)
+  // 3. Inspect existing files on remote tree (including blob SHA to detect changes)
   const existingRemotePaths = new Set<string>();
+  const existingRemoteShaByPath = new Map<string, string>();
   try {
     const treeRes = await fetch(
       `https://api.github.com/repos/${GITHUB_REPO}/git/trees/${baseTreeSha}?recursive=1`,
@@ -120,7 +130,12 @@ async function pushViaGitHubRestApi(token: string, message: string) {
       const treeJson = await treeRes.json();
       if (Array.isArray(treeJson.tree)) {
         treeJson.tree.forEach((t: any) => {
-          if (t.path) existingRemotePaths.add(t.path);
+          if (t.path) {
+            existingRemotePaths.add(t.path);
+            if (t.sha) {
+              existingRemoteShaByPath.set(t.path, t.sha);
+            }
+          }
         });
       }
     }
@@ -144,70 +159,140 @@ async function pushViaGitHubRestApi(token: string, message: string) {
     });
   }
 
-  // B. Backups
+  // B. Backups (Root & Public)
   const cmsBackupPath = path.join(process.cwd(), 'cms_backup.json');
+  let cmsBackupContent = '';
   if (fs.existsSync(cmsBackupPath)) {
+    cmsBackupContent = fs.readFileSync(cmsBackupPath, 'utf-8');
     treeItems.push({
       path: 'cms_backup.json',
       mode: '100644',
       type: 'blob',
-      content: fs.readFileSync(cmsBackupPath, 'utf-8'),
+      content: cmsBackupContent,
     });
   }
 
   const staticBackupPath = path.join(process.cwd(), 'static_backup.json');
+  let staticBackupContent = '';
   if (fs.existsSync(staticBackupPath)) {
+    staticBackupContent = fs.readFileSync(staticBackupPath, 'utf-8');
     treeItems.push({
       path: 'static_backup.json',
       mode: '100644',
       type: 'blob',
-      content: fs.readFileSync(staticBackupPath, 'utf-8'),
+      content: staticBackupContent,
     });
   }
 
-  // C. Uploaded Image Assets: Find referenced files that are NOT in existingRemotePaths
-  const referencedMatches = seedContent
-    ? [...new Set(seedContent.match(/\/uploads\/assets\/[a-zA-Z0-9_.-]+/g) || [])]
-    : [];
+  const publicStaticBackupPath = path.join(process.cwd(), 'public', 'static_backup.json');
+  if (fs.existsSync(publicStaticBackupPath)) {
+    treeItems.push({
+      path: 'public/static_backup.json',
+      mode: '100644',
+      type: 'blob',
+      content: fs.readFileSync(publicStaticBackupPath, 'utf-8'),
+    });
+  }
 
-  const missingAssets = referencedMatches.filter((relUrl) => {
-    const repoPath = `public${relUrl}`;
-    return !existingRemotePaths.has(repoPath);
-  });
+  // C. Local Image & Media Assets: Profile Avatars, Projects, Gallery, and Uploads
+  const candidateRelUrls = new Set<string>();
 
-  // Batch upload missing assets in parallel chunks of 6
-  const batchSize = 6;
-  for (let i = 0; i < missingAssets.length; i += batchSize) {
-    const batch = missingAssets.slice(i, i + batchSize);
-    await Promise.all(
-      batch.map(async (relUrl) => {
-        const filename = relUrl.replace(/^\/uploads\/assets\//, '');
-        const filePath = path.join(process.cwd(), 'public', 'uploads', 'assets', filename);
-        if (fs.existsSync(filePath)) {
-          try {
-            const buf = fs.readFileSync(filePath);
-            const blobRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/git/blobs`, {
-              method: 'POST',
-              headers,
-              body: JSON.stringify({
-                content: buf.toString('base64'),
-                encoding: 'base64',
-              }),
-            });
-            if (blobRes.ok) {
-              const blobJson = await blobRes.json();
-              if (blobJson.sha) {
-                treeItems.push({
-                  path: `public/uploads/assets/${filename}`,
-                  mode: '100644',
-                  type: 'blob',
-                  sha: blobJson.sha,
-                });
-              }
-            }
-          } catch (err) {
-            console.warn(`Error uploading asset blob ${filename}:`, err);
+  // Explicit primary avatar & profile assets
+  candidateRelUrls.add('/profile/avatar.jpeg');
+  candidateRelUrls.add('/images/profile/sathwik-avatar.jpeg');
+
+  // Extract all asset references from JSON data files
+  const searchSources = [seedContent, cmsBackupContent, staticBackupContent].filter(Boolean);
+  for (const src of searchSources) {
+    const matches = src.match(/"\/(?:uploads|profile|images)\/[^"\\]+"/g) || [];
+    for (const m of matches) {
+      candidateRelUrls.add(m.replace(/"/g, ''));
+    }
+  }
+
+  // Also include any files residing in public/uploads and public/uploads/assets
+  try {
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    if (fs.existsSync(uploadsDir)) {
+      const topFiles = fs.readdirSync(uploadsDir);
+      for (const f of topFiles) {
+        if (!f.startsWith('.')) {
+          const p = path.join(uploadsDir, f);
+          if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+            candidateRelUrls.add(`/uploads/${f}`);
           }
+        }
+      }
+    }
+    const assetsDir = path.join(process.cwd(), 'public', 'uploads', 'assets');
+    if (fs.existsSync(assetsDir)) {
+      const assetFiles = fs.readdirSync(assetsDir);
+      for (const f of assetFiles) {
+        if (!f.startsWith('.')) {
+          const p = path.join(assetsDir, f);
+          if (fs.existsSync(p) && fs.statSync(p).isFile()) {
+            candidateRelUrls.add(`/uploads/assets/${f}`);
+          }
+        }
+      }
+    }
+  } catch (err) {
+    console.warn('Error reading local uploads dir:', err);
+  }
+
+  // Determine assets that either don't exist on remote or have different local SHA (e.g. updated photo)
+  const assetsToUpload: { repoPath: string; localPath: string; buffer: Buffer }[] = [];
+  for (const relUrl of candidateRelUrls) {
+    const cleanRel = relUrl.startsWith('/') ? relUrl.substring(1) : relUrl;
+    const localPath = path.join(process.cwd(), 'public', cleanRel);
+    const repoPath = `public/${cleanRel}`;
+
+    if (fs.existsSync(localPath)) {
+      try {
+        const buffer = fs.readFileSync(localPath);
+        const localSha = computeGitBlobSha(buffer);
+        const remoteSha = existingRemoteShaByPath.get(repoPath);
+
+        // Upload if missing on GitHub or if local file content changed!
+        if (!remoteSha || remoteSha !== localSha) {
+          assetsToUpload.push({ repoPath, localPath, buffer });
+        }
+      } catch (err) {
+        console.warn(`Error checking asset file ${localPath}:`, err);
+      }
+    }
+  }
+
+  // Batch upload changed or missing assets in parallel chunks of 5
+  const batchSize = 5;
+  for (let i = 0; i < assetsToUpload.length; i += batchSize) {
+    const batch = assetsToUpload.slice(i, i + batchSize);
+    await Promise.all(
+      batch.map(async ({ repoPath, buffer }) => {
+        try {
+          const blobRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}/git/blobs`, {
+            method: 'POST',
+            headers,
+            body: JSON.stringify({
+              content: buffer.toString('base64'),
+              encoding: 'base64',
+            }),
+          });
+          if (blobRes.ok) {
+            const blobJson = await blobRes.json();
+            if (blobJson.sha) {
+              treeItems.push({
+                path: repoPath,
+                mode: '100644',
+                type: 'blob',
+                sha: blobJson.sha,
+              });
+            }
+          } else {
+            console.warn(`GitHub Blob API rejected ${repoPath}:`, await blobRes.text());
+          }
+        } catch (err) {
+          console.warn(`Error uploading asset blob ${repoPath}:`, err);
         }
       })
     );
@@ -636,6 +721,22 @@ router.post('/sync', async (req: Request, res: Response) => {
     try {
       fs.writeFileSync(TOKEN_FILE_PATH, req.body.token.trim(), { encoding: 'utf-8', mode: 0o600 });
     } catch (e) {}
+  }
+
+  // 1. If payload contains live in-memory CMS state, flush to disk and MongoDB before git commit
+  if (req.body?.data && typeof req.body.data === 'object') {
+    try {
+      saveLocalDiskData(req.body.data);
+      if (isDatabaseConnected()) {
+        await CMSModel.findOneAndUpdate(
+          { key: 'portfolio_cms_v1' },
+          { schemaVersion: 1, version: Date.now(), data: req.body.data, updatedAt: new Date() },
+          { upsert: true }
+        ).exec();
+      }
+    } catch (persistErr) {
+      console.warn('[Git Sync] Error saving live payload to disk/db:', persistErr);
+    }
   }
 
   const message =
