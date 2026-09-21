@@ -186,7 +186,9 @@
       "githubUrl": "https://github.com/DubbakaSathwik/INTELLI-Query.git",
       "featured": true,
       "status": "Completed",
-      "year": "2026"
+      "year": "2026",
+      "cardIdNo": "{intelli-query-001}",
+      "sequenceNumber": 1
     },
     {
       "id": "proj-1785576197261",
@@ -223,7 +225,9 @@
       "demoUrl": "https://multiai-6kx9.onrender.com",
       "featured": true,
       "status": "Completed",
-      "year": "2026"
+      "year": "2026",
+      "cardIdNo": "{nexora-002}",
+      "sequenceNumber": 2
     },
     {
       "id": "proj-1788716566911",
@@ -258,42 +262,9 @@
       "githubUrl": "https://github.com/DubbakaSathwik/medlens-prompt_wars.git",
       "featured": true,
       "status": "Completed",
-      "year": "2026"
-    },
-    {
-      "id": "proj-1785858907457",
-      "title": "FoodFlow Connect",
-      "summary": "{bold}FoodFlow Connect{bold} is a role-based{bold & highlight} food rescue web application{bold & highlight} connecting surplus food providers, NGOs, and consumers to streamline food redistribution, minimize community waste, and track donation impact.",
-      "description": "{bold}FoodFlow Connect{bold} is a role-based{bold & highlight} food rescue web application{bold & highlight} connecting surplus food providers, NGOs, and consumers to streamline food redistribution, minimize community waste, and track donation impact.",
-      "longDescription": "{bold}FoodFlow Connect{bold} is a role-based{bold & highlight} food rescue and redistribution MVP{bold & highlight} designed to{bold} reduce waste and support local communities{bold}. The application features specialized, interactive dashboards for providers to manage inventory, NGOs to discover and claim surplus listings, and consumers to browse and reserve items. The project supports two execution paths: a standard Node.js server backed by SQLite for robust deployments, and a browser-only static version using localStorage for lightweight staging on platforms like GitHub Pages.",
-      "category": "Web Apps",
-      "tags": [
-        "Web Apps",
-        "React",
-        "Node.js",
-        "HTML/CSS",
-        "JavaScript"
-      ],
-      "technologies": [
-        "Web Apps",
-        "React",
-        "Node.js",
-        "HTML/CSS",
-        "JavaScript"
-      ],
-      "thumbnail": "/uploads/assets/static_asset_projects_2_thumbnail_8xggcz5i.jpg",
-      "image": "/uploads/assets/static_asset_projects_2_image_2pkb7xvo.jpg",
-      "images": [
-        "/uploads/assets/static_asset_projects_2_images_0_dmhg7ra9.jpg",
-        "/uploads/assets/static_asset_projects_2_images_1_gupjnc12.jpg",
-        "/uploads/assets/static_asset_projects_2_images_2_o039m3vg.jpg",
-        "/uploads/assets/static_asset_projects_2_images_3_ye8klmaf.jpg"
-      ],
-      "githubUrl": "https://github.com/DubbakaSathwik/FoodFlow-Connect.git",
-      "demoUrl": "https://udayprakashchamakuri-beep.github.io/foodflow/",
-      "featured": false,
-      "status": "Completed",
-      "year": "2026"
+      "year": "2026",
+      "cardIdNo": "{medlens-008}",
+      "sequenceNumber": 3
     },
     {
       "id": "proj-1785860179523",
@@ -330,7 +301,46 @@
       "githubUrl": "https://github.com/DubbakaSathwik/COBRA-CORE-TECH-Website.git",
       "featured": false,
       "status": "Completed",
-      "year": "2026"
+      "year": "2026",
+      "cardIdNo": "{cobra-007}",
+      "sequenceNumber": 4
+    },
+    {
+      "id": "proj-1785858907457",
+      "title": "FoodFlow Connect",
+      "summary": "{bold}FoodFlow Connect{bold} is a role-based{bold & highlight} food rescue web application{bold & highlight} connecting surplus food providers, NGOs, and consumers to streamline food redistribution, minimize community waste, and track donation impact.",
+      "description": "{bold}FoodFlow Connect{bold} is a role-based{bold & highlight} food rescue web application{bold & highlight} connecting surplus food providers, NGOs, and consumers to streamline food redistribution, minimize community waste, and track donation impact.",
+      "longDescription": "{bold}FoodFlow Connect{bold} is a role-based{bold & highlight} food rescue and redistribution MVP{bold & highlight} designed to{bold} reduce waste and support local communities{bold}. The application features specialized, interactive dashboards for providers to manage inventory, NGOs to discover and claim surplus listings, and consumers to browse and reserve items. The project supports two execution paths: a standard Node.js server backed by SQLite for robust deployments, and a browser-only static version using localStorage for lightweight staging on platforms like GitHub Pages.",
+      "category": "Web Apps",
+      "tags": [
+        "Web Apps",
+        "React",
+        "Node.js",
+        "HTML/CSS",
+        "JavaScript"
+      ],
+      "technologies": [
+        "Web Apps",
+        "React",
+        "Node.js",
+        "HTML/CSS",
+        "JavaScript"
+      ],
+      "thumbnail": "/uploads/assets/static_asset_projects_2_thumbnail_8xggcz5i.jpg",
+      "image": "/uploads/assets/static_asset_projects_2_image_2pkb7xvo.jpg",
+      "images": [
+        "/uploads/assets/static_asset_projects_2_images_0_dmhg7ra9.jpg",
+        "/uploads/assets/static_asset_projects_2_images_1_gupjnc12.jpg",
+        "/uploads/assets/static_asset_projects_2_images_2_o039m3vg.jpg",
+        "/uploads/assets/static_asset_projects_2_images_3_ye8klmaf.jpg"
+      ],
+      "githubUrl": "https://github.com/DubbakaSathwik/FoodFlow-Connect.git",
+      "demoUrl": "https://udayprakashchamakuri-beep.github.io/foodflow/",
+      "featured": false,
+      "status": "Completed",
+      "year": "2026",
+      "cardIdNo": "{foodflow-003}",
+      "sequenceNumber": 5
     },
     {
       "id": "proj-1785859536070",
@@ -353,19 +363,21 @@
         "HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+)",
         "Google Gemini & OpenAI APIs"
       ],
-      "thumbnail": "/uploads/assets/static_asset_projects_4_thumbnail_xg400vsk.jpg",
-      "image": "/uploads/assets/static_asset_projects_4_image_up73ptmd.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_4_thumbnail_i61ejz0u.jpg",
+      "image": "/uploads/assets/static_asset_projects_4_image_3xh19pwx.jpg",
       "images": [
-        "/uploads/assets/static_asset_projects_4_images_0_u4rumclh.jpg",
-        "/uploads/assets/static_asset_projects_4_images_1_1p823c5p.jpg",
-        "/uploads/assets/static_asset_projects_4_images_2_m5sz8ae3.jpg",
-        "/uploads/assets/static_asset_projects_4_images_3_amxm45qb.jpg"
+        "/uploads/assets/static_asset_projects_4_images_0_2lm4jnl6.jpg",
+        "/uploads/assets/static_asset_projects_4_images_1_vgeo1f1y.jpg",
+        "/uploads/assets/static_asset_projects_4_images_2_bv46g46k.jpg",
+        "/uploads/assets/static_asset_projects_4_images_3_gp1rd92r.jpg"
       ],
       "demoUrl": "https://news-without-the-noise.onrender.com",
       "githubUrl": "https://github.com/DubbakaSathwik/AA-Hackthon-online-.git",
       "featured": false,
       "status": "Completed",
-      "year": "2026"
+      "year": "2026",
+      "cardIdNo": "{news-005}",
+      "sequenceNumber": 6
     },
     {
       "id": "proj-1785859211876",
@@ -397,7 +409,9 @@
       "githubUrl": "https://github.com/DubbakaSathwik/AI-Hiring-Assistant.git",
       "featured": false,
       "status": "Completed",
-      "year": "2026"
+      "year": "2026",
+      "cardIdNo": "{ai-hiring-004}",
+      "sequenceNumber": 7
     },
     {
       "id": "proj-1785859703526",
@@ -428,9 +442,101 @@
       "githubUrl": "https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git",
       "featured": false,
       "status": "Completed",
-      "year": "2026"
+      "year": "2026",
+      "cardIdNo": "{vaultflow-006}",
+      "sequenceNumber": 8
     }
   ],
+  "projectsSequence": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-09-21T15:56:24.386Z",
+    "totalProjects": 8,
+    "sequence": [
+      {
+        "position": 1,
+        "cardIdNo": "{intelli-query-001}",
+        "id": "proj-1785569765444",
+        "title": "INTELLI-Query",
+        "category": "Tools",
+        "featured": true,
+        "status": "Completed"
+      },
+      {
+        "position": 2,
+        "cardIdNo": "{nexora-002}",
+        "id": "proj-1785576197261",
+        "title": "Nexora-AI",
+        "category": "College Projects",
+        "featured": true,
+        "status": "Completed"
+      },
+      {
+        "position": 3,
+        "cardIdNo": "{medlens-008}",
+        "id": "proj-1788716566911",
+        "title": "MedLens ",
+        "category": "Tools",
+        "featured": true,
+        "status": "Completed"
+      },
+      {
+        "position": 4,
+        "cardIdNo": "{cobra-007}",
+        "id": "proj-1785860179523",
+        "title": "Cobra Core & Tech",
+        "category": "Full-Stack",
+        "featured": false,
+        "status": "Completed"
+      },
+      {
+        "position": 5,
+        "cardIdNo": "{foodflow-003}",
+        "id": "proj-1785858907457",
+        "title": "FoodFlow Connect",
+        "category": "Web Apps",
+        "featured": false,
+        "status": "Completed"
+      },
+      {
+        "position": 6,
+        "cardIdNo": "{news-005}",
+        "id": "proj-1785859536070",
+        "title": "News Without the Noise",
+        "category": "Web Apps",
+        "featured": false,
+        "status": "Completed"
+      },
+      {
+        "position": 7,
+        "cardIdNo": "{ai-hiring-004}",
+        "id": "proj-1785859211876",
+        "title": "AI Hiring Assistant",
+        "category": "Full-Stack",
+        "featured": false,
+        "status": "Completed"
+      },
+      {
+        "position": 8,
+        "cardIdNo": "{vaultflow-006}",
+        "id": "proj-1785859703526",
+        "title": "VaultFlow",
+        "category": "Personal",
+        "featured": false,
+        "status": "Completed"
+      }
+    ],
+    "backupRules": {
+      "preserveSequenceOnBackup": true,
+      "autoAssignCardId": true,
+      "snapshotSequenceFile": true,
+      "dualStorageParity": true
+    },
+    "pushRules": {
+      "gitPushSequenceSection": true,
+      "gitCommitSequenceMessage": true,
+      "safeTreePush": true
+    }
+  },
   "creativePortfolio": [
     {
       "id": "cr-1785861522307",
@@ -453,7 +559,9 @@
       "platformUrl": "https://www.instagram.com/reel/DXGpBjBEhGS/?igsh=Y3h2eXhsZncyMHUw",
       "completionDate": "April 17th 2026",
       "featured": true,
-      "status": "Published"
+      "status": "Published",
+      "cardIdNo": "{vision-001}",
+      "sequenceNumber": 1
     },
     {
       "id": "cr-1785861219308",
@@ -479,7 +587,9 @@
       "platformUrl": "https://www.instagram.com/p/DY3xbbzEWZI/?img_index=3&igsh=YmJzMms1bWR5cGEy",
       "completionDate": "28 May 2026",
       "featured": true,
-      "status": "Published"
+      "status": "Published",
+      "cardIdNo": "{menstrual-002}",
+      "sequenceNumber": 2
     },
     {
       "id": "cr-1785861036353",
@@ -502,7 +612,9 @@
       "platformUrl": "https://www.instagram.com/reel/DZMojG3R6rl/?igsh=ZnppMHh6ZGt2MGt2",
       "completionDate": "5 June 2026",
       "featured": true,
-      "status": "Published"
+      "status": "Published",
+      "cardIdNo": "{environment-003}",
+      "sequenceNumber": 3
     },
     {
       "id": "cr-1785860691131",
@@ -524,7 +636,9 @@
       "platformUrl": "",
       "completionDate": "26 July 2026",
       "featured": true,
-      "status": "Published"
+      "status": "Published",
+      "cardIdNo": "{kargil-004}",
+      "sequenceNumber": 4
     },
     {
       "id": "cr-1785860827796",
@@ -547,7 +661,9 @@
       "platformUrl": "",
       "completionDate": "April 17th 2026",
       "featured": true,
-      "status": "Published"
+      "status": "Published",
+      "cardIdNo": "{vision-005}",
+      "sequenceNumber": 5
     },
     {
       "id": "cr-1785861404956",
@@ -570,7 +686,9 @@
       "platformUrl": "https://www.instagram.com/reel/DXrN50nkTU9/?igsh=bWdwN21sb2EzNHdm",
       "completionDate": "April 28th 2026",
       "featured": true,
-      "status": "Published"
+      "status": "Published",
+      "cardIdNo": "{nss-006}",
+      "sequenceNumber": 6
     }
   ],
   "gallery": [
@@ -598,7 +716,9 @@
         "Team Leadership",
         "Logical Thinking"
       ],
-      "featured": true
+      "featured": true,
+      "cardIdNo": "{hackfest-001}",
+      "sequenceNumber": 1
     },
     {
       "id": "g-1785861787830",
@@ -624,7 +744,9 @@
         "Cyber Ekta"
       ],
       "description": "Achieved a {bold & highlight}Top 4 position in Cyber Ekathon 2025{bold & highlight} and earned a {bold & highlight}cybersecurity internship opportunity{bold & highlight} by demonstrating strong technical, analytical, and collaborative skills during the IEEE-organized hackathon.",
-      "detailedDescription": "Participated in {bold & highlight}Cyber Ekathon 2025{bold & highlight}, a cybersecurity hackathon organized by the {bold & highlight}IEEE MVSR Computer Society Student Branch{bold & highlight} in collaboration with Cyber Ekta and IEEE Young Professionals, Hyderabad Section. Through effective teamwork, cybersecurity knowledge, and problem-solving abilities, my team secured a {bold & highlight}Top 4 position{bold & highlight} among the participants. This achievement also led to a {bold & highlight}cybersecurity internship opportunity{bold & highlight}, recognizing our technical potential and practical approach to solving real-world security challenges while strengthening my experience in competitive technical events."
+      "detailedDescription": "Participated in {bold & highlight}Cyber Ekathon 2025{bold & highlight}, a cybersecurity hackathon organized by the {bold & highlight}IEEE MVSR Computer Society Student Branch{bold & highlight} in collaboration with Cyber Ekta and IEEE Young Professionals, Hyderabad Section. Through effective teamwork, cybersecurity knowledge, and problem-solving abilities, my team secured a {bold & highlight}Top 4 position{bold & highlight} among the participants. This achievement also led to a {bold & highlight}cybersecurity internship opportunity{bold & highlight}, recognizing our technical potential and practical approach to solving real-world security challenges while strengthening my experience in competitive technical events.",
+      "cardIdNo": "{cyber-002}",
+      "sequenceNumber": 2
     },
     {
       "id": "g-1785862478538",
@@ -648,7 +770,9 @@
         "Certificates"
       ],
       "description": "Won {bold & highlight}1st Place in the Pixel Craft Logo Design Competition{bold & highlight} by designing a {bold & highlight}custom logo from individual design elements{bold & highlight}, demonstrating creativity, branding expertise, and {bold & highlight}visual identity design skills{bold & highlight}.",
-      "detailedDescription": "Secured {bold & highlight}1st Place in the Pixel Craft Logo Design Competition{bold & highlight} organized by the {bold & highlight}CSI Student Body, MVSR Engineering College{bold & highlight}. I designed the winning logo by carefully creating and arranging {bold & highlight}each design element manually{bold & highlight}, focusing on originality, branding, typography, color harmony, and visual balance rather than relying on AI-generated artwork. My creative approach and attention to detail impressed the judging panel, earning me the first prize along with a {bold & highlight}one-year Canva Pro subscription{bold & highlight}, recognizing my skills in professional logo and brand identity design."
+      "detailedDescription": "Secured {bold & highlight}1st Place in the Pixel Craft Logo Design Competition{bold & highlight} organized by the {bold & highlight}CSI Student Body, MVSR Engineering College{bold & highlight}. I designed the winning logo by carefully creating and arranging {bold & highlight}each design element manually{bold & highlight}, focusing on originality, branding, typography, color harmony, and visual balance rather than relying on AI-generated artwork. My creative approach and attention to detail impressed the judging panel, earning me the first prize along with a {bold & highlight}one-year Canva Pro subscription{bold & highlight}, recognizing my skills in professional logo and brand identity design.",
+      "cardIdNo": "{1st-003}",
+      "sequenceNumber": 3
     },
     {
       "id": "g-1785862372270",
@@ -671,7 +795,9 @@
         "Computer Science",
         "IEEE Computer Society"
       ],
-      "featured": true
+      "featured": true,
+      "cardIdNo": "{ieee-004}",
+      "sequenceNumber": 4
     },
     {
       "id": "g-1785863014437",
@@ -694,7 +820,9 @@
         "IIIT Hyderabad",
         "Hackathon"
       ],
-      "featured": false
+      "featured": false,
+      "cardIdNo": "{forge-005}",
+      "sequenceNumber": 5
     },
     {
       "id": "g-1785862900680",
@@ -716,7 +844,9 @@
         "Certificates"
       ],
       "description": "Participated in the {bold & highlight}UNNATI Hackathon 2026{bold & highlight}, showcasing {bold & highlight}innovation, teamwork, and problem-solving skills{bold & highlight} while collaborating to develop impactful solutions in a competitive {bold & highlight}technical hackathon{bold & highlight}.",
-      "detailedDescription": "Successfully participated in the {bold & highlight}UNNATI Hackathon 2026{bold & highlight}, conducted by the {bold & highlight}CSI Student Branch, GRIET{bold & highlight} as part of Resonance'26. The hackathon provided an excellent platform to collaborate with talented peers, tackle real-world challenges, and develop innovative technical solutions under time constraints. Through this experience, I strengthened my {bold & highlight}software development, analytical thinking, and teamwork skills{bold & highlight}, while gaining valuable exposure to competitive hackathons, project development, and collaborative problem-solving in a national-level technical environment."
+      "detailedDescription": "Successfully participated in the {bold & highlight}UNNATI Hackathon 2026{bold & highlight}, conducted by the {bold & highlight}CSI Student Branch, GRIET{bold & highlight} as part of Resonance'26. The hackathon provided an excellent platform to collaborate with talented peers, tackle real-world challenges, and develop innovative technical solutions under time constraints. Through this experience, I strengthened my {bold & highlight}software development, analytical thinking, and teamwork skills{bold & highlight}, while gaining valuable exposure to competitive hackathons, project development, and collaborative problem-solving in a national-level technical environment.",
+      "cardIdNo": "{unnati-006}",
+      "sequenceNumber": 6
     },
     {
       "id": "g-1785862597646",
@@ -738,7 +868,9 @@
         "Hackathon Participation",
         "Problem Solving"
       ],
-      "featured": false
+      "featured": false,
+      "cardIdNo": "{hack-007}",
+      "sequenceNumber": 7
     },
     {
       "id": "g-1785862089695",
@@ -763,7 +895,9 @@
         "Problem Solving",
         "Software Development"
       ],
-      "featured": false
+      "featured": false,
+      "cardIdNo": "{aethronix-008}",
+      "sequenceNumber": 8
     },
     {
       "id": "g-1785861967591",
@@ -789,7 +923,9 @@
         "Responsive Web Design",
         "Web Development Fundamentals"
       ],
-      "featured": false
+      "featured": false,
+      "cardIdNo": "{html-009}",
+      "sequenceNumber": 9
     }
   ],
   "journey": [
@@ -1214,6 +1350,5 @@
     "wordsSpeedSeconds": 4.8,
     "nameDelaySeconds": 1.2
   },
-  "messages": [],
-  "contactMessages": []
+  "messages": []
 }

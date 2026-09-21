@@ -1,0 +1,90 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2026-09-21T15:56:24.386Z",
+  "totalProjects": 8,
+  "sequence": [
+    {
+      "position": 1,
+      "cardIdNo": "{intelli-query-001}",
+      "id": "proj-1785569765444",
+      "title": "INTELLI-Query",
+      "category": "Tools",
+      "featured": true,
+      "status": "Completed"
+    },
+    {
+      "position": 2,
+      "cardIdNo": "{nexora-002}",
+      "id": "proj-1785576197261",
+      "title": "Nexora-AI",
+      "category": "College Projects",
+      "featured": true,
+      "status": "Completed"
+    },
+    {
+      "position": 3,
+      "cardIdNo": "{medlens-008}",
+      "id": "proj-1788716566911",
+      "title": "MedLens ",
+      "category": "Tools",
+      "featured": true,
+      "status": "Completed"
+    },
+    {
+      "position": 4,
+      "cardIdNo": "{cobra-007}",
+      "id": "proj-1785860179523",
+      "title": "Cobra Core & Tech",
+      "category": "Full-Stack",
+      "featured": false,
+      "status": "Completed"
+    },
+    {
+      "position": 5,
+      "cardIdNo": "{foodflow-003}",
+      "id": "proj-1785858907457",
+      "title": "FoodFlow Connect",
+      "category": "Web Apps",
+      "featured": false,
+      "status": "Completed"
+    },
+    {
+      "position": 6,
+      "cardIdNo": "{news-005}",
+      "id": "proj-1785859536070",
+      "title": "News Without the Noise",
+      "category": "Web Apps",
+      "featured": false,
+      "status": "Completed"
+    },
+    {
+      "position": 7,
+      "cardIdNo": "{ai-hiring-004}",
+      "id": "proj-1785859211876",
+      "title": "AI Hiring Assistant",
+      "category": "Full-Stack",
+      "featured": false,
+      "status": "Completed"
+    },
+    {
+      "position": 8,
+      "cardIdNo": "{vaultflow-006}",
+      "id": "proj-1785859703526",
+      "title": "VaultFlow",
+      "category": "Personal",
+      "featured": false,
+      "status": "Completed"
+    }
+  ],
+  "backupRules": {
+    "preserveSequenceOnBackup": true,
+    "autoAssignCardId": true,
+    "snapshotSequenceFile": true,
+    "dualStorageParity": true
+  },
+  "pushRules": {
+    "gitPushSequenceSection": true,
+    "gitCommitSequenceMessage": true,
+    "safeTreePush": true
+  }
+}
