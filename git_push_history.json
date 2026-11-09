@@ -1,15 +1,5 @@
 [
   {
-    "id": "1794251536372",
-    "timestamp": "2026-11-09T19:12:16.372Z",
-    "commitHash": "failed",
-    "message": "update: portfolio projects, media assets & static data (11/9/2026)",
-    "author": "Dubbaka Sathwik",
-    "status": "failed",
-    "details": "GitHub Ref Error (401): {\r\n  \"message\": \"Bad credentials\",\r\n  \"documentation_url\": \"https://docs.github.com/rest\",\r\n  \"status\": \"401\"\r\n}",
-    "mode": "rest_api"
-  },
-  {
     "id": "1790052021459",
     "timestamp": "2026-09-22T04:40:21.459Z",
     "commitHash": "failed",
