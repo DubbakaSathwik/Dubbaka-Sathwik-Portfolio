@@ -16,15 +16,17 @@ export interface ServerConfig {
 // $2a$10$8u1r7aMhF8wWfZ1GgH7w/.a6yUu.5I8uJ1r6aMhF8wWfZ1GgH7w/ is generated for standard initial deployment
 const DEFAULT_ADMIN_HASH = '$2a$10$m6k7hY1b3kZ4w8v9u0t1s.X5y7z9a1b3c5d7e9f1g3h5i7j9k1l3m';
 
+import crypto from 'crypto';
+
+const EPHEMERAL_JWT_SECRET = crypto.randomBytes(32).toString('hex');
+
 export const config: ServerConfig = {
   PORT: parseInt(process.env.PORT || '3000', 10),
-  MONGODB_URI:
-    process.env.MONGODB_URI ||
-    'mongodb+srv://dubbakasathwik_db_user:bachi200@cluster0.6dd9987.mongodb.net/?appName=Cluster0',
-  JWT_SECRET: process.env.JWT_SECRET || 'sathwik_portfolio_jwt_secret_key_2026_secure',
+  MONGODB_URI: process.env.MONGODB_URI || '',
+  JWT_SECRET: process.env.JWT_SECRET || EPHEMERAL_JWT_SECRET,
   ADMIN_PASSWORD_HASH: process.env.ADMIN_PASSWORD_HASH || DEFAULT_ADMIN_HASH,
-  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '8731561334:AAFXBQBSWa3unRQ-0c3UFqBHOrF6tQFxSPc',
-  TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || '5869091520',
+  TELEGRAM_BOT_TOKEN: process.env.TELEGRAM_BOT_TOKEN || '',
+  TELEGRAM_CHAT_ID: process.env.TELEGRAM_CHAT_ID || '',
   NODE_ENV: process.env.NODE_ENV || 'development',
   APP_URL: process.env.APP_URL || 'http://localhost:3000',
 };

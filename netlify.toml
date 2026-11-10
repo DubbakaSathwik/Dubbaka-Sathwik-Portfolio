@@ -1,0 +1,42 @@
+# Netlify Production Build & Security Configuration
+[build]
+  publish = "dist"
+  command = "npm run build:client"
+
+[build.environment]
+  SECRETS_SCAN_OMIT_PATHS = "server/**,public/static_backup.json"
+
+# Explicitly block access to sensitive dotfiles and private tokens
+[[redirects]]
+  from = "/.env*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/.git_token"
+  to = "/index.html"
+  status = 404
+  force = true
+
+[[redirects]]
+  from = "/server.cjs*"
+  to = "/index.html"
+  status = 404
+  force = true
+
+# Single-Page Application (SPA) Client-Side Route Resolution
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Defense-in-Depth Security Headers
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Frame-Options = "SAMEORIGIN"
+    X-Content-Type-Options = "nosniff"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
+    Permissions-Policy = "camera=(), microphone=(), geolocation=()"

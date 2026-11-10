@@ -1,0 +1,36 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default-deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Helper functions
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function isSuperAdmin() {
+      return isSignedIn() &&
+        request.auth.token.email_verified == true &&
+        request.auth.token.email == 'dubbakasathwik@gmail.com';
+    }
+
+    // Admins collection: Super admin only (non-admins cannot inspect admin roster)
+    match /admins/{adminId} {
+      allow read, write: if isSuperAdmin();
+    }
+
+    // Portfolio Content: Public can read, only verified admin can update
+    match /portfolio/{document=**} {
+      allow read: if true;
+      allow write: if isSuperAdmin();
+    }
+
+    // Test connection doc
+    match /test/connection {
+      allow read: if true;
+    }
+  }
+}

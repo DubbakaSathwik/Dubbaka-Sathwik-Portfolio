@@ -41,14 +41,22 @@ import {
   Check,
   Search,
   Github,
+  GitCommit,
+  GitBranch,
+  Loader2,
   History,
   AlertCircle,
   AlertTriangle,
+  FileJson,
+  ListOrdered,
+  RefreshCw,
+  ShieldCheck,
 } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
 import { initialIntroData } from '../../data';
 import { sendTelegramConsoleLog, testTelegramBot } from '../../utils/telegram';
-import { CreativeItem } from '../../types';
+import { CreativeItem, GalleryItem } from '../../types';
+import { formatCardId, getItemCardId } from '../../utils/card-id';
 import { TagSelector } from '../ui/tag-selector';
 import { PositionSelector } from '../ui/position-selector';
 import { SmartTagInput } from '../ui/smart-tag-input';
@@ -56,6 +64,7 @@ import { RichTextEditor } from '../../lib/text-formatter';
 import { NeonIcon } from '../ui/neon-icon';
 import { PhotoDropdownSelector } from '../ui/photo-dropdown';
 import { BackupRestoreTab } from './tabs/backup-tab';
+import { JSONBackupTab } from './tabs/json-backup-tab';
 import { ActivityLogsTab } from './tabs/activity-logs-tab';
 
 function PdfDropzoneSelector({
@@ -200,12 +209,19 @@ export function AdminPortalModal() {
     reorderProjectItem,
     moveProjectItem,
     swapProjectItems,
+    reindexAllProjectCardIds,
+    updateBackupRules,
+    updatePushRules,
+    backupRules,
+    pushRules,
+    projectsSequence,
     addCreativeItem,
     updateCreativeItem,
     deleteCreativeItem,
     reorderCreativeItem,
     moveCreativeItem,
     swapCreativeItems,
+    reindexAllCreativeCardIds,
     addJourneyItem,
     updateJourneyItem,
     deleteJourneyItem,
@@ -218,6 +234,7 @@ export function AdminPortalModal() {
     reorderGalleryItem,
     moveGalleryItem,
     swapGalleryItems,
+    reindexAllGalleryCardIds,
     addResume,
     updateResumes,
     updateResumeItem,
@@ -235,19 +252,109 @@ export function AdminPortalModal() {
     dbConnected,
     forceSyncToMongoDB,
     isAuthenticated,
-    login,
+    isAdmin,
+    currentUser,
+    loginWithGoogle,
     logout,
+    syncToGitHub,
+    isGitSyncing,
+    lastGitCommit,
+    gitCardOrderPending,
   } = useCMS();
 
   const isOpen = isAdminModalOpen;
-  const [password, setPassword] = useState('');
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState<
-    'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'intro' | 'contact' | 'inbox' | 'backup' | 'logs'
+    'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'intro' | 'contact' | 'inbox' | 'backup' | 'json-backup' | 'logs'
   >('journey');
-  const [backupSubTab, setBackupSubTab] = useState<'github' | 'history' | 'export'>('github');
+  const [backupSubTab, setBackupSubTab] = useState<'github' | 'history' | 'export' | 'repo-info'>('github');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+
+  // GitHub token state for Projects tab
+  const [showGitTokenInputInProjects, setShowGitTokenInputInProjects] = useState(false);
+  const [gitTokenInput, setGitTokenInput] = useState(() => {
+    try {
+      return typeof window !== 'undefined' ? localStorage.getItem('sathwik_git_token') || '' : '';
+    } catch (e) {
+      return '';
+    }
+  });
+
+  const handleSaveGitTokenInProjects = async () => {
+    const trimmed = gitTokenInput.trim();
+    if (!trimmed) return;
+    try {
+      localStorage.setItem('sathwik_git_token', trimmed);
+      await fetch('/api/github/token', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ token: trimmed }),
+      });
+      setShowGitTokenInputInProjects(false);
+      setToast({
+        visible: true,
+        sectionName: 'GitHub Token',
+        message: 'GitHub Personal Access Token saved successfully!',
+        database: 'GitHub API',
+      });
+      setTimeout(() => setToast(null), 3500);
+    } catch (e) {
+      console.warn('Failed to save GitHub token:', e);
+    }
+  };
+
+  const handlePushProjectsOrderToGitHub = async () => {
+    // Check if we have token
+    let token = gitTokenInput.trim();
+    if (!token && typeof window !== 'undefined') {
+      token = (localStorage.getItem('sathwik_git_token') || '').trim();
+    }
+    if (!token) {
+      setShowGitTokenInputInProjects(true);
+      setToast({
+        visible: true,
+        sectionName: 'GitHub Token Required',
+        message: 'Please provide your GitHub Personal Access Token to commit and push.',
+        database: 'GitHub API',
+      });
+      setTimeout(() => setToast(null), 4000);
+      return;
+    }
+
+    setToast({
+      visible: true,
+      sectionName: 'GitHub Sync',
+      message: 'Committing & pushing reordered project cards to GitHub repository...',
+      database: 'Git Commit',
+    });
+
+    const res = await syncToGitHub(
+      `update: reorder technical project cards in showcase (${new Date().toLocaleTimeString('en-US')})`,
+      token
+    );
+
+    if (res.success) {
+      setToast({
+        visible: true,
+        sectionName: 'GitHub Sync Complete',
+        message: `✓ Successfully pushed card order to GitHub main! (Commit #${res.commit?.substring(0, 7) || 'latest'})`,
+        database: 'GitHub main',
+      });
+      setTimeout(() => setToast(null), 4500);
+    } else {
+      if (res.message?.includes('token') || res.message?.includes('Token') || res.message?.includes('401')) {
+        setShowGitTokenInputInProjects(true);
+      }
+      setToast({
+        visible: true,
+        sectionName: 'Git Push Failed',
+        message: res.message || 'Failed to push changes to GitHub.',
+        database: 'Error',
+      });
+      setTimeout(() => setToast(null), 5000);
+    }
+  };
 
   const [toast, setToast] = useState<{
     visible: boolean;
@@ -465,8 +572,10 @@ export function AdminPortalModal() {
 
   // Project Form State
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
+  const [isReindexingCardIds, setIsReindexingCardIds] = useState(false);
   const [newProject, setNewProject] = useState({
     title: '',
+    cardIdNo: '',
     category: 'Full-Stack' as string,
     customCategoryInput: '',
     primaryTag: 'Full-Stack',
@@ -479,9 +588,40 @@ export function AdminPortalModal() {
     featured: true,
   });
 
+  const handleReindexCardIds = async () => {
+    setIsReindexingCardIds(true);
+    setToast({
+      visible: true,
+      sectionName: 'Card IDs & Sequence',
+      message: 'Re-indexing all project cards with {slug-0XX} format and syncing to Git...',
+      database: 'Sequence Engine',
+    });
+    try {
+      await reindexAllProjectCardIds();
+      setToast({
+        visible: true,
+        sectionName: 'Card IDs & Sequence',
+        message: '✅ Assigned unique {slug-0XX} IDs to all cards and generated projects_sequence.json!',
+        database: 'Sequence Engine',
+      });
+    } catch (e: any) {
+      setToast({
+        visible: true,
+        sectionName: 'Sequence Error',
+        message: `Failed: ${e.message || 'Error reindexing cards'}`,
+        database: 'Sequence Engine',
+      });
+    } finally {
+      setIsReindexingCardIds(false);
+      setTimeout(() => setToast(null), 4000);
+    }
+  };
+
   // Creative Item Form State
   const [editingCreativeId, setEditingCreativeId] = useState<string | null>(null);
+  const [isReindexingCreativeCardIds, setIsReindexingCreativeCardIds] = useState(false);
   const [newCreative, setNewCreative] = useState({
+    cardIdNo: '',
     title: '',
     category: 'Poster Design',
     featured: true,
@@ -495,9 +635,40 @@ export function AdminPortalModal() {
     detailedDescription: '',
   });
 
+  const handleReindexCreativeCardIds = async () => {
+    setIsReindexingCreativeCardIds(true);
+    setToast({
+      visible: true,
+      sectionName: 'Creative Card IDs',
+      message: 'Re-indexing all creative portfolio cards with {slug-0XX} format...',
+      database: 'Sequence Engine',
+    });
+    try {
+      await reindexAllCreativeCardIds();
+      setToast({
+        visible: true,
+        sectionName: 'Creative Card IDs',
+        message: '✅ Assigned unique {slug-0XX} IDs to all creative portfolio cards!',
+        database: 'Sequence Engine',
+      });
+    } catch (e: any) {
+      setToast({
+        visible: true,
+        sectionName: 'Sequence Error',
+        message: `Failed: ${e.message || 'Error reindexing creative cards'}`,
+        database: 'Sequence Engine',
+      });
+    } finally {
+      setIsReindexingCreativeCardIds(false);
+      setTimeout(() => setToast(null), 4000);
+    }
+  };
+
   // Certificates & Awards Form State
   const [editingGalleryId, setEditingGalleryId] = useState<string | null>(null);
+  const [isReindexingGalleryCardIds, setIsReindexingGalleryCardIds] = useState(false);
   const [newGallery, setNewGallery] = useState({
+    cardIdNo: '',
     title: '',
     category: 'Certificates',
     featured: true,
@@ -511,6 +682,35 @@ export function AdminPortalModal() {
     detailedDescription: '',
   });
 
+  const handleReindexGalleryCardIds = async () => {
+    setIsReindexingGalleryCardIds(true);
+    setToast({
+      visible: true,
+      sectionName: 'Certificates Card IDs',
+      message: 'Re-indexing all certificates & awards cards with {slug-0XX} format...',
+      database: 'Sequence Engine',
+    });
+    try {
+      await reindexAllGalleryCardIds();
+      setToast({
+        visible: true,
+        sectionName: 'Certificates Card IDs',
+        message: '✅ Assigned unique {slug-0XX} IDs to all certificates & awards cards!',
+        database: 'Sequence Engine',
+      });
+    } catch (e: any) {
+      setToast({
+        visible: true,
+        sectionName: 'Sequence Error',
+        message: `Failed: ${e.message || 'Error reindexing certificates cards'}`,
+        database: 'Sequence Engine',
+      });
+    } finally {
+      setIsReindexingGalleryCardIds(false);
+      setTimeout(() => setToast(null), 4000);
+    }
+  };
+
   // Contact Info Form
   const [contactForm, setContactForm] = useState(data.contactInfo);
 
@@ -522,29 +722,23 @@ export function AdminPortalModal() {
     }
   }, [data, isAdminModalOpen]);
 
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleGoogleLogin = async () => {
     setIsLoggingIn(true);
     setErrorMsg('');
-    const res = await login(password);
+    const res = await loginWithGoogle();
     setIsLoggingIn(false);
-    if (res.success) {
-      setPassword('');
-      setErrorMsg('');
-    } else {
-      setErrorMsg(res.message || 'Incorrect Password. Please try again.');
+    if (!res.success) {
+      setErrorMsg(res.message || 'Google sign-in could not be completed.');
     }
   };
 
   const handleClose = () => {
     setIsAdminModalOpen(false);
-    setPassword('');
     setErrorMsg('');
   };
 
-  const handleLogout = () => {
-    logout();
-    setPassword('');
+  const handleLogout = async () => {
+    await logout();
     setErrorMsg('');
   };
 
@@ -672,6 +866,7 @@ export function AdminPortalModal() {
 
     setNewProject({
       title: item.title || '',
+      cardIdNo: item.cardIdNo || '',
       category: cat,
       customCategoryInput: ['Full-Stack', 'AI & ML', 'Web Apps', 'Tools', 'College Projects'].includes(cat) ? '' : cat,
       primaryTag: cat,
@@ -689,6 +884,7 @@ export function AdminPortalModal() {
     setEditingProjectId(null);
     setNewProject({
       title: '',
+      cardIdNo: '',
       category: 'Full-Stack',
       customCategoryInput: '',
       primaryTag: 'Full-Stack',
@@ -723,6 +919,7 @@ export function AdminPortalModal() {
       updateProject({
         id: editingProjectId,
         title: newProject.title,
+        cardIdNo: newProject.cardIdNo || undefined,
         summary: newProject.description,
         description: newProject.description,
         longDescription: newProject.longDescription || newProject.description,
@@ -742,6 +939,7 @@ export function AdminPortalModal() {
     } else {
       addProject({
         title: newProject.title,
+        cardIdNo: newProject.cardIdNo || undefined,
         summary: newProject.description,
         description: newProject.description,
         longDescription: newProject.longDescription || newProject.description,
@@ -762,6 +960,7 @@ export function AdminPortalModal() {
     const wasEditing = !!editingProjectId;
     setNewProject({
       title: '',
+      cardIdNo: '',
       category: 'Full-Stack',
       customCategoryInput: '',
       primaryTag: 'Full-Stack',
@@ -791,6 +990,7 @@ export function AdminPortalModal() {
     if (editingCreativeId) {
       updateCreativeItem({
         id: editingCreativeId,
+        cardIdNo: newCreative.cardIdNo ? formatCardId(newCreative.cardIdNo) : undefined,
         title: newCreative.title,
         category: newCreative.category as any,
         shortDescription: newCreative.shortDescription,
@@ -808,6 +1008,7 @@ export function AdminPortalModal() {
       setEditingCreativeId(null);
     } else {
       addCreativeItem({
+        cardIdNo: newCreative.cardIdNo ? formatCardId(newCreative.cardIdNo) : undefined,
         title: newCreative.title,
         category: newCreative.category,
         shortDescription: newCreative.shortDescription,
@@ -826,6 +1027,7 @@ export function AdminPortalModal() {
 
     const wasEditing = !!editingCreativeId;
     setNewCreative({
+      cardIdNo: '',
       title: '',
       category: 'Poster Design',
       featured: true,
@@ -845,6 +1047,7 @@ export function AdminPortalModal() {
     setEditingCreativeId(item.id);
     const existingPhotos = item.images && item.images.length > 0 ? item.images.join('\n') : item.thumbnail || '';
     setNewCreative({
+      cardIdNo: item.cardIdNo || '',
       title: item.title,
       category: item.category || 'Poster Design',
       featured: item.featured ?? true,
@@ -862,6 +1065,7 @@ export function AdminPortalModal() {
   const handleCancelEditCreative = () => {
     setEditingCreativeId(null);
     setNewCreative({
+      cardIdNo: '',
       title: '',
       category: 'Poster Design',
       featured: true,
@@ -883,6 +1087,7 @@ export function AdminPortalModal() {
       : item.image || '';
 
     setNewGallery({
+      cardIdNo: item.cardIdNo || '',
       title: item.title || '',
       category: item.category || 'Certificates',
       featured: item.featured ?? true,
@@ -900,6 +1105,7 @@ export function AdminPortalModal() {
   const handleCancelEditGallery = () => {
     setEditingGalleryId(null);
     setNewGallery({
+      cardIdNo: '',
       title: '',
       category: 'Certificates',
       featured: true,
@@ -929,6 +1135,7 @@ export function AdminPortalModal() {
     if (editingGalleryId) {
       updateGalleryItem({
         id: editingGalleryId,
+        cardIdNo: newGallery.cardIdNo ? formatCardId(newGallery.cardIdNo) : undefined,
         title: newGallery.title,
         category: newGallery.category,
         featured: newGallery.featured,
@@ -945,6 +1152,7 @@ export function AdminPortalModal() {
       setEditingGalleryId(null);
     } else {
       addGalleryItem({
+        cardIdNo: newGallery.cardIdNo ? formatCardId(newGallery.cardIdNo) : undefined,
         title: newGallery.title,
         category: newGallery.category,
         featured: newGallery.featured,
@@ -962,6 +1170,7 @@ export function AdminPortalModal() {
 
     const wasEditing = !!editingGalleryId;
     setNewGallery({
+      cardIdNo: '',
       title: '',
       category: 'Certificates',
       featured: true,
@@ -987,58 +1196,129 @@ export function AdminPortalModal() {
           className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/90 backdrop-blur-xl overflow-y-auto"
         >
           {!isAuthenticated ? (
-            /* LOGIN SCREEN */
+            /* GOOGLE SIGN IN SCREEN */
             <motion.div
               initial={{ scale: 0.9, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-md bg-[#0c0c0f] rounded-3xl border border-emerald-500/30 shadow-2xl p-8 space-y-6"
+              className="relative w-full max-w-md bg-[#0c0c0f] rounded-3xl border border-emerald-500/30 shadow-2xl p-8 space-y-6 text-center"
             >
               <button
                 onClick={handleClose}
-                className="absolute top-5 right-5 p-2 rounded-full bg-zinc-900 text-zinc-400 hover:text-white"
+                className="absolute top-5 right-5 p-2 rounded-full bg-zinc-900 text-zinc-400 hover:text-white transition-colors cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
 
-              <div className="text-center space-y-2">
-                <div className="w-12 h-12 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-[0_0_20px_rgba(16,185,129,0.4)]">
-                  <KeyRound className="w-6 h-6" />
+              <div className="space-y-2">
+                <div className="w-14 h-14 rounded-2xl bg-emerald-950/80 border border-emerald-500/40 text-emerald-400 flex items-center justify-center mx-auto shadow-[0_0_25px_rgba(16,185,129,0.4)]">
+                  <ShieldCheck className="w-7 h-7" />
                 </div>
                 <h3 className="text-2xl font-black text-white tracking-tight">Dubbaka Sathwik CMS</h3>
-                <p className="text-xs font-mono text-zinc-400">Enter Admin Password</p>
+                <p className="text-xs font-mono text-zinc-400">Secure Admin Authentication Portal</p>
               </div>
 
-              <form onSubmit={handleLogin} className="space-y-4">
-                <div className="space-y-1.5">
-                  <input
-                    type="password"
-                    autoFocus
-                    required
-                    placeholder="Password"
-                    value={password}
-                    onChange={(e) => {
-                      setPassword(e.target.value);
-                      setErrorMsg('');
-                    }}
-                    className="w-full px-4 py-3.5 rounded-xl bg-zinc-950 border border-zinc-800 focus:border-emerald-500 focus:outline-none text-center font-mono tracking-widest text-white text-base transition-colors"
-                  />
-                  {errorMsg && (
-                    <p className="text-xs text-red-400 text-center font-mono">{errorMsg}</p>
-                  )}
-                </div>
+              <p className="text-xs text-zinc-400 font-mono leading-relaxed px-2">
+                Sign in with your authorized Google account to manage portfolio projects, showcases, and assets.
+              </p>
 
+              {errorMsg && (
+                <div className="p-3 rounded-xl bg-rose-950/60 border border-rose-500/40 text-rose-300 text-xs font-mono">
+                  {errorMsg}
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={handleGoogleLogin}
+                disabled={isLoggingIn}
+                className="w-full py-3.5 px-4 rounded-xl bg-white hover:bg-zinc-100 text-zinc-900 font-bold text-sm shadow-[0_0_20px_rgba(255,255,255,0.2)] transition-all cursor-pointer disabled:opacity-50 flex items-center justify-center gap-3"
+              >
+                {isLoggingIn ? (
+                  <>
+                    <Loader2 className="w-5 h-5 animate-spin text-zinc-900" />
+                    <span>Signing in with Google...</span>
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-5 h-5" viewBox="0 0 24 24">
+                      <path
+                        fill="#4285F4"
+                        d="M23.745 12.27c0-.7-.06-1.4-.19-2.07H12v4.51h6.6c-.29 1.52-1.14 2.82-2.4 3.68v3.05h3.88c2.27-2.09 3.66-5.17 3.66-9.17z"
+                      />
+                      <path
+                        fill="#34A853"
+                        d="M12 24c3.24 0 5.95-1.08 7.93-2.91l-3.88-3.05c-1.08.72-2.45 1.16-4.05 1.16-3.12 0-5.77-2.1-6.72-4.93H1.25v3.15C3.27 21.36 7.35 24 12 24z"
+                      />
+                      <path
+                        fill="#FBBC05"
+                        d="M5.28 14.27c-.25-.72-.38-1.49-.38-2.27s.13-1.55.38-2.27V6.58H1.25C.45 8.16 0 9.94 0 12s.45 3.84 1.25 5.42l4.03-3.15z"
+                      />
+                      <path
+                        fill="#EA4335"
+                        d="M12 4.75c1.77 0 3.35.61 4.6 1.8l3.42-3.42C17.95 1.19 15.24 0 12 0 7.35 0 3.27 2.64 1.25 6.58l4.03 3.15c.95-2.83 3.6-4.98 6.72-4.98z"
+                      />
+                    </svg>
+                    <span>Sign in with Google</span>
+                  </>
+                )}
+              </button>
+            </motion.div>
+          ) : !isAdmin ? (
+            /* NON-ADMIN ACCESS DENIED SCREEN */
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              exit={{ scale: 0.9, opacity: 0 }}
+              className="relative w-full max-w-lg bg-[#0c0c0f] rounded-3xl border border-rose-500/40 shadow-2xl p-8 space-y-6 text-center"
+            >
+              <button
+                onClick={handleClose}
+                className="absolute top-5 right-5 p-2 rounded-full bg-zinc-900 text-zinc-400 hover:text-white transition-colors cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+
+              <div className="w-16 h-16 rounded-3xl bg-rose-950/80 border border-rose-500/50 text-rose-400 flex items-center justify-center mx-auto shadow-[0_0_30px_rgba(244,63,94,0.35)]">
+                <AlertTriangle className="w-8 h-8" />
+              </div>
+
+              <div className="space-y-2">
+                <h3 className="text-2xl font-black text-white tracking-tight">Access Restricted</h3>
+                <p className="text-xs font-mono text-rose-400 font-semibold uppercase tracking-wider">
+                  Admin Only Portal
+                </p>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-zinc-950 border border-zinc-800 text-left space-y-2">
+                <p className="text-xs text-zinc-400 font-mono">Current Signed-in Account:</p>
+                <p className="text-sm font-mono text-white font-bold bg-zinc-900 px-3 py-2 rounded-xl border border-zinc-700/60 break-all">
+                  {currentUser?.email || 'Unknown User'}
+                </p>
+                <p className="text-xs text-zinc-400 leading-relaxed pt-1">
+                  This is an admin-only management portal. Please go back to view the <strong className="text-emerald-400 font-bold">Dubbaka Sathwik Portfolio</strong>, or switch to the authorized administrator account.
+                </p>
+              </div>
+
+              <div className="flex flex-col sm:flex-row gap-3 pt-2">
                 <button
-                  type="submit"
-                  disabled={isLoggingIn}
-                  className="w-full py-3.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-sm shadow-[0_0_20px_rgba(16,185,129,0.4)] transition-all cursor-pointer disabled:opacity-50"
+                  type="button"
+                  onClick={handleClose}
+                  className="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white font-bold text-sm shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer flex items-center justify-center gap-2"
                 >
-                  {isLoggingIn ? 'Authenticating...' : 'Login to CMS'}
+                  <span>Go Back to Portfolio</span>
                 </button>
-              </form>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="py-3 px-4 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white border border-zinc-800 text-xs font-mono font-bold transition-colors cursor-pointer"
+                >
+                  Sign Out / Switch Account
+                </button>
+              </div>
             </motion.div>
           ) : (
-            /* CMS DASHBOARD */
+            /* CMS DASHBOARD FOR AUTHORIZED ADMIN */
             <motion.div
               initial={{ scale: 0.95, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
@@ -1169,6 +1449,20 @@ export function AdminPortalModal() {
                 </div>
 
                 <div className="flex items-center justify-between lg:justify-end gap-2 shrink-0 border-t lg:border-t-0 border-zinc-800/60 pt-2 lg:pt-0">
+                  {currentUser && (
+                    <div className="hidden sm:flex items-center gap-2 px-2.5 py-1.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-[11px] font-mono text-zinc-300">
+                      {currentUser.photoURL ? (
+                        <img
+                          src={currentUser.photoURL}
+                          alt="Admin"
+                          className="w-5 h-5 rounded-full border border-emerald-500/50"
+                        />
+                      ) : (
+                        <User className="w-3.5 h-3.5 text-emerald-400" />
+                      )}
+                      <span className="text-emerald-400 font-semibold">{currentUser.email}</span>
+                    </div>
+                  )}
                   <button
                     onClick={() => setActiveTab('backup')}
                     className="flex-1 lg:flex-none px-3.5 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 hover:text-white text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer"
@@ -1186,9 +1480,9 @@ export function AdminPortalModal() {
                   <button
                     onClick={handleLogout}
                     className="px-3 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-white text-xs font-mono cursor-pointer border border-zinc-800"
-                    title="Lock CMS and log out"
+                    title="Sign out of Google and lock CMS"
                   >
-                    Lock CMS
+                    Sign Out
                   </button>
                   <button
                     onClick={handleClose}
@@ -1284,7 +1578,8 @@ export function AdminPortalModal() {
                         icon: Inbox,
                         badge: (data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length,
                       },
-                      { id: 'backup', label: 'GitHub & Backups', icon: Github },
+                      { id: 'backup', label: 'GitHub Live Sync', icon: Github },
+                      { id: 'json-backup', label: 'JSON Backup & Import', icon: FileJson },
                       { id: 'git-history', label: 'Git Push History', icon: History },
                       { id: 'logs', label: 'Activity Logs', icon: Terminal },
                     ].map((tab) => {
@@ -1456,6 +1751,7 @@ export function AdminPortalModal() {
                       { id: 'contact', label: 'Contact', icon: Mail },
                       { id: 'inbox', label: 'Inbox', icon: Inbox },
                       { id: 'backup', label: 'GitHub', icon: Github },
+                      { id: 'json-backup', label: 'JSON Backup', icon: FileJson },
                       { id: 'git-history', label: 'Push History', icon: History },
                       { id: 'logs', label: 'Logs', icon: Terminal },
                     ].map((tab) => {
@@ -1827,7 +2123,7 @@ export function AdminPortalModal() {
                           )}
                         </div>
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           <div>
                             <label className="text-xs font-mono text-zinc-400 block mb-1">
                               Project Title <span className="text-emerald-400">*</span>
@@ -1835,10 +2131,27 @@ export function AdminPortalModal() {
                             <input
                               type="text"
                               required
-                              placeholder="e.g. MVSR Campus Hub, AI Portfolio"
+                              placeholder="e.g. Nexora AI, MVSR Campus Hub"
                               value={newProject.title}
                               onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
                               className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                            />
+                          </div>
+
+                          {/* Unique Card ID No. */}
+                          <div>
+                            <div className="flex items-center justify-between mb-1">
+                              <label className="text-xs font-mono text-zinc-400">
+                                Card ID No. <span className="text-emerald-400 font-bold">&#123;slug-0XX&#125;</span>
+                              </label>
+                              <span className="text-[10px] font-mono text-emerald-400/80">Auto-Generates</span>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="e.g. {nexora-002} (auto if left empty)"
+                              value={newProject.cardIdNo}
+                              onChange={(e) => setNewProject({ ...newProject, cardIdNo: e.target.value })}
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-emerald-400 font-mono placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
                             />
                           </div>
 
@@ -1856,7 +2169,7 @@ export function AdminPortalModal() {
                             >
                               <span className="flex items-center gap-1.5">
                                 <Sparkles className={`w-3.5 h-3.5 ${newProject.featured ? 'text-emerald-400' : 'text-zinc-500'}`} />
-                                Featured on Showcase Card
+                                Featured on Card
                               </span>
                               <span className={`px-2 py-0.5 rounded text-[10px] uppercase font-bold ${
                                 newProject.featured ? 'bg-emerald-600 text-white' : 'bg-zinc-800 text-zinc-500'
@@ -2018,6 +2331,264 @@ export function AdminPortalModal() {
                         </div>
                       </form>
 
+                      {/* GitHub Live Repository Sync for Project Cards Order */}
+                      <div className="p-4 rounded-2xl bg-zinc-950/90 border border-zinc-800 hover:border-emerald-500/40 transition-all space-y-3">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                          <div className="space-y-1">
+                            <div className="flex items-center gap-2 flex-wrap">
+                              <Github className="w-4 h-4 text-emerald-400 shrink-0" />
+                              <h5 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                                GitHub Live Repo Sync (Project Cards Order)
+                              </h5>
+                              {gitCardOrderPending ? (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-amber-500/10 border border-amber-500/40 text-amber-300 font-mono text-[10px] animate-pulse">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+                                  Order Re-arranged • Auto-syncing to Git
+                                </span>
+                              ) : (
+                                <span className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 font-mono text-[10px]">
+                                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                                  In Sync with GitHub main
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] font-mono text-zinc-400 flex items-center gap-2 flex-wrap">
+                              <span>Repo: <strong className="text-zinc-200">DubbakaSathwik/Dubbaka-Sathwik-Portfolio</strong></span>
+                              <span>• Branch: <strong className="text-emerald-400">main</strong></span>
+                              {lastGitCommit && (
+                                <span>• Latest: <code className="text-emerald-300">#{lastGitCommit.substring(0, 7)}</code></span>
+                              )}
+                            </p>
+                          </div>
+
+                          {/* Quick Push Button */}
+                          <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                            <span className="hidden sm:inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-zinc-400">
+                              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>
+                              Manual Push Mode
+                            </span>
+
+                            <button
+                              type="button"
+                              disabled={isGitSyncing}
+                              onClick={handlePushProjectsOrderToGitHub}
+                              className={`px-3.5 py-1.5 rounded-xl font-mono font-bold text-xs flex items-center gap-2 transition-all cursor-pointer shadow-lg ${
+                                gitCardOrderPending
+                                  ? 'bg-emerald-500 hover:bg-emerald-400 text-black shadow-emerald-500/30'
+                                  : 'bg-zinc-800 hover:bg-zinc-700 text-white border border-zinc-700'
+                              } disabled:opacity-50`}
+                              title="Commit and push current projects order to GitHub main"
+                            >
+                              {isGitSyncing ? (
+                                <>
+                                  <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                  <span>Pushing to Git...</span>
+                                </>
+                              ) : (
+                                <>
+                                  <GitCommit className="w-3.5 h-3.5 text-emerald-400" />
+                                  <span>Push Order to GitHub</span>
+                                </>
+                              )}
+                            </button>
+
+                            <button
+                              type="button"
+                              onClick={() => setShowGitTokenInputInProjects(!showGitTokenInputInProjects)}
+                              className="px-2.5 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-zinc-400 hover:text-zinc-200 border border-zinc-800 text-[11px] font-mono transition-colors cursor-pointer"
+                              title="Configure GitHub Personal Access Token"
+                            >
+                              Token ⚙
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Collapsible GitHub Personal Access Token Input */}
+                        {showGitTokenInputInProjects && (
+                          <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-emerald-500/30 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-mono font-bold text-white flex items-center gap-1.5">
+                                <KeyRound className="w-3.5 h-3.5 text-emerald-400" /> GitHub Personal Access Token (classic / fine-grained)
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => setShowGitTokenInputInProjects(false)}
+                                className="text-[10px] font-mono text-zinc-400 hover:text-white"
+                              >
+                                Close ✕
+                              </button>
+                            </div>
+                            <p className="text-[11px] text-zinc-400 font-mono">
+                              Used to authenticate Git commits directly to your GitHub repo without command line:
+                            </p>
+                            <div className="flex items-center gap-2">
+                              <input
+                                type="password"
+                                value={gitTokenInput}
+                                onChange={(e) => setGitTokenInput(e.target.value)}
+                                placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                className="flex-1 px-3 py-1.5 rounded-lg bg-black border border-zinc-700 text-emerald-400 text-xs font-mono focus:outline-none focus:border-emerald-500"
+                              />
+                              <button
+                                type="button"
+                                onClick={handleSaveGitTokenInProjects}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold transition-colors cursor-pointer shrink-0"
+                              >
+                                Save Token
+                              </button>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Card Sequence Engine & Backup/Push Rules */}
+                      <div className="p-4 sm:p-5 rounded-2xl bg-gradient-to-br from-zinc-950 via-zinc-900/60 to-zinc-950 border border-emerald-500/30 shadow-xl space-y-4">
+                        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-zinc-800/80">
+                          <div className="flex items-center gap-2.5">
+                            <div className="p-2 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400">
+                              <ListOrdered className="w-5 h-5" />
+                            </div>
+                            <div>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <h5 className="text-xs font-mono font-bold text-white uppercase tracking-wider">
+                                  Card Sequence & Unique ID Engine
+                                </h5>
+                                <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">
+                                  Active Sync
+                                </span>
+                              </div>
+                              <p className="text-[11px] text-zinc-400 font-mono">
+                                Each card receives a unique ID &#123;slug-0XX&#125; synchronized across Portfolio, Backups, and Git.
+                              </p>
+                            </div>
+                          </div>
+
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={isReindexingCardIds}
+                              onClick={handleReindexCardIds}
+                              className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold flex items-center gap-1.5 transition-all shadow-md shadow-emerald-500/20 cursor-pointer disabled:opacity-50"
+                              title="Re-index all cards in sequential order with {projectname-0XX} format and sync to Git"
+                            >
+                              {isReindexingCardIds ? (
+                                <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                              ) : (
+                                <RefreshCw className="w-3.5 h-3.5" />
+                              )}
+                              <span>Re-Index All IDs</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Sequence Info & Stats Bar */}
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5">
+                          <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
+                            <span className="text-[10px] font-mono text-zinc-500 block">Total Sequenced Cards</span>
+                            <span className="text-sm font-mono font-bold text-emerald-400">{data.projects.length} Cards</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
+                            <span className="text-[10px] font-mono text-zinc-500 block">ID Format Pattern</span>
+                            <span className="text-xs font-mono font-bold text-zinc-200">&#123;slug-0XX&#125;</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
+                            <span className="text-[10px] font-mono text-zinc-500 block">Sequence Range</span>
+                            <span className="text-xs font-mono font-bold text-emerald-400">#001 — #{String(data.projects.length).padStart(3, '0')}</span>
+                          </div>
+                          <div className="p-2.5 rounded-xl bg-zinc-900/80 border border-zinc-800/80">
+                            <span className="text-[10px] font-mono text-zinc-500 block">Git Tracking File</span>
+                            <span className="text-[11px] font-mono font-bold text-zinc-300 truncate">projects_sequence.json</span>
+                          </div>
+                        </div>
+
+                        {/* Backup Rules & Push Rules Dual Grid */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-1">
+                          {/* Backup Rules Box */}
+                          <div className="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-mono font-bold text-white flex items-center gap-1.5">
+                                <ShieldCheck className="w-3.5 h-3.5 text-emerald-400" />
+                                Backup Rules
+                              </span>
+                              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                                Enforced
+                              </span>
+                            </div>
+                            <div className="space-y-2 text-xs font-mono text-zinc-300">
+                              <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={backupRules.preserveSequenceOnBackup}
+                                  onChange={(e) => updateBackupRules({ preserveSequenceOnBackup: e.target.checked })}
+                                  className="accent-emerald-500 rounded"
+                                />
+                                <span className="text-[11px]">Preserve Card Sequence Order on Backups</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={backupRules.autoAssignCardId}
+                                  onChange={(e) => updateBackupRules({ autoAssignCardId: e.target.checked })}
+                                  className="accent-emerald-500 rounded"
+                                />
+                                <span className="text-[11px]">Auto-Assign Unique ID on New Project Creation</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={backupRules.dualStorageParity}
+                                  onChange={(e) => updateBackupRules({ dualStorageParity: e.target.checked })}
+                                  className="accent-emerald-500 rounded"
+                                />
+                                <span className="text-[11px]">Dual Storage Parity (MongoDB + Local Disk + Git)</span>
+                              </label>
+                            </div>
+                          </div>
+
+                          {/* Push Rules Box */}
+                          <div className="p-3.5 rounded-xl bg-zinc-900/70 border border-zinc-800 space-y-2.5">
+                            <div className="flex items-center justify-between">
+                              <span className="text-xs font-mono font-bold text-white flex items-center gap-1.5">
+                                <GitBranch className="w-3.5 h-3.5 text-emerald-400" />
+                                Push Rules (Git Integration)
+                              </span>
+                              <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/30">
+                                Enforced
+                              </span>
+                            </div>
+                            <div className="space-y-2 text-xs font-mono text-zinc-300">
+                              <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={pushRules.gitPushSequenceSection}
+                                  onChange={(e) => updatePushRules({ gitPushSequenceSection: e.target.checked })}
+                                  className="accent-emerald-500 rounded"
+                                />
+                                <span className="text-[11px]">Push Sequence Manifest (`projects_sequence.json`) to Git</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={pushRules.gitCommitSequenceMessage}
+                                  onChange={(e) => updatePushRules({ gitCommitSequenceMessage: e.target.checked })}
+                                  className="accent-emerald-500 rounded"
+                                />
+                                <span className="text-[11px]">Include Card IDs & Sequence in Git Commit Message</span>
+                              </label>
+                              <label className="flex items-center gap-2 cursor-pointer select-none">
+                                <input
+                                  type="checkbox"
+                                  checked={pushRules.safeTreePush}
+                                  onChange={(e) => updatePushRules({ safeTreePush: e.target.checked })}
+                                  className="accent-emerald-500 rounded"
+                                />
+                                <span className="text-[11px]">Safe Git Tree Verification (Preserves Commit Integrity)</span>
+                              </label>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+
                       {/* Existing Projects List with Reordering & Swapping Controls */}
                       <div className="space-y-3">
                         <div className="flex items-center justify-between">
@@ -2032,6 +2603,7 @@ export function AdminPortalModal() {
                         {data.projects.map((p, idx) => {
                           const photoCount = p.images ? p.images.length : p.thumbnail || p.image ? 1 : 0;
                           const isEditingThis = editingProjectId === p.id;
+                          const cardDisplayId = p.cardIdNo || `{card-${String(idx + 1).padStart(3, '0')}}`;
 
                           return (
                             <div
@@ -2047,6 +2619,11 @@ export function AdminPortalModal() {
                                   {/* Position Badge */}
                                   <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold shrink-0">
                                     #{idx + 1}
+                                  </span>
+
+                                  {/* Unique Card ID Badge */}
+                                  <span className="px-2 py-0.5 rounded-md bg-black/80 border border-emerald-500/50 text-emerald-400 font-mono text-xs font-bold shrink-0 shadow-sm" title="Unique Card ID No.">
+                                    {cardDisplayId}
                                   </span>
 
                                   <NeonIcon name={p.category} className="w-4 h-4 shrink-0 text-emerald-400" />
@@ -2088,7 +2665,13 @@ export function AdminPortalModal() {
                                     disabled={idx === 0}
                                     onClick={() => {
                                       reorderProjectItem(idx, 'up');
-                                      showSaveToast('Projects');
+                                      setToast({
+                                        visible: true,
+                                        sectionName: 'Project Cards Order',
+                                        message: `Moved "${p.title}" to Pos #${idx} • Live showcase updated`,
+                                        database: 'Portfolio Storage',
+                                      });
+                                      setTimeout(() => setToast(null), 3000);
                                     }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Up in Technical Projects Grid"
@@ -2100,7 +2683,13 @@ export function AdminPortalModal() {
                                     disabled={idx === data.projects.length - 1}
                                     onClick={() => {
                                       reorderProjectItem(idx, 'down');
-                                      showSaveToast('Projects');
+                                      setToast({
+                                        visible: true,
+                                        sectionName: 'Project Cards Order',
+                                        message: `Moved "${p.title}" to Pos #${idx + 2} • Live showcase updated`,
+                                        database: 'Portfolio Storage',
+                                      });
+                                      setTimeout(() => setToast(null), 3000);
                                     }}
                                     className="p-1.5 text-zinc-400 hover:text-emerald-400 disabled:opacity-25 disabled:hover:text-zinc-400 hover:bg-zinc-800 rounded transition-colors cursor-pointer"
                                     title="Move Down in Technical Projects Grid"
@@ -2116,7 +2705,13 @@ export function AdminPortalModal() {
                                     const targetIndex = parseInt(e.target.value, 10);
                                     if (!isNaN(targetIndex) && targetIndex !== idx) {
                                       moveProjectItem(idx, targetIndex);
-                                      showSaveToast('Projects');
+                                      setToast({
+                                        visible: true,
+                                        sectionName: 'Project Cards Order',
+                                        message: `Moved "${p.title}" to Pos #${targetIndex + 1} • Live showcase updated`,
+                                        database: 'Portfolio Storage',
+                                      });
+                                      setTimeout(() => setToast(null), 3000);
                                     }
                                   }}
                                   className="px-2 py-1 rounded-lg bg-zinc-900 border border-emerald-500/40 text-emerald-400 text-[11px] font-mono font-bold focus:outline-none cursor-pointer hover:border-emerald-400"
@@ -2135,7 +2730,13 @@ export function AdminPortalModal() {
                                     type="button"
                                     onClick={() => {
                                       moveProjectItem(idx, 0);
-                                      showSaveToast('Projects');
+                                      setToast({
+                                        visible: true,
+                                        sectionName: 'Project Cards Order',
+                                        message: `Moved "${p.title}" to #1 (Top) • Live showcase updated`,
+                                        database: 'Portfolio Storage',
+                                      });
+                                      setTimeout(() => setToast(null), 3000);
                                     }}
                                     className="px-2 py-1 rounded-lg bg-zinc-900 hover:bg-emerald-950/80 text-emerald-400 border border-zinc-800 hover:border-emerald-500/50 text-[10px] font-mono font-bold transition-colors cursor-pointer"
                                     title="Move to First Position (#1)"
@@ -2212,8 +2813,8 @@ export function AdminPortalModal() {
                           </button>
                         </div>
 
-                        {/* Title & Category & Date */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                        {/* Title & Category & Card ID No & Date */}
+                        <div className="grid grid-cols-1 sm:grid-cols-4 gap-3">
                           <div className="sm:col-span-1 space-y-1">
                             <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">Title</label>
                             <input
@@ -2243,6 +2844,22 @@ export function AdminPortalModal() {
                               <option value="Thumbnail Design">Thumbnail Design</option>
                               <option value="Personal Creative Works">Personal Creative Works</option>
                             </select>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">
+                                Card ID No. <span className="text-emerald-400 font-bold">&#123;slug-0XX&#125;</span>
+                              </label>
+                              <span className="text-[9px] font-mono text-emerald-400/80">CMS Only</span>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="e.g. {poster-001} (auto if empty)"
+                              value={newCreative.cardIdNo}
+                              onChange={(e) => setNewCreative({ ...newCreative, cardIdNo: e.target.value })}
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-emerald-400 font-mono placeholder:text-zinc-600 focus:border-emerald-500/50 outline-none"
+                            />
                           </div>
 
                           <div className="space-y-1">
@@ -2520,18 +3137,31 @@ export function AdminPortalModal() {
 
                       {/* Existing Creative Items List with Reordering & Swapping Controls */}
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
                           <p className="text-xs font-mono font-semibold text-zinc-400">
                             Existing Creative Items ({data.creativePortfolio.length}) — Click <Pencil className="w-3 h-3 inline text-emerald-400" /> to edit
                           </p>
-                          <span className="text-[10px] font-mono text-emerald-400/80">
-                            ▲▼ Reorder Showcase Items
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={isReindexingCreativeCardIds}
+                              onClick={handleReindexCreativeCardIds}
+                              className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 hover:border-emerald-400 text-[10px] font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                              title="Re-assign and format unique {slug-0XX} Card IDs to all creative portfolio cards"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${isReindexingCreativeCardIds ? 'animate-spin' : ''}`} />
+                              Re-index Card IDs
+                            </button>
+                            <span className="text-[10px] font-mono text-emerald-400/80">
+                              ▲▼ Reorder Showcase Items
+                            </span>
+                          </div>
                         </div>
 
                         {data.creativePortfolio.map((c, idx) => {
                           const isEditingThis = editingCreativeId === c.id;
                           const thumbUrl = c.thumbnail || (c.images && c.images[0]) || '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
+                          const cardDisplayId = c.cardIdNo || getItemCardId(c, idx, 'creative');
 
                           return (
                             <div
@@ -2565,6 +3195,11 @@ export function AdminPortalModal() {
                                     {/* Position Badge */}
                                     <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold shrink-0">
                                       #{idx + 1}
+                                    </span>
+
+                                    {/* Unique Card ID Badge (CMS Visual Only) */}
+                                    <span className="px-2 py-0.5 rounded-md bg-black/80 border border-emerald-500/50 text-emerald-400 font-mono text-xs font-bold shrink-0 shadow-sm" title="Unique Card ID No.">
+                                      {cardDisplayId}
                                     </span>
 
                                     <NeonIcon name={c.category} className="w-4 h-4 shrink-0 text-emerald-400" />
@@ -2725,8 +3360,8 @@ export function AdminPortalModal() {
                           )}
                         </div>
 
-                        {/* Title & Category */}
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* Title, Category & Card ID No. */}
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                           <div className="space-y-1">
                             <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">
                               Certificate / Award Title *
@@ -2756,6 +3391,22 @@ export function AdminPortalModal() {
                               <option value="NSS and IEEE">NSS and IEEE</option>
                               <option value="Academics">Academics</option>
                             </select>
+                          </div>
+
+                          <div className="space-y-1">
+                            <div className="flex items-center justify-between">
+                              <label className="text-[10px] font-mono font-bold text-zinc-400 uppercase">
+                                Card ID No. <span className="text-emerald-400 font-bold">&#123;slug-0XX&#125;</span>
+                              </label>
+                              <span className="text-[9px] font-mono text-emerald-400/80">CMS Only</span>
+                            </div>
+                            <input
+                              type="text"
+                              placeholder="e.g. {hackfest-001} (auto if empty)"
+                              value={newGallery.cardIdNo}
+                              onChange={(e) => setNewGallery({ ...newGallery, cardIdNo: e.target.value })}
+                              className="w-full px-3.5 py-2.5 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-emerald-400 font-mono placeholder:text-zinc-600 focus:border-emerald-500/50 outline-none"
+                            />
                           </div>
                         </div>
 
@@ -2894,18 +3545,31 @@ export function AdminPortalModal() {
 
                       {/* Existing Certificates & Awards List with Reordering */}
                       <div className="space-y-3">
-                        <div className="flex items-center justify-between">
+                        <div className="flex items-center justify-between flex-wrap gap-2">
                           <p className="text-xs font-mono font-semibold text-zinc-400">
                             Existing Certificates & Awards ({data.gallery.length}) — Click <Pencil className="w-3 h-3 inline text-emerald-400" /> to edit
                           </p>
-                          <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
-                            ★ Use ▲▼, Top, or Position Dropdown to Rearrange Cards
-                          </span>
+                          <div className="flex items-center gap-2">
+                            <button
+                              type="button"
+                              disabled={isReindexingGalleryCardIds}
+                              onClick={handleReindexGalleryCardIds}
+                              className="px-2.5 py-1 rounded-lg bg-zinc-900 hover:bg-emerald-950/80 text-emerald-400 border border-emerald-500/40 hover:border-emerald-400 text-[10px] font-mono font-bold transition-colors cursor-pointer flex items-center gap-1.5 disabled:opacity-50"
+                              title="Re-assign and format unique {slug-0XX} Card IDs to all certificates & awards cards"
+                            >
+                              <RefreshCw className={`w-3 h-3 ${isReindexingGalleryCardIds ? 'animate-spin' : ''}`} />
+                              Re-index Card IDs
+                            </button>
+                            <span className="text-[10px] font-mono text-emerald-400 font-bold bg-emerald-500/10 px-2.5 py-1 rounded-md border border-emerald-500/30">
+                              ★ Rearrange Cards
+                            </span>
+                          </div>
                         </div>
 
                         {data.gallery.map((g, idx) => {
                           const isEditingThis = editingGalleryId === g.id;
                           const thumbUrl = g.image || (g.images && g.images[0]) || '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg';
+                          const cardDisplayId = g.cardIdNo || getItemCardId(g, idx, 'cert');
 
                           return (
                             <div
@@ -2934,6 +3598,11 @@ export function AdminPortalModal() {
                                     {/* Position Badge */}
                                     <span className="px-2 py-0.5 rounded-md bg-zinc-900 border border-emerald-500/40 text-emerald-400 font-mono text-xs font-bold shrink-0">
                                       #{idx + 1}
+                                    </span>
+
+                                    {/* Unique Card ID Badge (CMS Visual Only) */}
+                                    <span className="px-2 py-0.5 rounded-md bg-black/80 border border-emerald-500/50 text-emerald-400 font-mono text-xs font-bold shrink-0 shadow-sm" title="Unique Card ID No.">
+                                      {cardDisplayId}
                                     </span>
 
                                     <Award className="w-4 h-4 shrink-0 text-emerald-400" />
@@ -4060,20 +4729,20 @@ export function AdminPortalModal() {
                             <div className="flex items-center justify-between">
                               <label className="text-xs font-mono text-zinc-300 font-semibold">Floating Words Speed</label>
                               <span className="text-xs font-mono font-bold text-emerald-400">
-                                {introForm.wordsSpeedSeconds || 4.8}s
+                                {introForm.wordsSpeedSeconds || 2.6}s
                               </span>
                             </div>
                             <input
                               type="range"
-                              min="2.5"
+                              min="1.0"
                               max="8.0"
                               step="0.1"
-                              value={introForm.wordsSpeedSeconds || 4.8}
+                              value={introForm.wordsSpeedSeconds || 2.6}
                               onChange={(e) => setIntroForm({ ...introForm, wordsSpeedSeconds: parseFloat(e.target.value) })}
                               className="w-full accent-emerald-500 cursor-pointer"
                             />
                             <p className="text-[10px] text-zinc-500 font-mono">
-                              Higher value = slower, more cinematic convergence towards center.
+                              Speed of words converging towards center (2.6s for 10s intro).
                             </p>
                           </div>
 
@@ -4081,15 +4750,15 @@ export function AdminPortalModal() {
                             <div className="flex items-center justify-between">
                               <label className="text-xs font-mono text-zinc-300 font-semibold">Name Delay After Words End</label>
                               <span className="text-xs font-mono font-bold text-emerald-400">
-                                {introForm.nameDelaySeconds || 1.2}s
+                                {introForm.nameDelaySeconds || 0.8}s
                               </span>
                             </div>
                             <input
                               type="range"
-                              min="0.4"
+                              min="0.2"
                               max="4.0"
-                              step="0.1"
-                              value={introForm.nameDelaySeconds || 1.2}
+                              step="0.05"
+                              value={introForm.nameDelaySeconds || 0.8}
                               onChange={(e) => setIntroForm({ ...introForm, nameDelaySeconds: parseFloat(e.target.value) })}
                               className="w-full accent-emerald-500 cursor-pointer"
                             />
@@ -4386,7 +5055,7 @@ export function AdminPortalModal() {
                               </span>
                             </h5>
                             <p className="text-xs text-zinc-400 mt-0.5">
-                              Bot: <span className="font-mono text-sky-300">@SathwikPortfolioNotification_bot</span> | Chat ID: <span className="font-mono text-zinc-300">5869091520</span>
+                              Bot: <span className="font-mono text-sky-300">@SathwikPortfolioNotification_bot</span> | Chat ID: <span className="font-mono text-emerald-400">Connected</span>
                             </p>
                           </div>
                         </div>
@@ -4455,13 +5124,13 @@ export function AdminPortalModal() {
                       <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
                         <div>
                           <h3 className="text-lg font-bold text-white flex items-center gap-2">
-                            <span>Backup & Restore Center</span>
+                            <span>GitHub Live Sync & Repository Operations</span>
                             <span className="px-2.5 py-0.5 rounded text-[10px] font-mono bg-emerald-950 text-emerald-300 border border-emerald-500/30">
-                              Database Management
+                              Direct Git Integration
                             </span>
                           </h3>
                           <p className="text-xs text-zinc-400 mt-0.5">
-                            Export your entire portfolio state or restore from past `.json` snapshots.
+                            Commit & push live updates to GitHub, check push history, track storage data usage, and audit repository quotas.
                           </p>
                         </div>
                       </div>
@@ -4469,6 +5138,32 @@ export function AdminPortalModal() {
                       <BackupRestoreTab
                         initialSubTab={backupSubTab}
                         onSubTabChange={(sub) => setBackupSubTab(sub)}
+                        onNavigateToJSONBackup={() => setActiveTab('json-backup')}
+                        showToast={(sec, msg, db) =>
+                          setToast({ visible: true, sectionName: sec, message: msg, database: db })
+                        }
+                      />
+                    </div>
+                  )}
+
+                  {/* Dedicated JSON Backup & Import Section */}
+                  {activeTab === 'json-backup' && (
+                    <div className="space-y-6">
+                      <div className="flex items-center justify-between pb-4 border-b border-zinc-800">
+                        <div>
+                          <h3 className="text-lg font-bold text-white flex items-center gap-2">
+                            <span>JSON Backup & Data Import Center</span>
+                            <span className="px-2.5 py-0.5 rounded text-[10px] font-mono bg-sky-950 text-sky-300 border border-sky-500/30">
+                              Standalone Database Management
+                            </span>
+                          </h3>
+                          <p className="text-xs text-zinc-400 mt-0.5">
+                            Export full snapshots of all CMS categories, import offline backups, or reset databases with strategic merge protection.
+                          </p>
+                        </div>
+                      </div>
+
+                      <JSONBackupTab
                         showToast={(sec, msg, db) =>
                           setToast({ visible: true, sectionName: sec, message: msg, database: db })
                         }

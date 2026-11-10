@@ -25,9 +25,96 @@ type AnimationPhase =
   | 'phase6_scatter'     // 7th: Welcome letters scatter / disperse outward individually (slow-motion)
   | 'phase7_complete';   // Fade out to website
 
+// ============================================================================
+// TIMING PRESETS & UNDO CONFIGURATION
+// Active preset: 'mode_10s' (Strict 10-second duration without "welcome to my portfolio")
+// To rollback, toggle ACTIVE_TIMING_MODE to 'compressed_7s' or 'original_cinematic'
+// ============================================================================
+export type TimingMode = 'mode_10s' | 'compressed_7s' | 'original_cinematic';
+
+export const ACTIVE_TIMING_MODE: TimingMode = 'mode_10s';
+
+export interface TimingConfig {
+  hasWelcome: boolean;
+  totalTargetSec: number;
+  dubbakaDelayMs: number;
+  wordsStartMs: number;
+  wordStaggerDesktop: number;
+  wordStaggerMobile: number;
+  wordsSpeedDefault: number;
+  wordsSpeedMobile: number;
+  wordsEndBufferMs: number;
+  nameHoldMs: number;
+  welcomeAppearDelayMs?: number;
+  scatterDelayMs?: number;
+  scatterDurationSec?: number;
+  completeDelayMs?: number;
+  exitDurationSec: number;
+  nameAnimDurationSec: number;
+}
+
+export const TIMING_CONFIGS: Record<TimingMode, TimingConfig> = {
+  // 1. ACTIVE: 10-SECOND SEQUENCE WITHOUT WELCOME MESSAGE (PURE BRAND REVEAL)
+  mode_10s: {
+    hasWelcome: false,
+    totalTargetSec: 10.0,
+    dubbakaDelayMs: 1500,            // 1.5s: Dubbaka smoothly unfolds above Sathwik
+    wordsStartMs: 2700,              // 2.7s: Floating words commence
+    wordStaggerDesktop: 0.28,        // Elegant, smooth stagger
+    wordStaggerMobile: 0.24,
+    wordsSpeedDefault: 2.6,          // Flight duration to middle
+    wordsSpeedMobile: 2.4,
+    wordsEndBufferMs: 200,           // Buffer after last word completes
+    nameHoldMs: 800,                 // Name remains centered in full glory before fade-out
+    exitDurationSec: 0.8,            // 0.8s smooth overlay fade-out ending at strictly 10.0s
+    nameAnimDurationSec: 0.8,
+  },
+  // 2. PREVIOUS 7-SECOND SEQUENCE (Preserved for undo)
+  compressed_7s: {
+    hasWelcome: true,
+    totalTargetSec: 7.0,
+    dubbakaDelayMs: 700,
+    wordsStartMs: 1400,
+    wordStaggerDesktop: 0.08,
+    wordStaggerMobile: 0.07,
+    wordsSpeedDefault: 1.4,
+    wordsSpeedMobile: 1.3,
+    wordsEndBufferMs: 150,
+    nameHoldMs: 350,
+    welcomeAppearDelayMs: 350,
+    scatterDelayMs: 1150,
+    scatterDurationSec: 1.2,
+    completeDelayMs: 1400,
+    exitDurationSec: 0.6,
+    nameAnimDurationSec: 0.6,
+  },
+  // 3. ORIGINAL 21-SECOND SEQUENCE (Preserved for undo)
+  original_cinematic: {
+    hasWelcome: true,
+    totalTargetSec: 21.0,
+    dubbakaDelayMs: 1400,
+    wordsStartMs: 2800,
+    wordStaggerDesktop: 0.55,
+    wordStaggerMobile: 0.45,
+    wordsSpeedDefault: 4.8,
+    wordsSpeedMobile: 4.2,
+    wordsEndBufferMs: 600,
+    nameHoldMs: 1200,
+    welcomeAppearDelayMs: 900,
+    scatterDelayMs: 2300,
+    scatterDurationSec: 2.2,
+    completeDelayMs: 2400,
+    exitDurationSec: 1.2,
+    nameAnimDurationSec: 1.2,
+  },
+};
+
 export function CinematicLoadingScreen() {
   const { data } = useCMS();
   const intro = data?.intro || initialIntroData;
+
+  // Active timing preset: 'mode_10s' by default
+  const timing = TIMING_CONFIGS[ACTIVE_TIMING_MODE];
 
   const [phase, setPhase] = useState<AnimationPhase>('phase1_sathwik');
   const [showDubbaka, setShowDubbaka] = useState(false);
@@ -58,6 +145,7 @@ export function CinematicLoadingScreen() {
   const desktopLanes = useMemo(() => {
     const words = intro.floatingWords && intro.floatingWords.length > 0 ? intro.floatingWords : initialIntroData.floatingWords;
     const total = words.length;
+    const stagger = timing.wordStaggerDesktop;
     return words.map((text, idx) => {
       const angle = (idx / Math.max(1, total)) * 2 * Math.PI;
       const startX = Math.round(Math.cos(angle) * 780);
@@ -70,14 +158,15 @@ export function CinematicLoadingScreen() {
         startY,
         endX,
         endY,
-        delay: (idx * 0.55),
+        delay: idx * stagger,
       };
     });
-  }, [intro.floatingWords]);
+  }, [intro.floatingWords, timing.wordStaggerDesktop]);
 
   // Mobile lanes: strictly floating from ABOVE and BELOW only, stopping above and below the name
   const mobileLanes = useMemo(() => {
     const words = intro.floatingWords && intro.floatingWords.length > 0 ? intro.floatingWords : initialIntroData.floatingWords;
+    const stagger = timing.wordStaggerMobile;
     return words.map((text, idx) => {
       const isTop = idx % 2 === 0;
       const offset = ((idx * 7) % 5) * 35;
@@ -87,10 +176,10 @@ export function CinematicLoadingScreen() {
         startY: isTop ? -(520 + offset) : (520 + offset),
         endX: 0,
         endY: isTop ? -180 : 180,
-        delay: (idx * 0.45),
+        delay: idx * stagger,
       };
     });
-  }, [intro.floatingWords]);
+  }, [intro.floatingWords, timing.wordStaggerMobile]);
 
   const activeLanes = useMemo(() => {
     if (isMobile) {
@@ -99,8 +188,9 @@ export function CinematicLoadingScreen() {
     return desktopLanes;
   }, [isMobile, mobileLanes, desktopLanes]);
 
-  // Welcome characters
+  // Welcome characters (only used if welcome preset is active)
   const welcomeChars = useMemo(() => {
+    if (!timing.hasWelcome) return [];
     const raw = intro.welcomeText || 'Welcome to my portfolio.';
     return raw.split('').map((char, index) => {
       const angle = (index / Math.max(1, raw.length)) * 2 * Math.PI + ((index * 7) % 5) * 0.18;
@@ -113,22 +203,28 @@ export function CinematicLoadingScreen() {
         scatterRot: (index % 2 === 0 ? 1 : -1) * (45 + ((index * 23) % 70)),
       };
     });
-  }, [intro.welcomeText]);
+  }, [intro.welcomeText, timing.hasWelcome]);
 
-  const wordsSpeed = Number(intro.wordsSpeedSeconds) > 0 ? Number(intro.wordsSpeedSeconds) : (isMobile ? 4.2 : 4.8);
-  const nameDelayMs = (intro.nameDelaySeconds !== undefined && intro.nameDelaySeconds !== null && !isNaN(Number(intro.nameDelaySeconds)))
-    ? Number(intro.nameDelaySeconds) * 1000
-    : 1200;
+  // Dynamic speed resolution based on active preset
+  const wordsSpeed = useMemo(() => {
+    if (timing.totalTargetSec === 10.0) {
+      return isMobile ? timing.wordsSpeedMobile : timing.wordsSpeedDefault;
+    }
+    if (timing.totalTargetSec === 7.0) {
+      return isMobile ? timing.wordsSpeedMobile : timing.wordsSpeedDefault;
+    }
+    return Number(intro.wordsSpeedSeconds) > 0 ? Number(intro.wordsSpeedSeconds) : (isMobile ? timing.wordsSpeedMobile : timing.wordsSpeedDefault);
+  }, [timing, intro.wordsSpeedSeconds, isMobile]);
 
   // Calculate dynamic flight duration: guarantees EVERY single word completes its full flight to the middle
   const totalWordsDurationMs = useMemo(() => {
     const totalWords = activeLanes.length;
-    if (totalWords === 0) return 3000;
-    const staggerDelay = isMobile ? 0.45 : 0.55;
+    if (totalWords === 0) return 2000;
+    const staggerDelay = isMobile ? timing.wordStaggerMobile : timing.wordStaggerDesktop;
     const lastWordStartDelay = (totalWords - 1) * staggerDelay;
-    const totalDurationSec = lastWordStartDelay + wordsSpeed + 0.6; // extra buffer to let last word fully fade
-    return totalDurationSec * 1000;
-  }, [activeLanes.length, isMobile, wordsSpeed]);
+    const totalDurationSec = lastWordStartDelay + wordsSpeed + (timing.wordsEndBufferMs / 1000);
+    return Math.round(totalDurationSec * 1000);
+  }, [activeLanes.length, isMobile, wordsSpeed, timing]);
 
   // Guaranteed Sequence Controller
   useEffect(() => {
@@ -141,75 +237,82 @@ export function CinematicLoadingScreen() {
       const rm1 = setTimeout(() => {
         setShowDubbaka(true);
         setPhase('phase2_dubbaka');
-      }, 1000);
-      const rm2 = setTimeout(() => setPhase('phase4_disappear'), 2200);
-      const rm3 = setTimeout(() => setPhase('phase5_welcome'), 2800);
-      const rm4 = setTimeout(() => {
+      }, 800);
+      const rm2 = setTimeout(() => {
         setIsVisible(false);
         setPhase('phase7_complete');
-      }, 5000);
+      }, Math.round((timing.totalTargetSec - timing.exitDurationSec) * 1000));
       return () => {
         clearTimeout(rm1);
         clearTimeout(rm2);
-        clearTimeout(rm3);
-        clearTimeout(rm4);
       };
     }
 
-    // 1st STEP: First Name appears (0ms to 1400ms)
+    // 1st STEP: First Name appears (0ms to dubbakaDelayMs)
 
-    // 2nd STEP: Slowly converts to stacked Last Name + First Name (at 1400ms)
+    // 2nd STEP: Slowly converts to stacked Last Name + First Name
     const t1 = setTimeout(() => {
       setShowDubbaka(true);
       setPhase('phase2_dubbaka');
-    }, 1400);
+    }, timing.dubbakaDelayMs);
 
-    // 3rd STEP: Words come smoothly (at 2800ms)
+    // 3rd STEP: Words come smoothly
     const t2 = setTimeout(() => {
       setPhase('phase3_words');
-    }, 2800);
+    }, timing.wordsStartMs);
 
     // 4th STEP: Words finish dynamically when EVERY word reaches the middle and fades out
-    const wordsEndTime = 2800 + totalWordsDurationMs;
+    const wordsEndTime = timing.wordsStartMs + totalWordsDurationMs;
     const t3 = setTimeout(() => {
       setPhase('phase3_words_ended');
     }, wordsEndTime);
 
-    // 5th STEP: After all words finish, name remains for configured delay, then disappears
-    const disappearTime = wordsEndTime + nameDelayMs;
-    const t4 = setTimeout(() => {
-      setPhase('phase4_disappear');
-    }, disappearTime);
+    let t4: NodeJS.Timeout | null = null;
+    let t5: NodeJS.Timeout | null = null;
+    let t6: NodeJS.Timeout | null = null;
+    let t7: NodeJS.Timeout | null = null;
 
-    // 6th STEP: Welcome message appears boldly in single line
-    const welcomeTime = disappearTime + 900;
-    const t5 = setTimeout(() => {
-      setPhase('phase5_welcome');
-    }, welcomeTime);
+    if (!timing.hasWelcome) {
+      // 10-SECOND SEQUENCE: Name remains centered in full glory, then smooth exit to website at strictly 10.0s
+      const exitStartTime = Math.max(wordsEndTime + timing.nameHoldMs, Math.round((timing.totalTargetSec - timing.exitDurationSec) * 1000));
+      t7 = setTimeout(() => {
+        setIsVisible(false);
+        setPhase('phase7_complete');
+      }, exitStartTime);
+    } else {
+      // Welcome preset fallback
+      const disappearTime = wordsEndTime + (timing.nameHoldMs || 1000);
+      t4 = setTimeout(() => {
+        setPhase('phase4_disappear');
+      }, disappearTime);
 
-    // 7th STEP: Welcome message INDIVIDUAL LETTERS SCATTER OUTWARD SLOWLY
-    const scatterTime = welcomeTime + 2300;
-    const t6 = setTimeout(() => {
-      setPhase('phase6_scatter');
-    }, scatterTime);
+      const welcomeTime = disappearTime + (timing.welcomeAppearDelayMs || 500);
+      t5 = setTimeout(() => {
+        setPhase('phase5_welcome');
+      }, welcomeTime);
 
-    // 8th STEP: Fade out overlay & reveal website
-    const completeTime = scatterTime + 2400;
-    const t7 = setTimeout(() => {
-      setIsVisible(false);
-      setPhase('phase7_complete');
-    }, completeTime);
+      const scatterTime = welcomeTime + (timing.scatterDelayMs || 1200);
+      t6 = setTimeout(() => {
+        setPhase('phase6_scatter');
+      }, scatterTime);
+
+      const completeTime = scatterTime + (timing.completeDelayMs || 1500);
+      t7 = setTimeout(() => {
+        setIsVisible(false);
+        setPhase('phase7_complete');
+      }, completeTime);
+    }
 
     return () => {
       clearTimeout(t1);
       clearTimeout(t2);
       clearTimeout(t3);
-      clearTimeout(t4);
-      clearTimeout(t5);
-      clearTimeout(t6);
-      clearTimeout(t7);
+      if (t4) clearTimeout(t4);
+      if (t5) clearTimeout(t5);
+      if (t6) clearTimeout(t6);
+      if (t7) clearTimeout(t7);
     };
-  }, [prefersReducedMotion, intro.enabled, totalWordsDurationMs, nameDelayMs]);
+  }, [prefersReducedMotion, intro.enabled, totalWordsDurationMs, timing]);
 
   if (intro.enabled === false) {
     return null;
@@ -247,7 +350,7 @@ export function CinematicLoadingScreen() {
           key="cinematic-loader-main"
           initial={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+          transition={{ duration: timing.exitDurationSec, ease: [0.16, 1, 0.3, 1] }}
           onClick={handleSkip}
           className="fixed inset-0 z-[99999] bg-[#050505] text-white select-none overflow-hidden cursor-pointer"
           style={{ willChange: 'opacity' }}
@@ -315,9 +418,9 @@ export function CinematicLoadingScreen() {
                   }}
                   exit={{ opacity: 0, scale: 0.92, filter: 'blur(14px)' }}
                   transition={{
-                    opacity: { duration: 0.8, ease: [0.16, 1, 0.3, 1] },
+                    opacity: { duration: timing.totalTargetSec <= 7 ? 0.45 : 0.8, ease: [0.16, 1, 0.3, 1] },
                     scale: {
-                      duration: phase === 'phase3_words' ? 4.5 : 1.2,
+                      duration: phase === 'phase3_words' ? (timing.totalTargetSec <= 7 ? 2.5 : 4.0) : timing.nameAnimDurationSec,
                       ease: [0.16, 1, 0.3, 1],
                       repeat: phase === 'phase3_words' ? Infinity : 0,
                       repeatType: 'reverse',
@@ -333,7 +436,7 @@ export function CinematicLoadingScreen() {
                         initial={{ opacity: 0, y: -30, height: 0, filter: 'blur(10px)' }}
                         animate={{ opacity: 1, y: 0, height: 'auto', filter: 'blur(0px)' }}
                         exit={{ opacity: 0, y: -20, filter: 'blur(8px)' }}
-                        transition={{ duration: 1.2, ease: [0.16, 1, 0.3, 1] }}
+                        transition={{ duration: timing.nameAnimDurationSec, ease: [0.16, 1, 0.3, 1] }}
                         className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-300 to-emerald-500 drop-shadow-[0_0_35px_rgba(16,185,129,0.65)] tracking-[0.22em] sm:tracking-[0.28em] uppercase font-sans leading-tight overflow-visible"
                       >
                         {intro.lastName || 'Dubbaka'}
@@ -348,8 +451,8 @@ export function CinematicLoadingScreen() {
                     initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
                     animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
                     transition={{
-                      layout: { duration: 1.2, ease: [0.16, 1, 0.3, 1] },
-                      duration: 1.2,
+                      layout: { duration: timing.nameAnimDurationSec, ease: [0.16, 1, 0.3, 1] },
+                      duration: timing.nameAnimDurationSec,
                       ease: [0.16, 1, 0.3, 1],
                     }}
                     className="text-4xl sm:text-6xl md:text-7xl lg:text-8xl font-black text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 via-green-300 to-emerald-500 drop-shadow-[0_0_35px_rgba(16,185,129,0.65)] tracking-[0.22em] sm:tracking-[0.28em] uppercase font-sans leading-tight"
@@ -364,22 +467,48 @@ export function CinematicLoadingScreen() {
                       width: showDubbaka ? (isMobile ? '120px' : '200px') : (isMobile ? '60px' : '90px'),
                       opacity: 0.8,
                     }}
-                    transition={{ duration: 1.2, delay: 0.3, ease: [0.16, 1, 0.3, 1] }}
+                    transition={{ duration: timing.nameAnimDurationSec, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
                     className="h-[2px] bg-gradient-to-r from-transparent via-emerald-400 to-transparent shadow-[0_0_15px_rgba(16,185,129,0.9)] mt-4"
                   />
+
+                  {/* Ambient Emerald & Starlight Particle Aura behind Dubbaka Sathwik */}
+                  <div className="absolute inset-0 pointer-events-none flex items-center justify-center -z-10">
+                    {SCATTER_PARTICLES.map((p, i) => (
+                      <motion.div
+                        key={`name-particle-${i}`}
+                        animate={{
+                          x: [p.x * 0.85, p.x, p.x * 0.85],
+                          y: [p.y * 0.85, p.y, p.y * 0.85],
+                          opacity: [0.12, 0.5, 0.12],
+                          scale: [0.9, 1.25, 0.9],
+                        }}
+                        transition={{
+                          duration: 3.5 + (i % 3),
+                          repeat: Infinity,
+                          ease: 'easeInOut',
+                        }}
+                        className={`absolute rounded-full ${p.color}`}
+                        style={{
+                          width: `${p.size}px`,
+                          height: `${p.size}px`,
+                          boxShadow: '0 0 10px rgba(16, 185, 129, 0.65)',
+                        }}
+                      />
+                    ))}
+                  </div>
                 </motion.div>
               )}
             </AnimatePresence>
 
-            {/* 6TH & 7TH STEP: WELCOME MESSAGE IN STRICT SINGLE LINE & SLOW-MOTION LETTER SCATTERING */}
+            {/* 6TH & 7TH STEP: WELCOME MESSAGE (ONLY IN LEGACY/UNDO PRESETS, REMOVED FROM 10S MODE) */}
             <AnimatePresence>
-              {isWelcomeVisible && (
+              {timing.hasWelcome && isWelcomeVisible && (
                 <motion.div
                   key="welcome-stage"
                   initial={{ opacity: 0, scale: 0.9, filter: 'blur(10px)' }}
                   animate={{ opacity: 1, scale: 1, filter: 'blur(0px)' }}
                   exit={{ opacity: 0 }}
-                  transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+                  transition={{ duration: 0.6, ease: [0.16, 1, 0.3, 1] }}
                   className="flex flex-col items-center justify-center text-center space-y-5 w-full overflow-visible"
                 >
                   {/* Strict SINGLE LINE Letter-by-Letter Text with Slow-Motion Dispersal */}
@@ -412,13 +541,13 @@ export function CinematicLoadingScreen() {
                           transition={
                             isScatter
                               ? {
-                                  duration: 2.2,
-                                  delay: (idx * 0.025) % 0.22,
+                                  duration: timing.scatterDurationSec || 1.8,
+                                  delay: (idx * 0.02) % (timing.totalTargetSec <= 7 ? 0.15 : 0.22),
                                   ease: [0.16, 1, 0.3, 1],
                                 }
                               : {
-                                  duration: 0.9,
-                                  delay: idx * 0.035,
+                                  duration: timing.totalTargetSec <= 7 ? 0.45 : 0.9,
+                                  delay: idx * (timing.totalTargetSec <= 7 ? 0.016 : 0.035),
                                   ease: [0.16, 1, 0.3, 1],
                                 }
                           }
@@ -461,7 +590,7 @@ export function CinematicLoadingScreen() {
                           }
                           transition={
                             isScatter
-                              ? { duration: 1.8, ease: 'easeOut' }
+                              ? { duration: timing.scatterDurationSec || 1.8, ease: 'easeOut' }
                               : {
                                   duration: 2.5 + (i % 3),
                                   repeat: Infinity,
@@ -487,7 +616,7 @@ export function CinematicLoadingScreen() {
                         : { opacity: 1, y: 0, filter: 'blur(0px)', scale: 1 }
                     }
                     transition={{
-                      duration: phase === 'phase6_scatter' ? 1.4 : 0.9,
+                      duration: phase === 'phase6_scatter' ? (timing.totalTargetSec <= 7 ? 0.7 : 1.4) : (timing.totalTargetSec <= 7 ? 0.45 : 0.9),
                       ease: [0.16, 1, 0.3, 1],
                     }}
                     className="inline-flex items-center gap-2 px-3.5 py-1.5 sm:px-4 sm:py-2 rounded-full bg-emerald-950/70 border border-emerald-500/40 text-emerald-300 text-[10px] sm:text-xs font-mono font-medium tracking-wider shadow-[0_0_20px_rgba(16,185,129,0.3)] mt-2"

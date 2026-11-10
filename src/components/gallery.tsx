@@ -6,6 +6,7 @@ import { GalleryItem } from '../types';
 import { FormattedText } from '../lib/text-formatter';
 import { StackedCardDeck } from './ui/stacked-card-deck';
 import { DataLoadingState } from './ui/data-loading-state';
+import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
 
 // Mini card slideshow with 4-second auto shift & sliding motion effect
 function GalleryCardSlideshow({ images, title }: { images: string[]; title: string }) {
@@ -452,99 +453,57 @@ export function GallerySection() {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-50 flex items-center justify-center p-4 sm:p-6 bg-black/80 backdrop-blur-md overflow-y-auto"
+            className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto"
             onClick={() => setActiveItem(null)}
           >
             <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-black/85 backdrop-blur-xl overflow-y-auto"
-              onClick={() => setActiveItem(null)}
+              initial={{ scale: 0.95, opacity: 0, y: 15 }}
+              animate={{ scale: 1, opacity: 1, y: 0 }}
+              exit={{ scale: 0.95, opacity: 0, y: 15 }}
+              onClick={(e) => e.stopPropagation()}
+              className="relative w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl bg-[#0d0d12] rounded-2xl sm:rounded-3xl border border-emerald-500/40 shadow-[0_25px_60px_-15px_rgba(16,185,129,0.25)] overflow-hidden my-auto max-h-[92vh] sm:max-h-[90vh] flex flex-col p-4 sm:p-6 lg:p-7"
             >
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0, y: 15 }}
-                animate={{ scale: 1, opacity: 1, y: 0 }}
-                exit={{ scale: 0.95, opacity: 0, y: 15 }}
-                onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-xl sm:max-w-2xl bg-[#0d0d12] rounded-2xl sm:rounded-3xl border border-emerald-500/40 shadow-2xl overflow-hidden my-auto max-h-[85vh] flex flex-col"
+              {/* Close Button */}
+              <button
+                type="button"
+                onClick={() => setActiveItem(null)}
+                className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 z-40 p-2 sm:p-2.5 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-colors cursor-pointer shadow-lg"
+                aria-label="Close preview"
               >
-                {/* Close Button */}
-                <button
-                  type="button"
-                  onClick={() => setActiveItem(null)}
-                  className="absolute top-3 right-3 z-30 p-2 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-colors cursor-pointer shadow-lg"
-                >
-                  <X className="w-4 h-4 sm:w-5 sm:h-5" />
-                </button>
+                <X className="w-4 h-4 sm:w-5 sm:h-5" />
+              </button>
 
-                {/* Main Image Display (Click to Expand) */}
-                <div
-                  className="relative aspect-[16/9] w-full bg-zinc-950 overflow-hidden shrink-0 cursor-pointer group"
-                  onClick={() => {
-                    const currentImg =
+              {/* 2-Column Responsive Layout: Certificate Image on Left, Details on Right */}
+              <div className="flex flex-col lg:flex-row gap-5 lg:gap-8 flex-1 min-h-0 overflow-hidden">
+                {/* Left Column: Certificate Image Slideshow */}
+                <div className="w-full lg:w-[56%] xl:w-[58%] shrink-0 flex flex-col justify-start">
+                  <JourneyImageSlideshow
+                    images={
                       activeItem.images && activeItem.images.length > 0
-                        ? activeItem.images[activeImageIndex] || activeItem.image
-                        : activeItem.image;
-                    setExpandedCertImage(currentImg);
-                    setExpandedCertTitle(activeItem.title);
-                  }}
-                >
-                  <img
-                    src={
-                      (activeItem.images && activeItem.images.length > 0
-                        ? activeItem.images[activeImageIndex] || activeItem.image
-                        : activeItem.image) || '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg'
+                        ? activeItem.images
+                        : [activeItem.image].filter(Boolean) as string[]
                     }
-                    alt={activeItem.title}
-                    className="w-full h-full object-contain bg-black/90 group-hover:scale-102 transition-transform duration-300"
+                    title={activeItem.title}
+                    className="w-full h-64 sm:h-80 md:h-[380px] lg:h-[460px] xl:h-[500px]"
                   />
-                  <div className="absolute inset-0 bg-gradient-to-t from-[#0d0d12] via-transparent to-transparent pointer-events-none" />
-
-                  {/* Badges on Modal Image */}
-                  <div className="absolute top-3 left-3 flex items-center gap-1.5 z-10">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-zinc-900/90 text-emerald-400 border border-emerald-500/30 whitespace-nowrap shrink-0">
-                      {activeItem.category}
-                    </span>
-                    {activeItem.featured && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] font-mono font-bold bg-emerald-600 text-white shadow-md whitespace-nowrap shrink-0">
-                        ★ Featured
-                      </span>
-                    )}
-                  </div>
-
-                  {/* Click to Expand Overlay Badge */}
-                  <div className="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md text-emerald-400 border border-emerald-500/40 text-[11px] font-mono font-bold flex items-center gap-1.5 z-10 shadow-lg group-hover:bg-emerald-600 group-hover:text-white transition-all">
-                    <Maximize2 className="w-3.5 h-3.5" />
-                    <span>Expand Image</span>
-                  </div>
                 </div>
 
-                {/* Multiple Photos Switcher Bar */}
-                {activeItem.images && activeItem.images.length > 1 && (
-                  <div className="p-2 bg-zinc-900/90 border-t border-zinc-800 flex items-center gap-2 overflow-x-auto shrink-0">
-                    {activeItem.images.map((imgUrl, i) => (
-                      <button
-                        key={i}
-                        type="button"
-                        onClick={() => setActiveImageIndex(i)}
-                        className={`relative aspect-[16/10] w-14 rounded-lg overflow-hidden border transition-all cursor-pointer ${
-                          activeImageIndex === i
-                            ? 'border-emerald-500 ring-2 ring-emerald-500/30'
-                            : 'border-zinc-800 opacity-60 hover:opacity-100'
-                        }`}
-                      >
-                        <img src={imgUrl || '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg'} alt="" className="w-full h-full object-cover" />
-                      </button>
-                    ))}
-                  </div>
-                )}
-
-                {/* Detail Content */}
-                <div className="p-4 sm:p-6 space-y-4 overflow-y-auto flex-1">
-                  <div>
-                    <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 mb-1.5">
-                      <span className="flex items-center gap-1 text-emerald-400">
+                {/* Right Column: Title, Metadata, Skills & Verification Action */}
+                <div className="w-full lg:w-[44%] xl:w-[42%] flex-1 flex flex-col min-h-0 overflow-hidden">
+                  {/* Header */}
+                  <div className="pr-10 shrink-0 pb-3 border-b border-zinc-800/80">
+                    <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                      <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-zinc-900 border border-zinc-700/60 text-emerald-400 whitespace-nowrap shrink-0">
+                        {activeItem.category}
+                      </span>
+                      {activeItem.featured && (
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-600 text-white shadow-sm whitespace-nowrap shrink-0">
+                          ★ Featured
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3 text-xs font-mono text-zinc-400 mb-1">
+                      <span className="flex items-center gap-1 text-emerald-400 font-semibold">
                         <Calendar className="w-3.5 h-3.5" />
                         <span>{activeItem.date}</span>
                       </span>
@@ -555,59 +514,69 @@ export function GallerySection() {
                         </span>
                       )}
                     </div>
-
-                    <h3 className="text-lg sm:text-2xl font-black text-white leading-snug break-words">
+                    <h3 className="text-xl sm:text-2xl xl:text-3xl font-extrabold text-white tracking-tight break-words">
                       {activeItem.title}
                     </h3>
                   </div>
 
-                  {/* Tech / Skills Tags */}
-                  {activeItem.technologies && activeItem.technologies.length > 0 && (
-                    <div className="space-y-1.5">
-                      <h4 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
-                        Technologies & Skills
-                      </h4>
-                      <div className="flex flex-wrap gap-1.5">
-                        {activeItem.technologies.map((tech, i) => (
-                          <span
-                            key={i}
-                            className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-zinc-800 text-[11px] font-mono text-emerald-300 flex items-center gap-1"
-                          >
-                            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Description Text */}
-                  <div className="space-y-1.5">
-                    <h4 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
-                      Certificate Details
-                    </h4>
-                    <div className="text-xs sm:text-sm text-zinc-300 leading-relaxed space-y-2 font-sans">
+                  {/* Scrollable Details Area */}
+                  <div className="overflow-y-auto space-y-3.5 py-3 pr-1.5 flex-1 min-h-0">
+                    {/* Description Text */}
+                    <div className="p-3.5 sm:p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-sm text-zinc-300 leading-relaxed shadow-sm space-y-1">
+                      <span className="text-[11px] font-mono font-bold text-emerald-400 uppercase tracking-wider block mb-1">
+                        Certificate Details:
+                      </span>
                       <FormattedText text={activeItem.detailedDescription || activeItem.description} />
                     </div>
+
+                    {/* Tech / Skills Tags */}
+                    {activeItem.technologies && activeItem.technologies.length > 0 && (
+                      <div className="space-y-2 pt-1">
+                        <h4 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
+                          Technologies & Skills
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {activeItem.technologies.map((tech, i) => (
+                            <span
+                              key={i}
+                              className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-emerald-500/30 text-[11px] font-mono text-emerald-300 flex items-center gap-1"
+                            >
+                              <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+                              {tech}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                   </div>
 
-                  {/* Credential / Verify Action Button */}
-                  {activeItem.credentialUrl && (
-                    <div className="pt-2">
+                  {/* Modal Footer / Action */}
+                  <div className="pt-3.5 mt-auto border-t border-zinc-800/80 flex items-center justify-between gap-3 shrink-0">
+                    {activeItem.credentialUrl ? (
                       <a
                         href={activeItem.credentialUrl}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-lg shadow-emerald-950/60"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs transition-all shadow-lg shadow-emerald-950/60 hover:scale-105 active:scale-95"
                       >
                         <Sparkles className="w-4 h-4 text-amber-300" />
                         <span>Verify Credential Link</span>
                         <ExternalLink className="w-3.5 h-3.5" />
                       </a>
-                    </div>
-                  )}
+                    ) : (
+                      <div />
+                    )}
+
+                    <button
+                      type="button"
+                      onClick={() => setActiveItem(null)}
+                      className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-semibold text-xs transition-all cursor-pointer ml-auto"
+                    >
+                      Close
+                    </button>
+                  </div>
                 </div>
-              </motion.div>
+              </div>
             </motion.div>
           </motion.div>
         )}

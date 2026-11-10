@@ -510,7 +510,7 @@ export function ActivityLogsTab({
               </h4>
               <p className="text-xs text-zinc-400 mt-0.5">
                 Bot: <span className="font-mono text-sky-300">@SathwikPortfolioNotification_bot</span> | Chat ID:{' '}
-                <span className="font-mono text-zinc-300">5869091520</span>
+                <span className="font-mono text-emerald-400">Connected</span>
               </p>
             </div>
           </div>

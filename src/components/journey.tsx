@@ -157,7 +157,7 @@ export function JourneySection() {
               exit={{ scale: 0.95, opacity: 0, y: 15 }}
               transition={{ duration: 0.2, ease: 'easeOut' }}
               onClick={(e) => e.stopPropagation()}
-              className="relative w-full max-w-xl sm:max-w-2xl bg-[#0d0d12] border border-emerald-500/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 space-y-4 shadow-2xl overflow-hidden my-auto max-h-[85vh] flex flex-col min-w-0"
+              className="relative w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl bg-[#0d0d12] border border-emerald-500/40 rounded-2xl sm:rounded-3xl p-4 sm:p-6 lg:p-7 shadow-[0_25px_60px_-15px_rgba(16,185,129,0.25)] overflow-hidden my-auto max-h-[92vh] sm:max-h-[90vh] flex flex-col min-w-0"
             >
               {/* Decorative subtle ambient glow in background */}
               <div className="absolute -top-24 -left-24 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
@@ -167,85 +167,106 @@ export function JourneySection() {
               <button
                 type="button"
                 onClick={() => setSelectedJourneyItem(null)}
-                className="absolute top-4 right-4 z-20 p-2 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-all cursor-pointer shadow-lg"
+                className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 z-40 p-2 sm:p-2.5 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-all cursor-pointer shadow-lg"
+                aria-label="Close preview"
               >
                 <X className="w-4 h-4 sm:w-5 sm:h-5" />
               </button>
 
-              {/* Modal Header */}
-              <div className="flex items-start sm:items-center gap-3 border-b border-zinc-800/90 pb-3.5 relative z-10 shrink-0 pr-10">
-                <div className="w-11 h-11 sm:w-13 sm:h-13 rounded-xl bg-emerald-950/90 border border-emerald-500/50 flex items-center justify-center shrink-0 shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                  <NeonIcon name={selectedJourneyItem.category} className="w-5 h-5 sm:w-6 sm:h-6 text-emerald-400" />
-                </div>
-                <div className="min-w-0 flex-1">
-                  <div className="flex items-center gap-1.5 flex-wrap">
-                    <span className="text-[10px] sm:text-xs font-mono font-bold text-emerald-300 bg-emerald-950/90 px-2.5 py-0.5 rounded-lg border border-emerald-500/40 shadow-sm">
-                      {selectedJourneyItem.year}
-                    </span>
-                    <span className="text-[10px] sm:text-xs font-mono text-zinc-300 bg-zinc-900/90 px-2.5 py-0.5 rounded-lg border border-zinc-800 flex items-center gap-1">
-                      <NeonIcon name={selectedJourneyItem.category} className="w-3 h-3 text-emerald-400" />
-                      <span>{selectedJourneyItem.category}</span>
-                    </span>
-                  </div>
-                  <h3 className="text-lg sm:text-2xl font-extrabold text-white tracking-tight mt-1 break-words">{selectedJourneyItem.title}</h3>
-                </div>
-              </div>
+              {/* Responsive Layout: Photos on Left (if present), Details on Right */}
+              {(() => {
+                const journeyImages =
+                  selectedJourneyItem.images && selectedJourneyItem.images.length > 0
+                    ? selectedJourneyItem.images
+                    : selectedJourneyItem.image
+                    ? [selectedJourneyItem.image]
+                    : [];
 
-              {/* Modal Content Scrollable Container */}
-              <div className="space-y-4 overflow-y-auto pr-1 flex-1 relative z-10">
-                <div className="flex flex-wrap sm:flex-nowrap items-start sm:items-center justify-between gap-2 text-xs sm:text-sm font-mono text-emerald-400 bg-zinc-900/80 p-2.5 sm:p-3 rounded-xl border border-zinc-800/80">
-                  <div className="flex items-start sm:items-center gap-2 min-w-0 flex-1">
-                    <NeonIcon name={selectedJourneyItem.organization} className="w-3.5 h-3.5 mt-0.5 sm:mt-0 shrink-0 text-emerald-400" />
-                    <span className="font-semibold leading-snug break-words">{selectedJourneyItem.organization}</span>
-                  </div>
-                  {selectedJourneyItem.role && (
-                    <span className="text-zinc-300 font-normal whitespace-nowrap shrink-0">
-                      • {selectedJourneyItem.role}
-                    </span>
-                  )}
-                </div>
+                const hasPhotos = journeyImages.length > 0;
 
-                {/* Milestone Photos Large Slideshow */}
-                {((selectedJourneyItem.images && selectedJourneyItem.images.length > 0) || selectedJourneyItem.image) && (
-                  <div className="rounded-xl overflow-hidden border border-emerald-500/30 shadow-lg">
-                    <JourneyImageSlideshow
-                      images={
-                        selectedJourneyItem.images && selectedJourneyItem.images.length > 0
-                          ? selectedJourneyItem.images
-                          : selectedJourneyItem.image
-                          ? [selectedJourneyItem.image]
-                          : []
-                      }
-                      title={selectedJourneyItem.title}
-                    />
-                  </div>
-                )}
+                return (
+                  <div className={`flex flex-col ${hasPhotos ? 'lg:flex-row gap-5 lg:gap-8' : 'gap-4'} flex-1 min-h-0 overflow-hidden relative z-10`}>
+                    {/* Left Column: Photos (if present) */}
+                    {hasPhotos && (
+                      <div className="w-full lg:w-[56%] xl:w-[58%] shrink-0 flex flex-col justify-start">
+                        <JourneyImageSlideshow
+                          images={journeyImages}
+                          title={selectedJourneyItem.title}
+                          className="w-full h-64 sm:h-80 md:h-[380px] lg:h-[480px] xl:h-[530px]"
+                        />
+                      </div>
+                    )}
 
-                <div className="p-3.5 sm:p-4 rounded-xl bg-zinc-950/95 border border-emerald-500/25 text-xs sm:text-sm text-zinc-100 leading-relaxed space-y-2 shadow-inner">
-                  <div className="text-[11px] font-mono text-emerald-400 font-bold flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
-                    <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                    <span>Detailed Milestone Overview:</span>
-                  </div>
-                  <FormattedText text={selectedJourneyItem.detailedDescription || selectedJourneyItem.description} />
-                </div>
-              </div>
+                    {/* Right Column (or Full Width if no photos): Details */}
+                    <div className={`w-full ${hasPhotos ? 'lg:w-[44%] xl:w-[42%]' : 'w-full'} flex-1 flex flex-col min-h-0 overflow-hidden`}>
+                      {/* Header */}
+                      <div className="pr-10 shrink-0 pb-3 border-b border-zinc-800/80">
+                        <div className="flex items-center gap-1.5 flex-wrap mb-1.5">
+                          <span className="text-[10px] sm:text-xs font-mono font-bold text-emerald-300 bg-emerald-950/90 px-2.5 py-0.5 rounded-lg border border-emerald-500/40 shadow-sm">
+                            {selectedJourneyItem.year}
+                          </span>
+                          <span className="text-[10px] sm:text-xs font-mono text-zinc-300 bg-zinc-900/90 px-2.5 py-0.5 rounded-lg border border-zinc-800 flex items-center gap-1">
+                            <NeonIcon name={selectedJourneyItem.category} className="w-3 h-3 text-emerald-400" />
+                            <span>{selectedJourneyItem.category}</span>
+                          </span>
+                        </div>
+                        <h3 className="text-xl sm:text-2xl xl:text-3xl font-extrabold text-white tracking-tight break-words">
+                          {selectedJourneyItem.title}
+                        </h3>
 
-              {/* Modal Footer Tags */}
-              {selectedJourneyItem.tags && selectedJourneyItem.tags.length > 0 && (
-                <div className="pt-2.5 border-t border-zinc-800/80 relative z-10 shrink-0">
-                  <p className="text-[10px] font-mono text-zinc-400 mb-1.5 font-semibold">Associated Skills & Tags:</p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {selectedJourneyItem.tags.map((tag) => (
-                      <span
-                        key={tag}
-                        className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono font-medium"
-                      >
-                        #{tag}
-                      </span>
-                    ))}
+                        <div className="flex flex-wrap items-center gap-2 text-xs sm:text-sm font-mono text-emerald-400 mt-2 bg-zinc-900/80 p-2 sm:p-2.5 rounded-xl border border-zinc-800/80">
+                          <NeonIcon name={selectedJourneyItem.organization} className="w-3.5 h-3.5 shrink-0 text-emerald-400" />
+                          <span className="font-semibold leading-snug break-words">{selectedJourneyItem.organization}</span>
+                          {selectedJourneyItem.role && (
+                            <span className="text-zinc-300 font-normal">
+                              • {selectedJourneyItem.role}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Scrollable Overview */}
+                      <div className="overflow-y-auto space-y-3.5 py-3 pr-1.5 flex-1 min-h-0">
+                        <div className="p-3.5 sm:p-4 rounded-xl bg-zinc-950/95 border border-emerald-500/25 text-xs sm:text-sm text-zinc-100 leading-relaxed space-y-2 shadow-inner">
+                          <div className="text-[11px] font-mono text-emerald-400 font-bold flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                            <span>Detailed Milestone Overview:</span>
+                          </div>
+                          <FormattedText text={selectedJourneyItem.detailedDescription || selectedJourneyItem.description} />
+                        </div>
+
+                        {/* Associated Skills & Tags */}
+                        {selectedJourneyItem.tags && selectedJourneyItem.tags.length > 0 && (
+                          <div className="space-y-2 pt-1">
+                            <p className="text-[10px] font-mono text-zinc-400 uppercase tracking-wider font-semibold">Associated Skills & Tags:</p>
+                            <div className="flex flex-wrap gap-1.5">
+                              {selectedJourneyItem.tags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono font-medium"
+                                >
+                                  #{tag}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+
+                      {/* Footer */}
+                      <div className="pt-3.5 mt-auto border-t border-zinc-800/80 flex items-center justify-end shrink-0">
+                        <button
+                          type="button"
+                          onClick={() => setSelectedJourneyItem(null)}
+                          className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-semibold text-xs transition-all cursor-pointer ml-auto"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </motion.div>
           </motion.div>
         )}

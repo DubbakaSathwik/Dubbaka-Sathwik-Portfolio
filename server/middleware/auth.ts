@@ -22,6 +22,24 @@ export function verifyToken(token: string): { role: string; username: string } |
     const decoded = jwt.verify(token, config.JWT_SECRET) as { role: string; username: string };
     return decoded;
   } catch (err) {
+    // Check if token is a Firebase Google Auth ID token for the verified admin
+    try {
+      const decodedComplete = jwt.decode(token, { complete: true }) as any;
+      const payload = decodedComplete?.payload;
+      if (
+        payload &&
+        typeof payload === 'object' &&
+        payload.exp &&
+        payload.exp * 1000 > Date.now() &&
+        payload.iss &&
+        payload.iss.includes('securetoken.google.com') &&
+        payload.email &&
+        payload.email.toLowerCase() === 'dubbakasathwik@gmail.com' &&
+        payload.email_verified === true
+      ) {
+        return { role: 'admin', username: 'dubbakasathwik' };
+      }
+    } catch (e) {}
     return null;
   }
 }
@@ -29,23 +47,12 @@ export function verifyToken(token: string): { role: string; username: string } |
 export async function verifyAdminPassword(candidatePassword: string): Promise<boolean> {
   if (!candidatePassword) return false;
 
-  // 1. First check if candidates match standard authorized passwords
-  const validDirectPasswords = ['bachi200', 'admin', 'sathwik'];
-  if (validDirectPasswords.includes(candidatePassword)) {
-    return true;
-  }
-
-  // 2. Check bcrypt hash comparison with configured hash
+  // Check bcrypt hash comparison against configured admin hash
   if (config.ADMIN_PASSWORD_HASH) {
     try {
       const isMatch = await bcrypt.compare(candidatePassword, config.ADMIN_PASSWORD_HASH);
       if (isMatch) return true;
-    } catch (e) {
-      // If ADMIN_PASSWORD_HASH is not a valid bcrypt hash, compare plain text safely
-      if (candidatePassword === config.ADMIN_PASSWORD_HASH) {
-        return true;
-      }
-    }
+    } catch (e) {}
   }
 
   return false;

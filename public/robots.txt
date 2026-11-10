@@ -1,0 +1,8 @@
+# robots.txt for Dubbaka Sathwik Portfolio
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /admin
+
+# Sitemap location (Update domain if using a custom domain)
+Sitemap: https://dubbaka-sathwik.netlify.app/sitemap.xml

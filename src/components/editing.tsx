@@ -21,6 +21,7 @@ import { CreativeItem } from '../types';
 import { FormattedText } from '../lib/text-formatter';
 import { StackedCardDeck } from './ui/stacked-card-deck';
 import { DataLoadingState } from './ui/data-loading-state';
+import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
 
 export function EditingSection() {
   const { data } = useCMS();
@@ -412,177 +413,151 @@ export function EditingSection() {
                 animate={{ scale: 1, opacity: 1, y: 0 }}
                 exit={{ scale: 0.95, opacity: 0, y: 15 }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-xl sm:max-w-2xl bg-[#0d0d12] rounded-2xl sm:rounded-3xl border border-emerald-500/40 shadow-2xl overflow-hidden max-h-[88vh] flex flex-col my-auto"
+                className="relative w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl bg-[#0d0d12] rounded-2xl sm:rounded-3xl border border-emerald-500/40 shadow-[0_25px_60px_-15px_rgba(16,185,129,0.25)] overflow-hidden max-h-[92vh] sm:max-h-[90vh] flex flex-col p-4 sm:p-6 lg:p-7 my-auto"
               >
                 {/* Close Button */}
                 <button
                   type="button"
                   onClick={() => setActiveItem(null)}
-                  className="absolute top-3.5 right-3.5 z-30 p-2 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-colors cursor-pointer shadow-lg"
+                  className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 z-40 p-2 sm:p-2.5 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-colors cursor-pointer shadow-lg"
+                  aria-label="Close preview"
                 >
                   <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
-                {/* Modal Header */}
-                <div className="flex items-center justify-between px-4 sm:px-6 py-3.5 border-b border-zinc-800 bg-zinc-900/90 shrink-0 pr-14">
-                  <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="p-2 rounded-xl bg-emerald-950 border border-emerald-500/30 text-emerald-400 shrink-0">
-                      {activeItem.videoUrl ? <Video className="w-4 h-4" /> : <Palette className="w-4 h-4" />}
-                    </div>
-                    <div className="min-w-0">
-                      <h3 className="text-sm sm:text-base font-bold text-white truncate">{activeItem.title}</h3>
-                      <p className="text-[10px] sm:text-xs text-zinc-400 font-mono truncate">{activeItem.category}</p>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Media Preview & Details Container */}
-                <div className="overflow-y-auto p-4 sm:p-6 space-y-4 flex-1">
-                  {/* Video Embed or Expandable Image Display */}
-                  {activeItem.videoUrl ? (
-                    <div className="relative aspect-video w-full bg-black rounded-2xl overflow-hidden border border-zinc-800 shrink-0 shadow-lg">
-                      <iframe
-                        src={activeItem.videoUrl}
-                        title={activeItem.title}
-                        className="w-full h-full border-0"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen
-                      />
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <div
-                        onClick={() => setExpandedImage(currentPhoto)}
-                        className="relative rounded-2xl overflow-hidden border border-zinc-800 bg-black max-h-[360px] flex items-center justify-center shrink-0 cursor-pointer group shadow-xl"
-                      >
-                        <img
-                          src={currentPhoto}
-                          alt={activeItem.title}
-                          className="w-full h-full object-contain max-h-[360px] group-hover:scale-102 transition-transform duration-300"
+                {/* 2-Column Responsive Layout: Media on Left, Details on Right */}
+                <div className="flex flex-col lg:flex-row gap-5 lg:gap-8 flex-1 min-h-0 overflow-hidden">
+                  {/* Left Column: Video Embed or Expandable Images */}
+                  <div className="w-full lg:w-[56%] xl:w-[58%] shrink-0 flex flex-col justify-start space-y-3">
+                    {activeItem.videoUrl ? (
+                      <div className="relative aspect-video w-full bg-black rounded-2xl overflow-hidden border border-zinc-800 shrink-0 shadow-xl max-h-[480px]">
+                        <iframe
+                          src={activeItem.videoUrl}
+                          title={activeItem.title}
+                          className="w-full h-full border-0"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
                         />
-                        {/* Overlay Expand Badge */}
-                        <div className="absolute top-3 right-3 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md text-emerald-400 border border-emerald-500/40 text-xs font-mono font-bold flex items-center gap-1.5 opacity-90 group-hover:opacity-100 shadow-lg">
-                          <Maximize2 className="w-3.5 h-3.5" />
-                          <span>Expand Image</span>
-                        </div>
-                        <div className="absolute bottom-3 left-3 px-2.5 py-1 rounded-lg bg-black/80 backdrop-blur-md text-zinc-300 text-[10px] font-mono">
-                          🔍 Click photo to view full size
-                        </div>
                       </div>
-
-                      {/* Multiple Photos Switcher Strip */}
-                      {creativeImageList.length > 1 && (
-                        <div className="p-2 bg-zinc-900/90 rounded-xl border border-zinc-800 flex items-center gap-2 overflow-x-auto shrink-0">
-                          {creativeImageList.map((imgUrl, i) => (
-                            <button
-                              key={i}
-                              type="button"
-                              onClick={() => setActiveImageIndex(i)}
-                              className={`relative aspect-[16/10] w-16 sm:w-20 rounded-lg overflow-hidden border transition-all cursor-pointer ${
-                                activeImageIndex === i
-                                  ? 'border-emerald-500 ring-2 ring-emerald-500/40 opacity-100 scale-105'
-                                  : 'border-zinc-800 opacity-60 hover:opacity-100'
-                              }`}
-                            >
-                              <img src={imgUrl} alt="" className="w-full h-full object-cover" />
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                    </div>
-                  )}
-
-                  {/* Card Summary & Detailed Overview */}
-                  <div className="space-y-3">
-                    {/* Summary Box */}
-                    {activeItem.shortDescription && (
-                      <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-300 leading-relaxed space-y-1">
-                        <span className="text-emerald-400 font-mono font-bold block uppercase text-[10px] tracking-wider">
-                          Card Summary:
-                        </span>
-                        <div className="text-xs text-zinc-200">
-                          <FormattedText text={activeItem.shortDescription} />
-                        </div>
+                    ) : (
+                      <div className="w-full">
+                        <JourneyImageSlideshow
+                          images={creativeImageList}
+                          title={activeItem.title}
+                          className="w-full h-64 sm:h-80 md:h-[380px] lg:h-[460px] xl:h-[500px]"
+                        />
                       </div>
                     )}
+                  </div>
 
-                    {/* Detailed Overview */}
-                    <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-300 leading-relaxed space-y-1">
-                      <span className="text-emerald-400 font-mono font-bold block uppercase text-[10px] tracking-wider">
-                        Detailed Description & Overview:
-                      </span>
-                      <div className="text-xs text-zinc-200 space-y-1">
-                        <FormattedText
-                          text={activeItem.detailedDescription || activeItem.shortDescription}
-                        />
+                  {/* Right Column: Title, Badges, Details & Actions */}
+                  <div className="w-full lg:w-[44%] xl:w-[42%] flex-1 flex flex-col min-h-0 overflow-hidden">
+                    {/* Header */}
+                    <div className="pr-10 shrink-0 pb-3 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-zinc-900 border border-zinc-700/60 text-zinc-300 whitespace-nowrap shrink-0">
+                          {activeItem.category}
+                        </span>
+                        {activeItem.featured && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-sm whitespace-nowrap shrink-0">
+                            ★ Featured
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center gap-2.5">
+                        <div className="p-2 rounded-xl bg-emerald-950 border border-emerald-500/30 text-emerald-400 shrink-0">
+                          {activeItem.videoUrl ? <Video className="w-4 h-4" /> : <Palette className="w-4 h-4" />}
+                        </div>
+                        <h3 className="text-xl sm:text-2xl xl:text-3xl font-extrabold text-white tracking-tight break-words">
+                          {activeItem.title}
+                        </h3>
                       </div>
                     </div>
 
-                    {/* Metadata Badges */}
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
-                      <div>
-                        <span className="text-[10px] text-zinc-400 font-mono uppercase block mb-1 font-bold">
-                          Tools / Software Used
+                    {/* Scrollable Details Area */}
+                    <div className="overflow-y-auto space-y-3.5 py-3 pr-1.5 flex-1 min-h-0">
+                      {/* Summary Box */}
+                      {activeItem.shortDescription && (
+                        <div className="p-3.5 sm:p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-sm text-zinc-300 leading-relaxed space-y-1 shadow-sm">
+                          <span className="text-emerald-400 font-mono font-bold block uppercase text-[10px] sm:text-[11px] tracking-wider mb-1">
+                            Card Summary:
+                          </span>
+                          <div className="text-zinc-200">
+                            <FormattedText text={activeItem.shortDescription} />
+                          </div>
+                        </div>
+                      )}
+
+                      {/* Detailed Overview */}
+                      <div className="p-3.5 sm:p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-sm text-zinc-300 leading-relaxed space-y-1">
+                        <span className="text-emerald-400 font-mono font-bold block uppercase text-[10px] sm:text-[11px] tracking-wider mb-1">
+                          Detailed Description & Overview:
                         </span>
-                        <div className="flex flex-wrap gap-1">
-                          {(activeItem.softwareUsed || []).map((sw) => (
-                            <span
-                              key={sw}
-                              className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/20 text-[10px] font-mono"
-                            >
-                              {sw}
-                            </span>
-                          ))}
+                        <div className="text-zinc-200 space-y-1">
+                          <FormattedText
+                            text={activeItem.detailedDescription || activeItem.shortDescription}
+                          />
                         </div>
                       </div>
 
-                      <div>
-                        <span className="text-[10px] text-zinc-400 font-mono uppercase block mb-1 font-bold">
-                          Category & Tags
-                        </span>
-                        <div className="flex flex-wrap gap-1">
-                          <span className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px] font-mono">
-                            {activeItem.category}
+                      {/* Metadata Badges */}
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800 text-xs">
+                        <div>
+                          <span className="text-[10px] text-zinc-400 font-mono uppercase block mb-1 font-bold">
+                            Tools / Software Used
                           </span>
-                          {activeItem.featured && (
-                            <span className="px-2 py-0.5 rounded bg-emerald-600 text-white text-[10px] font-mono font-bold">
-                              ★ Featured
-                            </span>
-                          )}
-                          {(activeItem.tags || []).map((tg) => (
-                            <span key={tg} className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px] font-mono">
-                              #{tg}
-                            </span>
-                          ))}
+                          <div className="flex flex-wrap gap-1">
+                            {(activeItem.softwareUsed || []).map((sw) => (
+                              <span
+                                key={sw}
+                                className="px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/20 text-[10px] font-mono"
+                              >
+                                {sw}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+
+                        <div>
+                          <span className="text-[10px] text-zinc-400 font-mono uppercase block mb-1 font-bold">
+                            Tags & Categories
+                          </span>
+                          <div className="flex flex-wrap gap-1">
+                            {(activeItem.tags || []).map((tg) => (
+                              <span key={tg} className="px-2 py-0.5 rounded bg-zinc-800 text-zinc-300 text-[10px] font-mono">
+                                #{tg}
+                              </span>
+                            ))}
+                          </div>
                         </div>
                       </div>
+                    </div>
+
+                    {/* Modal Footer */}
+                    <div className="pt-3.5 mt-auto border-t border-zinc-800/80 flex items-center justify-between gap-3 shrink-0">
+                      {activeItem.platformUrl ? (
+                        <a
+                          href={activeItem.platformUrl}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all hover:scale-105 active:scale-95"
+                        >
+                          <ExternalLink className="w-3.5 h-3.5" />
+                          <span>View Post on Platform</span>
+                        </a>
+                      ) : (
+                        <div />
+                      )}
+
+                      <button
+                        type="button"
+                        onClick={() => setActiveItem(null)}
+                        className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-semibold text-xs transition-all cursor-pointer ml-auto"
+                      >
+                        Close
+                      </button>
                     </div>
                   </div>
-                </div>
-
-                {/* Modal Footer */}
-                <div className="p-3.5 sm:p-4 bg-zinc-900/90 border-t border-zinc-800 flex items-center justify-between gap-3 shrink-0">
-                  {activeItem.platformUrl ? (
-                    <a
-                      href={activeItem.platformUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-bold text-xs flex items-center gap-1.5 shadow-[0_0_15px_rgba(16,185,129,0.3)] transition-all"
-                    >
-                      <ExternalLink className="w-3.5 h-3.5" />
-                      <span>View Post on Platform</span>
-                    </a>
-                  ) : (
-                    <div />
-                  )}
-
-                  <button
-                    type="button"
-                    onClick={() => setActiveItem(null)}
-                    className="px-4 py-2 rounded-xl bg-zinc-800 hover:bg-zinc-700 text-zinc-300 hover:text-white font-semibold text-xs transition-all cursor-pointer"
-                  >
-                    Close
-                  </button>
                 </div>
               </motion.div>
             </motion.div>

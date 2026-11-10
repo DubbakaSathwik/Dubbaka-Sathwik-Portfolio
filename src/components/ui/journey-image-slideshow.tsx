@@ -6,9 +6,15 @@ interface JourneyImageSlideshowProps {
   images?: string[];
   title?: string;
   className?: string;
+  showThumbnails?: boolean;
 }
 
-export function JourneyImageSlideshow({ images = [], title = '', className }: JourneyImageSlideshowProps) {
+export function JourneyImageSlideshow({
+  images = [],
+  title = '',
+  className,
+  showThumbnails = true,
+}: JourneyImageSlideshowProps) {
   // Filter out empty strings
   const validImages = images.filter((img) => img && img.trim() !== '');
 
@@ -65,7 +71,8 @@ export function JourneyImageSlideshow({ images = [], title = '', className }: Jo
 
   return (
     <>
-      <div
+      <div className="flex flex-col w-full">
+        <div
         onMouseEnter={() => setIsPaused(true)}
         onMouseLeave={() => setIsPaused(false)}
         className={`relative w-full rounded-2xl overflow-hidden bg-black/90 border border-emerald-500/40 group shadow-[0_0_30px_rgba(16,185,129,0.15)] flex items-center justify-center ${
@@ -125,7 +132,7 @@ export function JourneyImageSlideshow({ images = [], title = '', className }: Jo
         {validImages.length === 1 && (
           <div className="absolute bottom-3 left-3 z-30 px-3 py-1.5 rounded-xl bg-black/80 backdrop-blur-md border border-emerald-500/30 text-xs font-mono text-emerald-300 flex items-center gap-2 shadow-lg">
             <ImageIcon className="w-4 h-4 text-emerald-400" />
-            <span>Milestone Photograph</span>
+            <span>High-Res Photo</span>
           </div>
         )}
 
@@ -137,7 +144,7 @@ export function JourneyImageSlideshow({ images = [], title = '', className }: Jo
               type="button"
               onClick={handlePrev}
               aria-label="Previous Photo"
-              className="absolute left-3.5 top-1/2 -translate-y-1/2 z-30 p-3 rounded-2xl bg-black/80 hover:bg-emerald-600 text-white border border-emerald-500/50 backdrop-blur-md transition-all shadow-xl hover:scale-110 active:scale-95"
+              className="absolute left-3.5 top-1/2 -translate-y-1/2 z-30 p-3 rounded-2xl bg-black/80 hover:bg-emerald-600 text-white border border-emerald-500/50 backdrop-blur-md transition-all shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
             >
               <ChevronLeft className="w-6 h-6 text-emerald-300" />
             </button>
@@ -147,7 +154,7 @@ export function JourneyImageSlideshow({ images = [], title = '', className }: Jo
               type="button"
               onClick={handleNext}
               aria-label="Next Photo"
-              className="absolute right-3.5 top-1/2 -translate-y-1/2 z-30 p-3 rounded-2xl bg-black/80 hover:bg-emerald-600 text-white border border-emerald-500/50 backdrop-blur-md transition-all shadow-xl hover:scale-110 active:scale-95"
+              className="absolute right-3.5 top-1/2 -translate-y-1/2 z-30 p-3 rounded-2xl bg-black/80 hover:bg-emerald-600 text-white border border-emerald-500/50 backdrop-blur-md transition-all shadow-xl hover:scale-110 active:scale-95 cursor-pointer"
             >
               <ChevronRight className="w-6 h-6 text-emerald-300" />
             </button>
@@ -164,7 +171,7 @@ export function JourneyImageSlideshow({ images = [], title = '', className }: Jo
                       const dir = idx >= currentIndex ? 1 : -1;
                       setPage([idx, dir]);
                     }}
-                    className={`h-2 rounded-full transition-all pointer-events-auto ${
+                    className={`h-2 rounded-full transition-all pointer-events-auto cursor-pointer ${
                       idx === currentIndex
                         ? 'w-6 bg-emerald-400 shadow-[0_0_10px_rgba(52,211,153,1)]'
                         : 'w-2 bg-zinc-600 hover:bg-zinc-400'
@@ -181,6 +188,31 @@ export function JourneyImageSlideshow({ images = [], title = '', className }: Jo
           </>
         )}
       </div>
+
+      {/* Multiple Photos Switcher Strip */}
+      {showThumbnails && validImages.length > 1 && (
+        <div className="mt-3 p-2 bg-zinc-900/90 rounded-xl border border-zinc-800 flex items-center gap-2 overflow-x-auto shrink-0 custom-scrollbar">
+          {validImages.map((imgUrl, i) => (
+            <button
+              key={i}
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                const dir = i >= currentIndex ? 1 : -1;
+                setPage([i, dir]);
+              }}
+              className={`relative aspect-[16/10] w-14 sm:w-16 rounded-lg overflow-hidden border transition-all cursor-pointer shrink-0 ${
+                currentIndex === i
+                  ? 'border-emerald-500 ring-2 ring-emerald-500/40 opacity-100 scale-105 shadow-md'
+                  : 'border-zinc-800 opacity-60 hover:opacity-100 hover:border-zinc-700'
+              }`}
+            >
+              <img src={imgUrl} alt="" className="w-full h-full object-cover" />
+            </button>
+          ))}
+        </div>
+      )}
+    </div>
 
       {/* FULLSCREEN LIGHTBOX MODAL */}
       <AnimatePresence>

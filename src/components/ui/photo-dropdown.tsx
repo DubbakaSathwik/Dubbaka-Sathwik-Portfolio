@@ -1,5 +1,23 @@
 import React, { useRef, useState } from 'react';
-import { Upload, Image as ImageIcon, Check, Trash2, HardDrive, Sparkles, FolderOpen, ChevronLeft, ChevronRight, Plus, Eye } from 'lucide-react';
+import {
+  Upload,
+  Image as ImageIcon,
+  Check,
+  Trash2,
+  HardDrive,
+  Sparkles,
+  FolderOpen,
+  ChevronLeft,
+  ChevronRight,
+  Plus,
+  Eye,
+  Zap,
+  Sliders,
+  Gauge,
+  CheckCircle2,
+  RefreshCw,
+  Info,
+} from 'lucide-react';
 
 export interface PresetPhoto {
   label: string;
@@ -120,6 +138,21 @@ export function PhotoDropdownSelector({
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const [previewModalUrl, setPreviewModalUrl] = useState<string | null>(null);
 
+  // Image Compression Suite State
+  const [compressOnUpload, setCompressOnUpload] = useState<boolean>(true);
+  const [compressionMode, setCompressionMode] = useState<'balanced' | 'high' | 'compact' | 'custom'>('balanced');
+  const [customQuality, setCustomQuality] = useState<number>(75);
+  const [customMaxDim, setCustomMaxDim] = useState<number>(1280);
+  const [isCompressingExisting, setIsCompressingExisting] = useState<boolean>(false);
+  const [showCompressionSettings, setShowCompressionSettings] = useState<boolean>(false);
+  const [compressionFeedback, setCompressionFeedback] = useState<{
+    message: string;
+    originalMb: string;
+    compressedMb: string;
+    percentSaved: number;
+    count: number;
+  } | null>(null);
+
   // Helper to append a single photo URL to existing list without duplicates
   const addPhotoToList = (url: string, sourceLabel: string) => {
     if (!url) return;
@@ -208,6 +241,39 @@ export function PhotoDropdownSelector({
     });
   };
 
+  // Helper to re-compress an existing image URL via canvas
+  const compressImageUrl = (url: string, maxWidth = 1280, maxHeight = 1280, quality = 0.75): Promise<string> => {
+    return new Promise((resolve) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        let width = img.width;
+        let height = img.height;
+        if (width > maxWidth || height > maxHeight) {
+          if (width > height) {
+            height = Math.round((height * maxWidth) / width);
+            width = maxWidth;
+          } else {
+            width = Math.round((width * maxHeight) / height);
+            height = maxHeight;
+          }
+        }
+        const canvas = document.createElement('canvas');
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } else {
+          resolve(url);
+        }
+      };
+      img.onerror = () => resolve(url);
+      img.src = url;
+    });
+  };
+
   // Helper to upload image to server endpoint or fallback to data URL
   const uploadToServerOrFallback = async (fileName: string, dataUrl: string): Promise<string> => {
     if (!dataUrl || !dataUrl.startsWith('data:')) return dataUrl;
@@ -245,21 +311,125 @@ export function PhotoDropdownSelector({
     return dataUrl;
   };
 
+  // Get active compression settings
+  const getActiveCompressionSettings = () => {
+    if (!compressOnUpload) {
+      return { maxDim: 2560, quality: 0.98, enabled: false };
+    }
+    switch (compressionMode) {
+      case 'compact':
+        return { maxDim: 960, quality: 0.55, enabled: true };
+      case 'high':
+        return { maxDim: 1920, quality: 0.88, enabled: true };
+      case 'custom':
+        return { maxDim: customMaxDim, quality: customQuality / 100, enabled: true };
+      case 'balanced':
+      default:
+        return { maxDim: 1280, quality: 0.75, enabled: true };
+    }
+  };
+
+  // Compress attached photos in place
+  const handleCompressAttachedPhotos = async () => {
+    if (currentPhotos.length === 0 || isCompressingExisting) return;
+    setIsCompressingExisting(true);
+    try {
+      const settings = getActiveCompressionSettings();
+      let totalEstimatedOrig = 0;
+      let totalCompressed = 0;
+
+      const compressedList: string[] = [];
+      for (let i = 0; i < currentPhotos.length; i++) {
+        const url = currentPhotos[i];
+        try {
+          const compressedDataUrl = await compressImageUrl(url, settings.maxDim, settings.maxDim, settings.quality);
+          if (compressedDataUrl && compressedDataUrl.startsWith('data:')) {
+            const compBytes = Math.round((compressedDataUrl.length * 3) / 4);
+            const origEstimate = Math.max(compBytes * 3, 500 * 1024);
+            totalEstimatedOrig += origEstimate;
+            totalCompressed += compBytes;
+
+            const fileName = `optimized_${Date.now()}_${i + 1}.jpg`;
+            const uploaded = await uploadToServerOrFallback(fileName, compressedDataUrl);
+            compressedList.push(uploaded);
+          } else {
+            compressedList.push(url);
+          }
+        } catch (e) {
+          compressedList.push(url);
+        }
+      }
+
+      if (onUpdatePhotoList) {
+        onUpdatePhotoList(compressedList);
+      }
+
+      const percentSaved =
+        totalEstimatedOrig > 0
+          ? Math.max(0, Math.min(99, Math.round((1 - totalCompressed / totalEstimatedOrig) * 1000) / 10))
+          : 0;
+
+      setCompressionFeedback({
+        message: `Successfully compressed ${currentPhotos.length} photo${currentPhotos.length > 1 ? 's' : ''}`,
+        originalMb: (totalEstimatedOrig / (1024 * 1024)).toFixed(2),
+        compressedMb: (totalCompressed / (1024 * 1024)).toFixed(2),
+        percentSaved,
+        count: currentPhotos.length,
+      });
+
+      setLastAddedLabel(`Compressed ${currentPhotos.length} photos`);
+      setTimeout(() => setLastAddedLabel(''), 4000);
+    } catch (e) {
+      console.warn('Failed to compress existing photos:', e);
+    } finally {
+      setIsCompressingExisting(false);
+    }
+  };
+
   // Process files from input or drop in batch mode
   const processFiles = async (files: FileList | File[]) => {
     const fileList = Array.from(files).filter((file) => file.type.startsWith('image/'));
     if (fileList.length === 0) return;
 
+    const settings = getActiveCompressionSettings();
+    let totalRawBytes = 0;
+    fileList.forEach((f) => {
+      totalRawBytes += f.size;
+    });
+
     const readPromises = fileList.map(async (file) => {
-      const maxDim = multilineMode ? 1200 : 800;
-      const compressedDataUrl = await compressImageFile(file, maxDim, maxDim, 0.82);
+      const compressedDataUrl = settings.enabled
+        ? await compressImageFile(file, settings.maxDim, settings.maxDim, settings.quality)
+        : await new Promise<string>((res) => {
+            const r = new FileReader();
+            r.onload = (e) => res((e.target?.result as string) || '');
+            r.readAsDataURL(file);
+          });
+
       const finalUrl = await uploadToServerOrFallback(file.name, compressedDataUrl);
-      return { name: file.name, dataUrl: finalUrl };
+      const byteLen = Math.round((compressedDataUrl.length * 3) / 4);
+      return { name: file.name, dataUrl: finalUrl, byteLen };
     });
 
     const results = await Promise.all(readPromises);
     const validResults = results.filter((r) => r.dataUrl && r.dataUrl.length > 0);
     if (validResults.length === 0) return;
+
+    let totalCompressedBytes = 0;
+    validResults.forEach((r) => {
+      totalCompressedBytes += r.byteLen;
+    });
+
+    if (settings.enabled && totalRawBytes > 0) {
+      const savedPct = Math.max(0, Math.min(99, Math.round((1 - totalCompressedBytes / totalRawBytes) * 1000) / 10));
+      setCompressionFeedback({
+        message: `Compressed ${validResults.length} uploaded photo${validResults.length > 1 ? 's' : ''}`,
+        originalMb: (totalRawBytes / (1024 * 1024)).toFixed(2),
+        compressedMb: (totalCompressedBytes / (1024 * 1024)).toFixed(2),
+        percentSaved: savedPct,
+        count: validResults.length,
+      });
+    }
 
     const newDeviceItems: DevicePhotoItem[] = validResults.map((r) => ({
       id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
@@ -446,6 +616,175 @@ export function PhotoDropdownSelector({
           📷 No photos attached yet. Select device photo file(s) or options below to add.
         </div>
       )}
+
+      {/* 1b. IMAGE COMPRESSION OPTIMIZER & STORAGE SUITE */}
+      <div className="p-3 rounded-xl bg-zinc-900/90 border border-emerald-500/30 space-y-2.5 shadow-inner">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <span className="p-1 rounded-lg bg-emerald-950 text-emerald-400 border border-emerald-500/40">
+              <Zap className="w-3.5 h-3.5" />
+            </span>
+            <div className="flex flex-col">
+              <span className="text-xs font-mono font-bold text-zinc-200 flex items-center gap-1.5">
+                Image Compression
+                <span className={`px-1.5 py-0.2 rounded text-[9px] font-mono ${compressOnUpload ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/40' : 'bg-zinc-800 text-zinc-400'}`}>
+                  {compressOnUpload ? 'ACTIVE' : 'OFF'}
+                </span>
+              </span>
+              <span className="text-[10px] text-zinc-400">
+                {compressOnUpload
+                  ? compressionMode === 'balanced'
+                    ? 'Balanced (1280px • 75% quality • ~85% space saved)'
+                    : compressionMode === 'high'
+                    ? 'High Detail (1920px • 88% quality • ~65% saved)'
+                    : compressionMode === 'compact'
+                    ? 'Ultra Compact (960px • 55% quality • ~95% saved)'
+                    : `Custom (${customMaxDim}px • ${customQuality}% quality)`
+                  : 'Images uploaded in original raw resolution'}
+              </span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* Toggle Enable */}
+            <label className="flex items-center gap-1.5 cursor-pointer text-xs font-mono text-zinc-300">
+              <input
+                type="checkbox"
+                checked={compressOnUpload}
+                onChange={(e) => setCompressOnUpload(e.target.checked)}
+                className="w-3.5 h-3.5 rounded accent-emerald-500 cursor-pointer"
+              />
+              <span className="text-[11px] text-zinc-300">Compress</span>
+            </label>
+
+            {/* Custom Settings Gear */}
+            {compressOnUpload && (
+              <button
+                type="button"
+                onClick={() => setShowCompressionSettings(!showCompressionSettings)}
+                className={`p-1.5 rounded-lg border text-xs font-mono transition-all cursor-pointer ${
+                  showCompressionSettings
+                    ? 'bg-emerald-950 text-emerald-300 border-emerald-500/50'
+                    : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-zinc-700'
+                }`}
+                title="Configure custom compression presets"
+              >
+                <Sliders className="w-3 h-3" />
+              </button>
+            )}
+
+            {/* In-place Compress Attached Photos Button */}
+            {currentPhotos.length > 0 && onUpdatePhotoList && (
+              <button
+                type="button"
+                disabled={isCompressingExisting}
+                onClick={handleCompressAttachedPhotos}
+                className="px-2.5 py-1 rounded-lg bg-emerald-600/90 hover:bg-emerald-500 disabled:opacity-50 text-white font-mono text-[11px] font-semibold flex items-center gap-1.5 shadow-md hover:shadow-emerald-900/40 transition-all cursor-pointer"
+                title="Compress all currently attached photos right now"
+              >
+                {isCompressingExisting ? (
+                  <>
+                    <RefreshCw className="w-3 h-3 animate-spin" />
+                    <span>Compressing...</span>
+                  </>
+                ) : (
+                  <>
+                    <Zap className="w-3 h-3 text-emerald-200" />
+                    <span>Compress Attached ({currentPhotos.length})</span>
+                  </>
+                )}
+              </button>
+            )}
+          </div>
+        </div>
+
+        {/* Compression Presets Pills */}
+        {compressOnUpload && (
+          <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-zinc-800/80">
+            <span className="text-[10px] font-mono text-zinc-400 mr-1">Preset:</span>
+            {[
+              { id: 'balanced', label: 'Balanced (Recommended)', desc: '1280px / 75%' },
+              { id: 'high', label: 'High Detail', desc: '1920px / 88%' },
+              { id: 'compact', label: 'Ultra Compact', desc: '960px / 55%' },
+              { id: 'custom', label: 'Custom...', desc: `${customQuality}% / ${customMaxDim}px` },
+            ].map((preset) => {
+              const isSelected = compressionMode === preset.id;
+              return (
+                <button
+                  key={preset.id}
+                  type="button"
+                  onClick={() => {
+                    setCompressionMode(preset.id as any);
+                    if (preset.id === 'custom') {
+                      setShowCompressionSettings(true);
+                    }
+                  }}
+                  className={`px-2 py-1 rounded-lg text-[10px] font-mono transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-emerald-950 text-emerald-300 font-bold border border-emerald-500/50 shadow-sm'
+                      : 'bg-zinc-800 hover:bg-zinc-750 text-zinc-400 hover:text-zinc-200 border border-zinc-800'
+                  }`}
+                >
+                  {preset.label}
+                </button>
+              );
+            })}
+          </div>
+        )}
+
+        {/* Custom Sliders Panel */}
+        {compressOnUpload && showCompressionSettings && (
+          <div className="p-2.5 rounded-lg bg-black/60 border border-zinc-800 space-y-2 mt-1 animate-fadeIn">
+            <div className="flex items-center justify-between text-[11px] font-mono text-zinc-300">
+              <span>Quality Compression: {customQuality}%</span>
+              <span className="text-zinc-500">Lower = smaller file size</span>
+            </div>
+            <input
+              type="range"
+              min={35}
+              max={95}
+              value={customQuality}
+              onChange={(e) => {
+                setCustomQuality(parseInt(e.target.value, 10));
+                setCompressionMode('custom');
+              }}
+              className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+            />
+
+            <div className="flex items-center justify-between text-[11px] font-mono text-zinc-300 pt-1">
+              <span>Max Dimension Limit: {customMaxDim}px</span>
+              <span className="text-zinc-500">Preserves aspect ratio</span>
+            </div>
+            <input
+              type="range"
+              min={600}
+              max={2560}
+              step={80}
+              value={customMaxDim}
+              onChange={(e) => {
+                setCustomMaxDim(parseInt(e.target.value, 10));
+                setCompressionMode('custom');
+              }}
+              className="w-full accent-emerald-500 cursor-pointer h-1.5 bg-zinc-800 rounded-lg"
+            />
+          </div>
+        )}
+
+        {/* Compression Feedback Banner */}
+        {compressionFeedback && (
+          <div className="p-2 rounded-lg bg-emerald-950/60 border border-emerald-500/40 flex items-center justify-between gap-2 text-xs font-mono text-emerald-300 animate-fadeIn">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+              <span>
+                {compressionFeedback.message}: <span className="line-through text-zinc-400">{compressionFeedback.originalMb} MB</span> ➔ <span className="font-bold text-white">{compressionFeedback.compressedMb} MB</span>
+              </span>
+            </div>
+            <span className="px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200 text-[10px] font-bold border border-emerald-500/30 shrink-0">
+              -{compressionFeedback.percentSaved}% Space Saved
+            </span>
+          </div>
+        )}
+      </div>
 
       {/* 2. DEVICE FILE INPUT & DRAG/DROP ZONE */}
       <div

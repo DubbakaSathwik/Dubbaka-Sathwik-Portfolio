@@ -28,8 +28,8 @@ function saveDiskLogs(logs: any[]) {
   }
 }
 
-// GET /api/logs - Fetch recent activity logs
-router.get('/', async (req: Request, res: Response): Promise<void> => {
+// GET /api/logs - Fetch recent activity logs (Protected Admin)
+router.get('/', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
     const limit = Math.min(parseInt((req.query.limit as string) || '100', 10), 500);
     const category = req.query.category as string;

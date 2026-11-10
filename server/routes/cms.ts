@@ -82,10 +82,96 @@ function loadLocalDiskData(): any {
   return null;
 }
 
+function slugifyProjectTitle(title: string): string {
+  if (!title) return 'project';
+  const trimmed = title.trim();
+  const lower = trimmed.toLowerCase();
+  if (lower.startsWith('nexora')) return 'nexora';
+  if (lower.startsWith('intelli')) return 'intelli-query';
+  if (lower.startsWith('foodflow')) return 'foodflow';
+  if (lower.startsWith('ai hiring') || lower.startsWith('ai-hiring')) return 'ai-hiring';
+  if (lower.startsWith('news without')) return 'news';
+  if (lower.startsWith('vaultflow')) return 'vaultflow';
+  if (lower.startsWith('cobra')) return 'cobra';
+  if (lower.startsWith('medlens')) return 'medlens';
+
+  const cleaned = lower.replace(/[^a-z0-9\s-_]/g, '').trim();
+  const tokens = cleaned.split(/[\s_]+/).filter(Boolean);
+  if (tokens.length === 0) return 'project';
+  let first = tokens[0];
+  if (first.includes('-')) {
+    const sub = first.split('-')[0];
+    if (sub && sub.length >= 3) first = sub;
+  }
+  if (first.length <= 2 && tokens.length > 1) {
+    return `${first}-${tokens[1]}`;
+  }
+  return first;
+}
+
+function generateCardIdNo(title: string, seq: number): string {
+  const slug = slugifyProjectTitle(title);
+  const numStr = String(seq).padStart(3, '0');
+  return `{${slug}-${numStr}}`;
+}
+
 // Helper to safely write clean data directly to src/seed_data.json code & disk backup
 export function saveLocalDiskData(payload: any): any {
   try {
     const sanitized = processBase64AndSanitize(payload);
+
+    // Enforce unique Card ID No. {slug-0XX} and sequenceNumber for all projects
+    if (Array.isArray(sanitized.projects)) {
+      sanitized.projects = sanitized.projects.map((p: any, idx: number) => {
+        const seq = idx + 1;
+        const cardIdNo = p.cardIdNo && p.cardIdNo.trim() ? p.cardIdNo.trim() : generateCardIdNo(p.title, seq);
+        return {
+          ...p,
+          cardIdNo,
+          sequenceNumber: seq,
+        };
+      });
+
+      // Construct the canonical projectsSequence structure
+      const sequenceData = {
+        version: '1.0.0',
+        lastUpdated: new Date().toISOString(),
+        totalProjects: sanitized.projects.length,
+        sequence: sanitized.projects.map((p: any, idx: number) => ({
+          position: idx + 1,
+          cardIdNo: p.cardIdNo,
+          id: p.id,
+          title: p.title,
+          category: p.category,
+          featured: Boolean(p.featured),
+          status: p.status || 'Completed',
+        })),
+        backupRules: {
+          preserveSequenceOnBackup: true,
+          autoAssignCardId: true,
+          snapshotSequenceFile: true,
+          dualStorageParity: true,
+        },
+        pushRules: {
+          gitPushSequenceSection: true,
+          gitCommitSequenceMessage: true,
+          safeTreePush: true,
+        },
+      };
+
+      sanitized.projectsSequence = sequenceData;
+
+      // Save projects_sequence.json in src, root, and public
+      const seqJsonStr = JSON.stringify(sequenceData, null, 2);
+      try {
+        fs.writeFileSync(path.join(process.cwd(), 'src', 'projects_sequence.json'), seqJsonStr, 'utf-8');
+        fs.writeFileSync(path.join(process.cwd(), 'projects_sequence.json'), seqJsonStr, 'utf-8');
+        fs.writeFileSync(path.join(process.cwd(), 'public', 'projects_sequence.json'), seqJsonStr, 'utf-8');
+      } catch (e) {
+        console.warn('[CMS Route] Error saving sequence files:', e);
+      }
+    }
+
     const jsonStr = JSON.stringify(sanitized, null, 2);
 
     // 1. Persist directly into source code seed data (src/seed_data.json)
@@ -343,6 +429,53 @@ router.get('/backup/download', async (req: Request, res: Response): Promise<void
       success: false,
       error: { code: 'EXPORT_FAILED', message: err?.message || 'Backup export failed' },
     });
+  }
+});
+
+// GET /api/cms/sequence - Retrieve the canonical projects sequence & rules data
+router.get('/sequence', async (req: Request, res: Response): Promise<void> => {
+  try {
+    const seqPath = path.join(process.cwd(), 'src', 'projects_sequence.json');
+    if (fs.existsSync(seqPath)) {
+      const content = fs.readFileSync(seqPath, 'utf-8');
+      res.json({ success: true, sequenceData: JSON.parse(content) });
+      return;
+    }
+    const currentData = loadLocalDiskData() || initialCMSData;
+    const sanitized = saveLocalDiskData(currentData);
+    res.json({ success: true, sequenceData: sanitized.projectsSequence });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to fetch sequence' });
+  }
+});
+
+// POST /api/cms/sequence/reindex - Re-indexes all project card IDs and persists to disk and DB
+router.post('/sequence/reindex', requireAuth, async (req: Request, res: Response): Promise<void> => {
+  try {
+    const currentData = loadLocalDiskData() || initialCMSData;
+    if (Array.isArray(currentData.projects)) {
+      currentData.projects = currentData.projects.map((p: any, idx: number) => {
+        const seq = idx + 1;
+        return {
+          ...p,
+          cardIdNo: generateCardIdNo(p.title, seq),
+          sequenceNumber: seq,
+        };
+      });
+      const saved = saveLocalDiskData(currentData);
+      if (isDatabaseConnected()) {
+        await CMSModel.findOneAndUpdate(
+          { key: 'portfolio_cms_v1' },
+          { schemaVersion: 1, version: Date.now(), data: saved, updatedAt: new Date() },
+          { upsert: true }
+        ).exec();
+      }
+      res.json({ success: true, sequenceData: saved.projectsSequence, projects: saved.projects });
+      return;
+    }
+    res.status(400).json({ success: false, error: 'No projects found to re-index' });
+  } catch (err: any) {
+    res.status(500).json({ success: false, error: err?.message || 'Failed to re-index sequence' });
   }
 });
 

@@ -141,8 +141,9 @@ export const initialIntroData: IntroData = {
     'IEEE Coordinator',
     'Student Coordinator',
   ],
-  wordsSpeedSeconds: 4.8,
-  nameDelaySeconds: 1.2,
+  // 10-second sequence defaults (previous 7s: 1.4/0.35; original 21s: 4.8/1.2)
+  wordsSpeedSeconds: 2.6,
+  nameDelaySeconds: 0.8,
   ...((seedData as any).intro || {}),
 };
 

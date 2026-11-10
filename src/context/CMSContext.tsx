@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from 'react';
 import {
   CMSData,
   HeroData,
@@ -13,17 +13,37 @@ import {
   ContactInfo,
   ContactMessage,
   IntroData,
+  BackupRulesConfig,
+  PushRulesConfig,
+  SequenceSectionData,
 } from '../types';
 import { initialCMSData } from '../data';
 import { sendTelegramConsoleLog } from '../utils/telegram';
+import {
+  getProjectCardId,
+  getItemCardId,
+  formatCardId,
+  generateCardIdNo,
+  buildSequenceSection,
+  reindexProjectsWithCardIds,
+  reindexCreativeItemsWithCardIds,
+  reindexGalleryItemsWithCardIds,
+  DEFAULT_BACKUP_RULES,
+  DEFAULT_PUSH_RULES,
+} from '../utils/card-id';
+import { auth, googleProvider, isAuthorizedAdmin } from '../lib/firebase';
+import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
 
 interface CMSContextType {
   data: CMSData & { contactMessages: ContactMessage[] };
   isLoading: boolean;
   dbConnected: boolean;
   isAuthenticated: boolean;
+  isAdmin: boolean;
+  currentUser: { email?: string | null; displayName?: string | null; photoURL?: string | null; uid?: string } | null;
   authToken: string | null;
-  login: (password: string) => Promise<{ success: boolean; message: string }>;
+  login: (password?: string) => Promise<{ success: boolean; message: string }>;
+  loginWithGoogle: () => Promise<{ success: boolean; message: string; isAdmin?: boolean }>;
   logout: () => void;
 
   updateHero: (hero: HeroData) => void;
@@ -38,6 +58,12 @@ interface CMSContextType {
   reorderProjectItem: (index: number, direction: 'up' | 'down') => void;
   moveProjectItem: (fromIndex: number, toIndex: number) => void;
   swapProjectItems: (index1: number, index2: number) => void;
+  reindexAllProjectCardIds: () => void;
+  updateBackupRules: (rules: Partial<BackupRulesConfig>) => void;
+  updatePushRules: (rules: Partial<PushRulesConfig>) => void;
+  backupRules: BackupRulesConfig;
+  pushRules: PushRulesConfig;
+  projectsSequence: SequenceSectionData | null;
 
   updateCreativePortfolio: (items: CreativeItem[]) => void;
   addCreativeItem: (item: any) => void;
@@ -46,6 +72,7 @@ interface CMSContextType {
   reorderCreativeItem: (index: number, direction: 'up' | 'down') => void;
   moveCreativeItem: (fromIndex: number, toIndex: number) => void;
   swapCreativeItems: (index1: number, index2: number) => void;
+  reindexAllCreativeCardIds: () => void;
 
   updateJourney: (journey: JourneyItem[]) => void;
   addJourneyItem: (item: any) => void;
@@ -62,6 +89,7 @@ interface CMSContextType {
   reorderGalleryItem: (index: number, direction: 'up' | 'down') => void;
   moveGalleryItem: (fromIndex: number, toIndex: number) => void;
   swapGalleryItems: (index1: number, index2: number) => void;
+  reindexAllGalleryCardIds: () => void;
 
   updateBlogs: (blogs: BlogPost[]) => void;
   addBlogPost: (post: any) => void;
@@ -99,6 +127,16 @@ interface CMSContextType {
   staticBackupStats: any;
   staticBackupFiles: any[];
   refreshStaticBackupInfo: () => Promise<void>;
+
+  // GitHub Live Synchronization Methods
+  syncToGitHub: (
+    commitMessage?: string,
+    explicitToken?: string
+  ) => Promise<{ success: boolean; message: string; commit?: string; error?: string }>;
+  isGitSyncing: boolean;
+  lastGitCommit: string | null;
+  gitCardOrderPending: boolean;
+  setGitCardOrderPending: (val: boolean) => void;
 }
 
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
@@ -292,14 +330,43 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     } catch (e) {}
   }, [data]);
 
-  // Authentication State: Strictly locked on every page reload
+  // Authentication State with Firebase Google Auth & Admin Verification
+  const [firebaseUser, setFirebaseUser] = useState<User | null>(() => auth.currentUser);
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => isAuthorizedAdmin(auth.currentUser?.email));
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => Boolean(auth.currentUser));
+
   const [authToken, setAuthToken] = useState<string | null>(() => {
     try {
-      localStorage.removeItem(AUTH_STORAGE_KEY);
-    } catch (e) {}
-    return null;
+      return typeof window !== 'undefined' ? localStorage.getItem(AUTH_STORAGE_KEY) : null;
+    } catch (e) {
+      return null;
+    }
   });
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+
+  // Track Firebase Auth state changes
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      setFirebaseUser(user);
+      const isUserAdmin = isAuthorizedAdmin(user?.email);
+      setIsAdmin(isUserAdmin);
+      setIsAuthenticated(Boolean(user));
+
+      if (user) {
+        try {
+          const token = await user.getIdToken();
+          setAuthToken(token);
+          localStorage.setItem(AUTH_STORAGE_KEY, token);
+        } catch (e) {}
+      } else {
+        setAuthToken(null);
+        try {
+          localStorage.removeItem(AUTH_STORAGE_KEY);
+        } catch (e) {}
+      }
+    });
+
+    return () => unsubscribe();
+  }, []);
 
   // Modals state
   const [isResumeModalOpen, setIsResumeModalOpenState] = useState(false);
@@ -313,49 +380,135 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
-  // Login handler
-  const login = async (password: string): Promise<{ success: boolean; message: string }> => {
+  // Google Sign-In handler
+  const loginWithGoogle = async (): Promise<{ success: boolean; message: string; isAdmin?: boolean }> => {
     try {
-      const res = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ password }),
-      });
-      const json = await res.json();
+      const result = await signInWithPopup(auth, googleProvider);
+      const user = result.user;
+      const isUserAdmin = isAuthorizedAdmin(user.email);
+      setIsAdmin(isUserAdmin);
+      setIsAuthenticated(true);
+      setFirebaseUser(user);
 
-      if (json.success && json.token) {
-        setAuthToken(json.token);
-        setIsAuthenticated(true);
-        return { success: true, message: 'Admin authentication successful' };
+      const token = await user.getIdToken();
+      setAuthToken(token);
+      try {
+        localStorage.setItem(AUTH_STORAGE_KEY, token);
+      } catch (e) {}
+
+      if (isUserAdmin) {
+        return {
+          success: true,
+          message: `Welcome back, Dubbaka Sathwik! Admin access granted.`,
+          isAdmin: true,
+        };
       } else {
         return {
-          success: false,
-          message: json.error?.message || 'Incorrect Password. Please try again.',
+          success: true,
+          message: `Signed in as ${user.email}. Unauthorized for CMS admin controls.`,
+          isAdmin: false,
         };
       }
     } catch (err: any) {
+      console.error('Google Sign-In Error:', err);
       return {
         success: false,
-        message: err?.message || 'Server connection error during login.',
+        message: err?.message || 'Google Sign-In was cancelled or failed.',
+        isAdmin: false,
       };
     }
   };
 
+  // Compatibility login fallback
+  const login = async (_password?: string): Promise<{ success: boolean; message: string }> => {
+    const res = await loginWithGoogle();
+    return {
+      success: res.success && !!res.isAdmin,
+      message: res.message,
+    };
+  };
+
   // Logout handler
-  const logout = () => {
-    setAuthToken(null);
+  const logout = async () => {
+    try {
+      await signOut(auth);
+    } catch (e) {}
+    setFirebaseUser(null);
+    setIsAdmin(false);
     setIsAuthenticated(false);
+    setAuthToken(null);
     try {
       localStorage.removeItem(AUTH_STORAGE_KEY);
     } catch (e) {}
-    fetch('/api/auth/logout', { method: 'POST' }).catch(() => {});
   };
 
   // Static Backup State
   const [staticBackupStats, setStaticBackupStats] = useState<any>(null);
   const [staticBackupFiles, setStaticBackupFiles] = useState<any[]>([]);
 
+  // Backup & Push Rules state
+  const [backupRules, setBackupRules] = useState<BackupRulesConfig>(DEFAULT_BACKUP_RULES);
+  const [pushRules, setPushRules] = useState<PushRulesConfig>(DEFAULT_PUSH_RULES);
+
+  const updateBackupRules = (newRules: Partial<BackupRulesConfig>) => {
+    setBackupRules((prev) => {
+      const updated = { ...prev, ...newRules };
+      setData((prevData) => {
+        const nextSeq = buildSequenceSection(prevData.projects || [], updated, pushRules);
+        const next = { ...prevData, projectsSequence: nextSeq };
+        persistCMSDataInstantly(next);
+        return next;
+      });
+      return updated;
+    });
+  };
+
+  const updatePushRules = (newRules: Partial<PushRulesConfig>) => {
+    setPushRules((prev) => {
+      const updated = { ...prev, ...newRules };
+      setData((prevData) => {
+        const nextSeq = buildSequenceSection(prevData.projects || [], backupRules, updated);
+        const next = { ...prevData, projectsSequence: nextSeq };
+        persistCMSDataInstantly(next);
+        return next;
+      });
+      return updated;
+    });
+  };
+
   const formatCMSPayload = (rawData: any): CMSData => {
+    const rawProjects = Array.isArray(rawData.projects) && rawData.projects.length >= initialCMSData.projects.length
+      ? rawData.projects
+      : initialCMSData.projects;
+
+    const formattedProjects: Project[] = rawProjects.map((p: any, idx: number) => ({
+      ...p,
+      cardIdNo: getProjectCardId(p, idx),
+      sequenceNumber: typeof p.sequenceNumber === 'number' ? p.sequenceNumber : idx + 1,
+    }));
+
+    const rawCreative = Array.isArray(rawData.creativePortfolio) && rawData.creativePortfolio.length >= initialCMSData.creativePortfolio.length
+      ? rawData.creativePortfolio
+      : initialCMSData.creativePortfolio;
+
+    const formattedCreative: CreativeItem[] = rawCreative.map((c: any, idx: number) => ({
+      ...c,
+      cardIdNo: getItemCardId(c, idx, 'creative'),
+      sequenceNumber: typeof c.sequenceNumber === 'number' ? c.sequenceNumber : idx + 1,
+    }));
+
+    const rawGallery = Array.isArray(rawData.gallery) && rawData.gallery.length >= initialCMSData.gallery.length
+      ? rawData.gallery
+      : initialCMSData.gallery;
+
+    const formattedGallery: GalleryItem[] = rawGallery.map((g: any, idx: number) => ({
+      ...g,
+      cardIdNo: getItemCardId(g, idx, 'cert'),
+      sequenceNumber: typeof g.sequenceNumber === 'number' ? g.sequenceNumber : idx + 1,
+    }));
+
+    const sequenceSection = rawData.projectsSequence || buildSequenceSection(formattedProjects, backupRules, pushRules);
+
     return {
       hero: { ...initialCMSData.hero, ...(rawData.hero || {}) },
       about: {
@@ -369,18 +522,10 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         Array.isArray(rawData.skills) && rawData.skills.length >= initialCMSData.skills.length
           ? rawData.skills
           : initialCMSData.skills,
-      projects:
-        Array.isArray(rawData.projects) && rawData.projects.length >= initialCMSData.projects.length
-          ? rawData.projects
-          : initialCMSData.projects,
-      creativePortfolio:
-        Array.isArray(rawData.creativePortfolio) && rawData.creativePortfolio.length >= initialCMSData.creativePortfolio.length
-          ? rawData.creativePortfolio
-          : initialCMSData.creativePortfolio,
-      gallery:
-        Array.isArray(rawData.gallery) && rawData.gallery.length >= initialCMSData.gallery.length
-          ? rawData.gallery
-          : initialCMSData.gallery,
+      projects: formattedProjects,
+      projectsSequence: sequenceSection,
+      creativePortfolio: formattedCreative,
+      gallery: formattedGallery,
       journey: sanitizeJourney(
         Array.isArray(rawData.journey) && rawData.journey.length >= initialCMSData.journey.length
           ? rawData.journey
@@ -700,6 +845,78 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // GitHub Live Synchronization State
+  const [isGitSyncing, setIsGitSyncing] = useState<boolean>(false);
+  const [lastGitCommit, setLastGitCommit] = useState<string | null>(null);
+  const [gitCardOrderPending, setGitCardOrderPending] = useState<boolean>(false);
+
+  // Reusable Git Sync Function
+  const syncToGitHub = async (
+    commitMessage?: string,
+    explicitToken?: string
+  ): Promise<{ success: boolean; message: string; commit?: string; error?: string }> => {
+    setIsGitSyncing(true);
+    try {
+      let token = (explicitToken || '').trim();
+      if (!token && typeof window !== 'undefined') {
+        token = (localStorage.getItem('sathwik_git_token') || '').trim();
+      }
+
+      const defaultMsg =
+        commitMessage?.trim() ||
+        `update: reorder technical projects & sync portfolio data (${new Date().toLocaleString('en-US')})`;
+
+      const res = await fetch('/api/github/sync', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
+        },
+        body: JSON.stringify({
+          token: token || undefined,
+          message: defaultMsg,
+          saveToken: Boolean(token),
+          data,
+        }),
+      });
+
+      const json = await res.json();
+      setIsGitSyncing(false);
+
+      if (json.success) {
+        setGitCardOrderPending(false);
+        if (json.commit) {
+          setLastGitCommit(json.commit);
+        }
+        refreshStaticBackupInfo();
+        sendTelegramConsoleLog(
+          'GitHub Sync Pushed',
+          `Git commit ${json.commit || ''} pushed to GitHub repository:\n${defaultMsg}`,
+          'success'
+        );
+        return {
+          success: true,
+          message: json.message || `Pushed commit ${json.commit} to GitHub!`,
+          commit: json.commit,
+        };
+      } else {
+        return {
+          success: false,
+          message: json.message || 'Failed to push to GitHub',
+          error: json.message,
+        };
+      }
+    } catch (err: any) {
+      setIsGitSyncing(false);
+      console.error('[CMSContext] GitHub Sync Error:', err);
+      return {
+        success: false,
+        message: err?.message || 'Network error while syncing with GitHub',
+        error: err?.message,
+      };
+    }
+  };
+
   // Section update handlers
   const updateHero = (hero: HeroData) => {
     setData((prev) => {
@@ -728,6 +945,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     setData((prev) => {
       const next = { ...prev, projects };
       persistCMSDataInstantly(next);
+      setGitCardOrderPending(true);
       return next;
     });
   };
@@ -739,6 +957,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       '/uploads/assets/static_projects_0_thumbnail_ae4790213b.png';
     const newProj: Project = {
       id: 'proj-' + Date.now(),
+      cardIdNo: generateCardIdNo(project.title || 'Untitled', 1),
+      sequenceNumber: 1,
       title: project.title || 'Untitled Project',
       summary: project.summary || project.description || '',
       description: project.description || project.summary || '',
@@ -756,28 +976,62 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       year: project.year || '2026',
     };
     setData((prev) => {
-      const next = { ...prev, projects: [newProj, ...(prev.projects || [])] };
+      const existing = (prev.projects || []).map((p, idx) => ({
+        ...p,
+        sequenceNumber: idx + 2,
+        cardIdNo: p.cardIdNo || getProjectCardId(p, idx + 1),
+      }));
+      const allProjects = [newProj, ...existing];
+      const sequenceSection = buildSequenceSection(allProjects, backupRules, pushRules);
+      const next = { ...prev, projects: allProjects, projectsSequence: sequenceSection };
       persistCMSDataInstantly(next);
+      setGitCardOrderPending(true);
       return next;
     });
   };
   const updateProject = (project: Project) => {
     setData((prev) => {
+      const nextProjects = (prev.projects || []).map((p, idx) => {
+        if (p.id === project.id) {
+          const updatedCardId = project.cardIdNo && project.cardIdNo.trim()
+            ? (project.cardIdNo.trim().startsWith('{') && project.cardIdNo.trim().endsWith('}')
+                ? project.cardIdNo.trim()
+                : `{${project.cardIdNo.trim()}}`)
+            : getProjectCardId(project, idx);
+          return {
+            ...project,
+            cardIdNo: updatedCardId,
+            sequenceNumber: typeof project.sequenceNumber === 'number' ? project.sequenceNumber : idx + 1,
+          };
+        }
+        return p;
+      });
+      const sequenceSection = buildSequenceSection(nextProjects, backupRules, pushRules);
       const next = {
         ...prev,
-        projects: (prev.projects || []).map((p) => (p.id === project.id ? project : p)),
+        projects: nextProjects,
+        projectsSequence: sequenceSection,
       };
       persistCMSDataInstantly(next);
+      setGitCardOrderPending(true);
       return next;
     });
   };
   const deleteProject = (id: string) => {
     setData((prev) => {
+      const deleted = (prev.projects || []).find((p) => p.id === id);
+      const filtered = (prev.projects || []).filter((p) => p.id !== id).map((p, idx) => ({
+        ...p,
+        sequenceNumber: idx + 1,
+      }));
+      const sequenceSection = buildSequenceSection(filtered, backupRules, pushRules);
       const next = {
         ...prev,
-        projects: (prev.projects || []).filter((p) => p.id !== id),
+        projects: filtered,
+        projectsSequence: sequenceSection,
       };
       persistCMSDataInstantly(next);
+      setGitCardOrderPending(true);
       return next;
     });
   };
@@ -788,8 +1042,18 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
       const [moved] = items.splice(index, 1);
       items.splice(targetIndex, 0, moved);
-      const next = { ...prev, projects: items };
+
+      // Re-map sequence numbers and retain/format Card ID No.
+      const updatedProjects = items.map((p, pIdx) => ({
+        ...p,
+        sequenceNumber: pIdx + 1,
+        cardIdNo: getProjectCardId(p, pIdx),
+      }));
+
+      const sequenceSection = buildSequenceSection(updatedProjects, backupRules, pushRules);
+      const next = { ...prev, projects: updatedProjects, projectsSequence: sequenceSection };
       persistCMSDataInstantly(next);
+      setGitCardOrderPending(true);
       return next;
     });
   };
@@ -806,8 +1070,18 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
-      const next = { ...prev, projects: items };
+
+      // Re-map sequence numbers and retain/format Card ID No.
+      const updatedProjects = items.map((p, pIdx) => ({
+        ...p,
+        sequenceNumber: pIdx + 1,
+        cardIdNo: getProjectCardId(p, pIdx),
+      }));
+
+      const sequenceSection = buildSequenceSection(updatedProjects, backupRules, pushRules);
+      const next = { ...prev, projects: updatedProjects, projectsSequence: sequenceSection };
       persistCMSDataInstantly(next);
+      setGitCardOrderPending(true);
       return next;
     });
   };
@@ -818,8 +1092,28 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const temp = items[index1];
       items[index1] = items[index2];
       items[index2] = temp;
-      const next = { ...prev, projects: items };
+
+      // Re-map sequence numbers and retain/format Card ID No.
+      const updatedProjects = items.map((p, pIdx) => ({
+        ...p,
+        sequenceNumber: pIdx + 1,
+        cardIdNo: getProjectCardId(p, pIdx),
+      }));
+
+      const sequenceSection = buildSequenceSection(updatedProjects, backupRules, pushRules);
+      const next = { ...prev, projects: updatedProjects, projectsSequence: sequenceSection };
       persistCMSDataInstantly(next);
+      setGitCardOrderPending(true);
+      return next;
+    });
+  };
+  const reindexAllProjectCardIds = () => {
+    setData((prev) => {
+      const reindexed = reindexProjectsWithCardIds(prev.projects || []);
+      const sequenceSection = buildSequenceSection(reindexed, backupRules, pushRules);
+      const next = { ...prev, projects: reindexed, projectsSequence: sequenceSection };
+      persistCMSDataInstantly(next);
+      setGitCardOrderPending(true);
       return next;
     });
   };
@@ -833,8 +1127,11 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       item.image ||
       (item.images && item.images[0]) ||
       '/uploads/assets/static_creativePortfolio_0_thu_9ebbff8284.jpg';
+    const cardId = item.cardIdNo ? formatCardId(item.cardIdNo) : getItemCardId(item, 0, 'creative');
     const newItem: CreativeItem = {
       id: 'cr-' + Date.now(),
+      cardIdNo: cardId,
+      sequenceNumber: 1,
       title: item.title || 'Untitled Work',
       category: item.category || 'UI/UX',
       thumbnail: firstImg,
@@ -847,22 +1144,45 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       featured: item.featured ?? true,
       status: item.status || 'Published',
     };
-    setData((prev) => ({
-      ...prev,
-      creativePortfolio: [newItem, ...(prev.creativePortfolio || [])],
-    }));
+    setData((prev) => {
+      const updated = [newItem, ...(prev.creativePortfolio || [])].map((c, idx) => ({
+        ...c,
+        sequenceNumber: idx + 1,
+        cardIdNo: getItemCardId(c, idx, 'creative'),
+      }));
+      const next = { ...prev, creativePortfolio: updated };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const updateCreativeItem = (item: CreativeItem) => {
-    setData((prev) => ({
-      ...prev,
-      creativePortfolio: (prev.creativePortfolio || []).map((c) => (c.id === item.id ? item : c)),
-    }));
+    setData((prev) => {
+      const updated = (prev.creativePortfolio || []).map((c, idx) =>
+        c.id === item.id
+          ? {
+              ...item,
+              cardIdNo: item.cardIdNo ? formatCardId(item.cardIdNo) : getItemCardId(item, idx, 'creative'),
+              sequenceNumber: typeof item.sequenceNumber === 'number' ? item.sequenceNumber : idx + 1,
+            }
+          : c
+      );
+      const next = { ...prev, creativePortfolio: updated };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const deleteCreativeItem = (id: string) => {
-    setData((prev) => ({
-      ...prev,
-      creativePortfolio: (prev.creativePortfolio || []).filter((c) => c.id !== id),
-    }));
+    setData((prev) => {
+      const filtered = (prev.creativePortfolio || []).filter((c) => c.id !== id);
+      const updated = filtered.map((c, idx) => ({
+        ...c,
+        sequenceNumber: idx + 1,
+        cardIdNo: getItemCardId(c, idx, 'creative'),
+      }));
+      const next = { ...prev, creativePortfolio: updated };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const reorderCreativeItem = (index: number, direction: 'up' | 'down') => {
     setData((prev) => {
@@ -871,7 +1191,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
       const [moved] = items.splice(index, 1);
       items.splice(targetIndex, 0, moved);
-      const next = { ...prev, creativePortfolio: items };
+      const updated = items.map((c, cIdx) => ({
+        ...c,
+        sequenceNumber: cIdx + 1,
+        cardIdNo: getItemCardId(c, cIdx, 'creative'),
+      }));
+      const next = { ...prev, creativePortfolio: updated };
       persistCMSDataInstantly(next);
       return next;
     });
@@ -889,7 +1214,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
-      const next = { ...prev, creativePortfolio: items };
+      const updated = items.map((c, cIdx) => ({
+        ...c,
+        sequenceNumber: cIdx + 1,
+        cardIdNo: getItemCardId(c, cIdx, 'creative'),
+      }));
+      const next = { ...prev, creativePortfolio: updated };
       persistCMSDataInstantly(next);
       return next;
     });
@@ -901,7 +1231,20 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const temp = items[index1];
       items[index1] = items[index2];
       items[index2] = temp;
-      const next = { ...prev, creativePortfolio: items };
+      const updated = items.map((c, cIdx) => ({
+        ...c,
+        sequenceNumber: cIdx + 1,
+        cardIdNo: getItemCardId(c, cIdx, 'creative'),
+      }));
+      const next = { ...prev, creativePortfolio: updated };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const reindexAllCreativeCardIds = () => {
+    setData((prev) => {
+      const reindexed = reindexCreativeItemsWithCardIds(prev.creativePortfolio || []);
+      const next = { ...prev, creativePortfolio: reindexed };
       persistCMSDataInstantly(next);
       return next;
     });
@@ -1001,8 +1344,11 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       item.image ||
       (item.images && item.images[0]) ||
       '/uploads/assets/static_gallery_0_image_4e182a45cd.jpg';
+    const cardId = item.cardIdNo ? formatCardId(item.cardIdNo) : getItemCardId(item, 0, 'cert');
     const newItem: GalleryItem = {
       id: 'gal-' + Date.now(),
+      cardIdNo: cardId,
+      sequenceNumber: 1,
       title: item.title || 'Certificate / Award',
       category: item.category || 'Certificates',
       description: item.description || '',
@@ -1017,9 +1363,14 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       technologies: item.technologies || [],
     };
     setData((prev) => {
+      const updated = [newItem, ...(prev.gallery || [])].map((g, idx) => ({
+        ...g,
+        sequenceNumber: idx + 1,
+        cardIdNo: getItemCardId(g, idx, 'cert'),
+      }));
       const next = {
         ...prev,
-        gallery: [newItem, ...(prev.gallery || [])],
+        gallery: updated,
       };
       persistCMSDataInstantly(next);
       return next;
@@ -1027,9 +1378,18 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const updateGalleryItem = (item: GalleryItem) => {
     setData((prev) => {
+      const updated = (prev.gallery || []).map((g, idx) =>
+        g.id === item.id
+          ? {
+              ...item,
+              cardIdNo: item.cardIdNo ? formatCardId(item.cardIdNo) : getItemCardId(item, idx, 'cert'),
+              sequenceNumber: typeof item.sequenceNumber === 'number' ? item.sequenceNumber : idx + 1,
+            }
+          : g
+      );
       const next = {
         ...prev,
-        gallery: (prev.gallery || []).map((g) => (g.id === item.id ? item : g)),
+        gallery: updated,
       };
       persistCMSDataInstantly(next);
       return next;
@@ -1037,9 +1397,15 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
   const deleteGalleryItem = (id: string) => {
     setData((prev) => {
+      const filtered = (prev.gallery || []).filter((g) => g.id !== id);
+      const updated = filtered.map((g, idx) => ({
+        ...g,
+        sequenceNumber: idx + 1,
+        cardIdNo: getItemCardId(g, idx, 'cert'),
+      }));
       const next = {
         ...prev,
-        gallery: (prev.gallery || []).filter((g) => g.id !== id),
+        gallery: updated,
       };
       persistCMSDataInstantly(next);
       return next;
@@ -1052,7 +1418,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       if (targetIndex < 0 || targetIndex >= items.length) return prev;
       const [moved] = items.splice(index, 1);
       items.splice(targetIndex, 0, moved);
-      const next = { ...prev, gallery: items };
+      const updated = items.map((g, gIdx) => ({
+        ...g,
+        sequenceNumber: gIdx + 1,
+        cardIdNo: getItemCardId(g, gIdx, 'cert'),
+      }));
+      const next = { ...prev, gallery: updated };
       persistCMSDataInstantly(next);
       return next;
     });
@@ -1070,7 +1441,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         return prev;
       const [moved] = items.splice(fromIndex, 1);
       items.splice(toIndex, 0, moved);
-      const next = { ...prev, gallery: items };
+      const updated = items.map((g, gIdx) => ({
+        ...g,
+        sequenceNumber: gIdx + 1,
+        cardIdNo: getItemCardId(g, gIdx, 'cert'),
+      }));
+      const next = { ...prev, gallery: updated };
       persistCMSDataInstantly(next);
       return next;
     });
@@ -1082,7 +1458,20 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       const temp = items[index1];
       items[index1] = items[index2];
       items[index2] = temp;
-      const next = { ...prev, gallery: items };
+      const updated = items.map((g, gIdx) => ({
+        ...g,
+        sequenceNumber: gIdx + 1,
+        cardIdNo: getItemCardId(g, gIdx, 'cert'),
+      }));
+      const next = { ...prev, gallery: updated };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const reindexAllGalleryCardIds = () => {
+    setData((prev) => {
+      const reindexed = reindexGalleryItemsWithCardIds(prev.gallery || []);
+      const next = { ...prev, gallery: reindexed };
       persistCMSDataInstantly(next);
       return next;
     });
@@ -1300,8 +1689,18 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         isLoading,
         dbConnected,
         isAuthenticated,
+        isAdmin,
+        currentUser: firebaseUser
+          ? {
+              email: firebaseUser.email,
+              displayName: firebaseUser.displayName,
+              photoURL: firebaseUser.photoURL,
+              uid: firebaseUser.uid,
+            }
+          : null,
         authToken,
         login,
+        loginWithGoogle,
         logout,
         updateHero,
         updateIntro,
@@ -1314,6 +1713,12 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         reorderProjectItem,
         moveProjectItem,
         swapProjectItems,
+        reindexAllProjectCardIds,
+        updateBackupRules,
+        updatePushRules,
+        backupRules,
+        pushRules,
+        projectsSequence: safeData.projectsSequence || buildSequenceSection(safeData.projects || [], backupRules, pushRules),
         updateCreativePortfolio,
         addCreativeItem,
         updateCreativeItem,
@@ -1321,6 +1726,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         reorderCreativeItem,
         moveCreativeItem,
         swapCreativeItems,
+        reindexAllCreativeCardIds,
         updateJourney,
         addJourneyItem,
         updateJourneyItem,
@@ -1335,6 +1741,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         reorderGalleryItem,
         moveGalleryItem,
         swapGalleryItems,
+        reindexAllGalleryCardIds,
         updateBlogs,
         addBlogPost,
         updateBlogPost,
@@ -1366,6 +1773,11 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         staticBackupStats,
         staticBackupFiles,
         refreshStaticBackupInfo,
+        syncToGitHub,
+        isGitSyncing,
+        lastGitCommit,
+        gitCardOrderPending,
+        setGitCardOrderPending,
       }}
     >
       {children}

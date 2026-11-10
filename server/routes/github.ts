@@ -5,6 +5,7 @@ import path from 'path';
 import crypto from 'crypto';
 import { saveLocalDiskData } from './cms';
 import { CMSModel, isDatabaseConnected } from '../db/mongo';
+import { requireAuth } from '../middleware/auth';
 
 const router = Router();
 
@@ -31,6 +32,35 @@ function getActiveToken(): string {
     }
   } catch (e) {}
   return '';
+}
+
+// Helper to compute directory size and file count
+function getDirectoryStats(dirPath: string): { count: number; totalBytes: number } {
+  let count = 0;
+  let totalBytes = 0;
+  if (!fs.existsSync(dirPath)) return { count, totalBytes };
+
+  function walk(curr: string) {
+    try {
+      const items = fs.readdirSync(curr);
+      for (const item of items) {
+        if (item.startsWith('.')) continue;
+        const p = path.join(curr, item);
+        try {
+          const stat = fs.statSync(p);
+          if (stat.isDirectory()) {
+            walk(p);
+          } else if (stat.isFile()) {
+            count++;
+            totalBytes += stat.size;
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
+  }
+
+  walk(dirPath);
+  return { count, totalBytes };
 }
 
 // Check if git CLI binary is accessible
@@ -192,6 +222,43 @@ async function pushViaGitHubRestApi(token: string, message: string) {
       type: 'blob',
       content: fs.readFileSync(publicStaticBackupPath, 'utf-8'),
     });
+  }
+
+  // Push history file
+  if (fs.existsSync(PUSH_HISTORY_FILE)) {
+    try {
+      treeItems.push({
+        path: 'git_push_history.json',
+        mode: '100644',
+        type: 'blob',
+        content: fs.readFileSync(PUSH_HISTORY_FILE, 'utf-8'),
+      });
+    } catch (e) {}
+  }
+
+  // Sequence Section & Rules Manifest (Git Sequence Tracking)
+  const srcSequencePath = path.join(process.cwd(), 'src', 'projects_sequence.json');
+  if (fs.existsSync(srcSequencePath)) {
+    try {
+      treeItems.push({
+        path: 'src/projects_sequence.json',
+        mode: '100644',
+        type: 'blob',
+        content: fs.readFileSync(srcSequencePath, 'utf-8'),
+      });
+    } catch (e) {}
+  }
+
+  const rootSequencePath = path.join(process.cwd(), 'projects_sequence.json');
+  if (fs.existsSync(rootSequencePath)) {
+    try {
+      treeItems.push({
+        path: 'projects_sequence.json',
+        mode: '100644',
+        type: 'blob',
+        content: fs.readFileSync(rootSequencePath, 'utf-8'),
+      });
+    } catch (e) {}
   }
 
   // C. Local Image & Media Assets: Profile Avatars, Projects, Gallery, and Uploads
@@ -375,7 +442,7 @@ async function pushViaGitHubRestApi(token: string, message: string) {
 }
 
 // 1. Verify GitHub Token Endpoint (Tests user credentials directly with GitHub API)
-router.post('/verify', async (req: Request, res: Response) => {
+router.post('/verify', requireAuth, async (req: Request, res: Response) => {
   try {
     const token = (req.body?.token || getActiveToken() || '').trim();
     if (!token) {
@@ -518,14 +585,22 @@ router.get('/status', async (req: Request, res: Response) => {
   }
 });
 
-// 3. Retrieve Saved Token
-router.get('/token', (req: Request, res: Response) => {
+// 3. Retrieve Saved Token (Protected Admin)
+router.get('/token', requireAuth, (req: Request, res: Response) => {
   try {
     const activeToken = getActiveToken();
+    let maskedToken = '';
+    if (activeToken) {
+      maskedToken =
+        activeToken.length > 8
+          ? `${activeToken.slice(0, 4)}••••••••${activeToken.slice(-4)}`
+          : '••••••••';
+    }
     res.json({
       success: true,
       hasToken: Boolean(activeToken),
-      token: activeToken,
+      token: activeToken, // accessible only by authenticated super admin
+      maskedToken,
       source: process.env.GITHUB_TOKEN
         ? 'env'
         : fs.existsSync(TOKEN_FILE_PATH)
@@ -540,8 +615,8 @@ router.get('/token', (req: Request, res: Response) => {
   }
 });
 
-// 4. Save GitHub Token
-router.post('/token', (req: Request, res: Response) => {
+// 4. Save GitHub Token (Protected Admin)
+router.post('/token', requireAuth, (req: Request, res: Response) => {
   try {
     const token = (req.body?.token || '').trim();
     if (!token) {
@@ -565,8 +640,8 @@ router.post('/token', (req: Request, res: Response) => {
   }
 });
 
-// 5. Delete Saved Token
-router.delete('/token', (req: Request, res: Response) => {
+// 5. Delete Saved Token (Protected Admin)
+router.delete('/token', requireAuth, (req: Request, res: Response) => {
   try {
     if (fs.existsSync(TOKEN_FILE_PATH)) {
       fs.unlinkSync(TOKEN_FILE_PATH);
@@ -579,6 +654,193 @@ router.delete('/token', (req: Request, res: Response) => {
     res.status(500).json({
       success: false,
       message: error?.message || 'Failed to delete saved token.',
+    });
+  }
+});
+
+// 5b. Comprehensive GitHub Repo Info & Storage Data Usage Tracker
+router.get('/repo-info', async (req: Request, res: Response) => {
+  try {
+    const queryToken = (req.query.token as string)?.trim();
+    const authHeader = req.headers.authorization?.replace(/^Bearer\s+/i, '').trim();
+    const activeToken = queryToken || authHeader || getActiveToken();
+
+    // 1. Calculate Local Disk Usage (Uploaded Assets & JSON Datastores)
+    const uploadsDir = path.join(process.cwd(), 'public', 'uploads');
+    const localUploads = getDirectoryStats(uploadsDir);
+    
+    const seedDataPath = path.join(process.cwd(), 'src', 'seed_data.json');
+    const seedDataBytes = fs.existsSync(seedDataPath) ? fs.statSync(seedDataPath).size : 0;
+    
+    const cmsBackupPath = path.join(process.cwd(), 'cms_backup.json');
+    const cmsBackupBytes = fs.existsSync(cmsBackupPath) ? fs.statSync(cmsBackupPath).size : 0;
+
+    const staticBackupPath = path.join(process.cwd(), 'static_backup.json');
+    const staticBackupBytes = fs.existsSync(staticBackupPath) ? fs.statSync(staticBackupPath).size : 0;
+
+    const totalLocalAssetBytes = localUploads.totalBytes + seedDataBytes + cmsBackupBytes + staticBackupBytes;
+
+    const localStats = {
+      assetFilesCount: localUploads.count,
+      assetsSizeMb: (localUploads.totalBytes / (1024 * 1024)).toFixed(2),
+      assetsSizeBytes: localUploads.totalBytes,
+      seedDataKb: (seedDataBytes / 1024).toFixed(1),
+      backupsKb: ((cmsBackupBytes + staticBackupBytes) / 1024).toFixed(1),
+      totalLocalMb: (totalLocalAssetBytes / (1024 * 1024)).toFixed(2),
+      totalLocalBytes: totalLocalAssetBytes,
+    };
+
+    // 2. Fetch Live Repo Data from GitHub API if token available
+    let remoteData: any = null;
+    let latestCommit: any = null;
+    let rateLimits = {
+      limit: 60,
+      remaining: 60,
+      resetTime: '',
+      resetSeconds: 0,
+    };
+    let tokenValid = false;
+    let apiError: string | null = null;
+
+    if (activeToken) {
+      try {
+        const ghHeaders = {
+          Authorization: `Bearer ${activeToken}`,
+          'User-Agent': 'Dubbaka-Sathwik-Portfolio-CMS',
+          Accept: 'application/vnd.github+json',
+        };
+
+        const [repoRes, commitRes] = await Promise.all([
+          fetch(`https://api.github.com/repos/${GITHUB_REPO}`, { headers: ghHeaders }),
+          fetch(`https://api.github.com/repos/${GITHUB_REPO}/commits?sha=${GITHUB_BRANCH}&per_page=1`, { headers: ghHeaders }),
+        ]);
+
+        // Rate limits from headers
+        const limitHeader = repoRes.headers.get('x-ratelimit-limit');
+        const remainingHeader = repoRes.headers.get('x-ratelimit-remaining');
+        const resetHeader = repoRes.headers.get('x-ratelimit-reset');
+        if (limitHeader) rateLimits.limit = parseInt(limitHeader, 10);
+        if (remainingHeader) rateLimits.remaining = parseInt(remainingHeader, 10);
+        if (resetHeader) {
+          const resetEpoch = parseInt(resetHeader, 10);
+          rateLimits.resetTime = new Date(resetEpoch * 1000).toLocaleTimeString('en-US');
+          rateLimits.resetSeconds = Math.max(0, Math.floor(resetEpoch - Date.now() / 1000));
+        }
+
+        if (repoRes.ok) {
+          remoteData = await repoRes.json();
+          tokenValid = true;
+        } else {
+          const errBody = await repoRes.text();
+          apiError = `GitHub Repo Error (${repoRes.status}): ${errBody}`;
+        }
+
+        if (commitRes.ok) {
+          const commits = await commitRes.json();
+          if (Array.isArray(commits) && commits.length > 0) {
+            const c = commits[0];
+            const dateStr = c.commit?.author?.date || '';
+            let relativeDate = dateStr;
+            if (dateStr) {
+              const diffSec = Math.floor((Date.now() - new Date(dateStr).getTime()) / 1000);
+              if (diffSec < 60) relativeDate = 'just now';
+              else if (diffSec < 3600) relativeDate = `${Math.floor(diffSec / 60)} minutes ago`;
+              else if (diffSec < 86400) relativeDate = `${Math.floor(diffSec / 3600)} hours ago`;
+              else relativeDate = `${Math.floor(diffSec / 86400)} days ago`;
+            }
+            latestCommit = {
+              sha: c.sha || '',
+              shortSha: (c.sha || '').slice(0, 7),
+              message: (c.commit?.message || '').split('\n')[0],
+              author: c.commit?.author?.name || c.author?.login || 'Dubbaka Sathwik',
+              authorAvatar: c.author?.avatar_url || '',
+              date: dateStr ? new Date(dateStr).toLocaleString('en-US') : '',
+              relativeDate,
+              url: `https://github.com/${GITHUB_REPO}/commit/${c.sha}`,
+            };
+          }
+        }
+      } catch (err: any) {
+        apiError = err?.message || 'Failed to query GitHub REST API';
+      }
+    }
+
+    // 3. Compute Storage Metrics & Limits
+    // GitHub API 'size' is in Kilobytes (KB)
+    const repoSizeKb = remoteData?.size || 0;
+    const repoSizeMb = parseFloat((repoSizeKb / 1024).toFixed(2));
+    const softLimitMb = 1000; // 1 GB recommended limit by GitHub
+    const hardLimitMb = 5000; // 5 GB standard threshold
+    const percentOfSoftLimit = Math.min(100, parseFloat(((repoSizeMb / softLimitMb) * 100).toFixed(1)));
+    const remainingSoftLimitMb = Math.max(0, parseFloat((softLimitMb - repoSizeMb).toFixed(1)));
+
+    let healthStatus: 'optimal' | 'good' | 'caution' | 'critical' = 'optimal';
+    let healthBadge = 'Excellent (Minimal Usage)';
+    let healthRecommendation = 'Safe for lifetime portfolio updates. Plenty of storage capacity available.';
+
+    if (repoSizeMb > 1000) {
+      healthStatus = 'critical';
+      healthBadge = 'High Usage (>1 GB)';
+      healthRecommendation = 'Repository has exceeded GitHub recommended 1 GB soft limit. Enable Git LFS for large media.';
+    } else if (repoSizeMb > 750) {
+      healthStatus = 'caution';
+      healthBadge = 'Caution (>75% Capacity)';
+      healthRecommendation = 'Approaching recommended GitHub soft limit. Ensure all image files are compressed.';
+    } else if (repoSizeMb > 250) {
+      healthStatus = 'good';
+      healthBadge = 'Normal Usage';
+      healthRecommendation = 'Good storage state with plenty of room for project assets.';
+    }
+
+    res.json({
+      success: true,
+      repo: GITHUB_REPO,
+      branch: GITHUB_BRANCH,
+      tokenConfigured: Boolean(activeToken),
+      tokenValid,
+      apiError,
+      storage: {
+        repoSizeKb,
+        repoSizeMb,
+        formattedRepoSize: repoSizeMb >= 1 ? `${repoSizeMb} MB` : `${repoSizeKb} KB`,
+        softLimitMb,
+        hardLimitMb,
+        percentOfSoftLimit,
+        remainingSoftLimitMb,
+        healthStatus,
+        healthBadge,
+        healthRecommendation,
+      },
+      localAssets: localStats,
+      repoDetails: remoteData
+        ? {
+            name: remoteData.name,
+            fullName: remoteData.full_name,
+            isPrivate: remoteData.private,
+            visibility: remoteData.visibility || (remoteData.private ? 'private' : 'public'),
+            stars: remoteData.stargazers_count,
+            forks: remoteData.forks_count,
+            watchers: remoteData.watchers_count,
+            openIssues: remoteData.open_issues_count,
+            defaultBranch: remoteData.default_branch,
+            createdAt: remoteData.created_at ? new Date(remoteData.created_at).toLocaleDateString('en-US') : '',
+            updatedAt: remoteData.updated_at ? new Date(remoteData.updated_at).toLocaleDateString('en-US') : '',
+            pushedAt: remoteData.pushed_at ? new Date(remoteData.pushed_at).toLocaleString('en-US') : '',
+            htmlUrl: remoteData.html_url,
+            cloneUrl: remoteData.clone_url,
+            sshUrl: remoteData.ssh_url,
+            owner: remoteData.owner?.login || '',
+            ownerAvatar: remoteData.owner?.avatar_url || '',
+            description: remoteData.description || 'Personal Full-Stack Portfolio & CMS Application',
+          }
+        : null,
+      latestCommit,
+      rateLimits,
+    });
+  } catch (error: any) {
+    res.status(500).json({
+      success: false,
+      message: error?.message || 'Failed to fetch repository info and data usage',
     });
   }
 });
@@ -706,8 +968,37 @@ router.get('/history', async (req: Request, res: Response) => {
   }
 });
 
-// 7. Trigger Git Sync (Commits and pushes via GitHub REST API with 100% reliability)
-router.post('/sync', async (req: Request, res: Response) => {
+// 6b. Get Projects Sequence Status & Git Tracking Info
+router.get('/sequence', async (req: Request, res: Response) => {
+  try {
+    const seqPath = path.join(process.cwd(), 'src', 'projects_sequence.json');
+    if (fs.existsSync(seqPath)) {
+      const content = fs.readFileSync(seqPath, 'utf-8');
+      res.json({
+        success: true,
+        sequenceData: JSON.parse(content),
+        gitSyncReady: true,
+        trackedFiles: ['src/projects_sequence.json', 'projects_sequence.json'],
+        repo: GITHUB_REPO,
+        branch: GITHUB_BRANCH,
+      });
+      return;
+    }
+    res.json({
+      success: false,
+      message: 'Sequence file not yet generated on disk',
+      gitSyncReady: false,
+    });
+  } catch (err: any) {
+    res.status(500).json({
+      success: false,
+      message: err?.message || 'Failed to read sequence file',
+    });
+  }
+});
+
+// 7. Trigger Git Sync (Protected Admin)
+router.post('/sync', requireAuth, async (req: Request, res: Response) => {
   const token = (req.body?.token || getActiveToken() || '').trim();
   if (!token) {
     return res.status(400).json({

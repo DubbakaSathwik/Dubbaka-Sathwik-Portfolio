@@ -70,11 +70,11 @@ router.post('/login', loginRateLimiter, async (req: Request, res: Response): Pro
     // Generate JWT
     const token = generateToken({ role: 'admin', username: 'sathwik' });
 
-    // Set cookie
+    // Set cookie (supporting both standalone and iframe preview)
     res.cookie('admin_token', token, {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production',
-      sameSite: 'lax',
+      secure: true,
+      sameSite: 'none',
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 

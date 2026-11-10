@@ -17,6 +17,8 @@ export interface SkillCategory {
 export interface Project {
   id: string;
   title: string;
+  cardIdNo?: string;
+  sequenceNumber?: number;
   summary: string;
   description: string;
   longDescription?: string;
@@ -31,6 +33,38 @@ export interface Project {
   featured: boolean;
   status: 'Completed' | 'In Progress' | 'Maintained' | string;
   year: string;
+}
+
+export interface ProjectSequenceItem {
+  position: number;
+  cardIdNo: string;
+  id: string;
+  title: string;
+  category: string;
+  featured: boolean;
+  status: string;
+}
+
+export interface BackupRulesConfig {
+  preserveSequenceOnBackup: boolean;
+  autoAssignCardId: boolean;
+  snapshotSequenceFile: boolean;
+  dualStorageParity: boolean;
+}
+
+export interface PushRulesConfig {
+  gitPushSequenceSection: boolean;
+  gitCommitSequenceMessage: boolean;
+  safeTreePush: boolean;
+}
+
+export interface SequenceSectionData {
+  version: string;
+  lastUpdated: string;
+  totalProjects: number;
+  sequence: ProjectSequenceItem[];
+  backupRules: BackupRulesConfig;
+  pushRules: PushRulesConfig;
 }
 
 export type CreativeCategory =
@@ -50,6 +84,8 @@ export type CreativeCategory =
 
 export interface CreativeItem {
   id: string;
+  cardIdNo?: string;
+  sequenceNumber?: number;
   title: string;
   category: CreativeCategory;
   shortDescription: string;
@@ -96,6 +132,8 @@ export type GalleryCategory =
 
 export interface GalleryItem {
   id: string;
+  cardIdNo?: string;
+  sequenceNumber?: number;
   title: string;
   description: string;
   detailedDescription?: string;
@@ -218,6 +256,7 @@ export interface CMSData {
   about: AboutData;
   skills: SkillCategory[];
   projects: Project[];
+  projectsSequence?: SequenceSectionData;
   creativePortfolio: CreativeItem[];
   journey: JourneyItem[];
   gallery: GalleryItem[];

@@ -15,15 +15,17 @@ interface FormattedTextProps {
 export function FormattedText({ text, className = '' }: FormattedTextProps) {
   if (!text) return null;
 
-  // Split string by formatting tokens
-  const regex = /(\{bold & highlight\}.*?\{bold & highlight\}|\{bold\}.*?\{bold\}|\{highlight\}.*?\{highlight\})/g;
+  // Split string by formatting tokens (allowing flexible whitespace around & and keywords)
+  const regex = /(\{\s*bold\s*&\s*highlight\s*\}[\s\S]*?\{\s*bold\s*&\s*highlight\s*\}|\{\s*bold\s*\}[\s\S]*?\{\s*bold\s*\}|\{\s*highlight\s*\}[\s\S]*?\{\s*highlight\s*\})/gi;
   const parts = text.split(regex);
 
   return (
     <span className={`whitespace-pre-line ${className}`}>
       {parts.map((part, index) => {
-        if (part.startsWith('{bold & highlight}') && part.endsWith('{bold & highlight}')) {
-          const content = part.slice(18, -18);
+        if (/^\{\s*bold\s*&\s*highlight\s*\}/i.test(part) && /\{\s*bold\s*&\s*highlight\s*\}$/i.test(part)) {
+          const content = part
+            .replace(/^\{\s*bold\s*&\s*highlight\s*\}/i, '')
+            .replace(/\{\s*bold\s*&\s*highlight\s*\}$/i, '');
           return (
             <span
               key={index}
@@ -33,16 +35,20 @@ export function FormattedText({ text, className = '' }: FormattedTextProps) {
             </span>
           );
         }
-        if (part.startsWith('{bold}') && part.endsWith('{bold}')) {
-          const content = part.slice(6, -6);
+        if (/^\{\s*bold\s*\}/i.test(part) && /\{\s*bold\s*\}$/i.test(part)) {
+          const content = part
+            .replace(/^\{\s*bold\s*\}/i, '')
+            .replace(/\{\s*bold\s*\}$/i, '');
           return (
             <strong key={index} className="font-bold text-white">
               {content}
             </strong>
           );
         }
-        if (part.startsWith('{highlight}') && part.endsWith('{highlight}')) {
-          const content = part.slice(11, -11);
+        if (/^\{\s*highlight\s*\}/i.test(part) && /\{\s*highlight\s*\}$/i.test(part)) {
+          const content = part
+            .replace(/^\{\s*highlight\s*\}/i, '')
+            .replace(/\{\s*highlight\s*\}$/i, '');
           return (
             <span key={index} className="text-emerald-400 font-semibold">
               {content}

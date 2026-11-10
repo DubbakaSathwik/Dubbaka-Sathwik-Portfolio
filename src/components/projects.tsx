@@ -224,9 +224,11 @@ export function ProjectsSection() {
                               <ProjectCardSlideshow images={projectImageList} title={project.title} />
                             </div>
                             <div className="absolute inset-0 bg-gradient-to-t from-zinc-950 via-transparent to-transparent opacity-80 pointer-events-none" />
-                            <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-zinc-950/80 text-emerald-400 border border-emerald-500/30">
-                              {project.category}
-                            </span>
+                            <div className="absolute top-2 left-2 flex items-center gap-1.5 z-10">
+                              <span className="px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-zinc-950/80 text-zinc-300 border border-zinc-700/50">
+                                {project.category}
+                              </span>
+                            </div>
                             {project.featured && (
                               <span className="absolute top-2 right-2 px-2 py-0.5 rounded-full text-[9px] font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-md">
                                 <Sparkles className="w-2.5 h-2.5" /> Featured
@@ -289,9 +291,11 @@ export function ProjectsSection() {
                     <div className="absolute inset-0 bg-gradient-to-t from-[#09090b] via-transparent to-transparent opacity-80 pointer-events-none" />
 
                     {/* Category Pill */}
-                    <span className="absolute top-2 left-2 sm:top-3 sm:left-3 px-2 py-0.5 sm:px-3 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-mono font-semibold bg-zinc-950/80 backdrop-blur-md text-emerald-400 border border-emerald-500/30 z-10">
-                      {project.category}
-                    </span>
+                    <div className="absolute top-2 left-2 sm:top-3 sm:left-3 flex items-center gap-1.5 z-10">
+                      <span className="px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-mono font-semibold bg-zinc-950/80 backdrop-blur-md text-zinc-300 border border-zinc-700/50">
+                        {project.category}
+                      </span>
+                    </div>
 
                     {project.featured && (
                       <span className="absolute top-2 right-2 sm:top-3 sm:right-3 px-2 py-0.5 sm:px-2.5 sm:py-1 rounded-full text-[9px] sm:text-[10px] font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-md z-10">
@@ -412,112 +416,124 @@ export function ProjectsSection() {
                 exit={{ scale: 0.95, opacity: 0, y: 15 }}
                 transition={{ duration: 0.2, ease: 'easeOut' }}
                 onClick={(e) => e.stopPropagation()}
-                className="relative w-full max-w-xl sm:max-w-2xl bg-[#0d0d12] rounded-2xl sm:rounded-3xl border border-emerald-500/40 shadow-2xl overflow-hidden my-auto max-h-[85vh] flex flex-col p-4 sm:p-6 space-y-4"
+                className="relative w-full max-w-5xl lg:max-w-6xl xl:max-w-7xl bg-[#0d0d12] rounded-2xl sm:rounded-3xl border border-emerald-500/40 shadow-[0_25px_60px_-15px_rgba(16,185,129,0.25)] overflow-hidden my-auto max-h-[92vh] sm:max-h-[90vh] flex flex-col p-4 sm:p-6 lg:p-7"
               >
                 {/* Close Button */}
                 <button
                   type="button"
                   onClick={() => setSelectedProject(null)}
-                  className="absolute top-4 right-4 z-30 p-2 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-all cursor-pointer shadow-lg"
+                  className="absolute top-3.5 right-3.5 sm:top-5 sm:right-5 z-40 p-2 sm:p-2.5 rounded-xl bg-zinc-900/90 hover:bg-red-500/20 text-zinc-400 hover:text-red-400 border border-zinc-800 hover:border-red-500/50 transition-all cursor-pointer shadow-lg"
+                  aria-label="Close preview"
                 >
                   <X className="w-4 h-4 sm:w-5 sm:h-5" />
                 </button>
 
-                {/* Header */}
-                <div className="pr-10 shrink-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-950/90 border border-emerald-500/40 text-emerald-300 whitespace-nowrap shrink-0">
-                      {selectedProject.category}
-                    </span>
-                    {selectedProject.featured && (
-                      <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-sm whitespace-nowrap shrink-0">
-                        <Sparkles className="w-3 h-3" /> Featured
-                      </span>
+                {/* 2-Column Responsive Layout: Images on Left, Details on Right */}
+                <div className="flex flex-col lg:flex-row gap-5 lg:gap-8 flex-1 min-h-0 overflow-hidden">
+                  {/* Left Column: Image Slideshow & Visual Previews */}
+                  <div className="w-full lg:w-[56%] xl:w-[58%] shrink-0 flex flex-col justify-start">
+                    {popupImageList.length > 0 && (
+                      <JourneyImageSlideshow
+                        images={popupImageList}
+                        title={selectedProject.title}
+                        className="w-full h-64 sm:h-80 md:h-[380px] lg:h-[480px] xl:h-[530px]"
+                      />
                     )}
                   </div>
-                  <h3 className="text-xl sm:text-2xl font-extrabold text-white mt-1.5 tracking-tight break-words">
-                    {selectedProject.title}
-                  </h3>
-                </div>
 
-                {/* Scrollable Content Body */}
-                <div className="overflow-y-auto space-y-4 pr-1 flex-1">
-                  {/* Photo Slideshow */}
-                  {popupImageList.length > 0 && (
-                    <div className="rounded-xl overflow-hidden border border-emerald-500/30 shadow-lg">
-                      <JourneyImageSlideshow images={popupImageList} title={selectedProject.title} />
-                    </div>
-                  )}
-
-                  {/* Descriptions */}
-                  <div className="space-y-3">
-                    <div className="p-3.5 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs text-zinc-300 leading-relaxed">
-                      <span className="text-emerald-400 font-mono font-semibold block mb-1">Card Summary:</span>
-                      <FormattedText text={selectedProject.description} />
-                    </div>
-
-                    {((selectedProject as any).longDescription || (selectedProject as any).detailedDescription) && (
-                      <div className="p-4 rounded-xl bg-zinc-950 border border-emerald-500/25 text-xs sm:text-sm text-zinc-100 leading-relaxed space-y-2 shadow-inner">
-                        <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
-                          <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
-                          Detailed Project Breakdown:
+                  {/* Right Column: Project Title, Badges, Details & Actions */}
+                  <div className="w-full lg:w-[44%] xl:w-[42%] flex-1 flex flex-col min-h-0 overflow-hidden">
+                    {/* Header */}
+                    <div className="pr-10 shrink-0 pb-3 border-b border-zinc-800/80">
+                      <div className="flex items-center gap-2 flex-wrap mb-1.5">
+                        <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-zinc-900 border border-zinc-700/60 text-zinc-300 whitespace-nowrap shrink-0">
+                          {selectedProject.category}
                         </span>
-                        <FormattedText text={(selectedProject as any).longDescription || (selectedProject as any).detailedDescription} />
+                        {selectedProject.featured && (
+                          <span className="px-2.5 py-0.5 rounded-full text-[10px] sm:text-xs font-mono font-semibold bg-emerald-600 text-white flex items-center gap-1 shadow-sm whitespace-nowrap shrink-0">
+                            <Sparkles className="w-3 h-3" /> Featured
+                          </span>
+                        )}
                       </div>
-                    )}
-                  </div>
+                      <h3 className="text-xl sm:text-2xl xl:text-3xl font-extrabold text-white tracking-tight break-words">
+                        {selectedProject.title}
+                      </h3>
+                    </div>
 
-                  {/* Tech Stack */}
-                  <div className="space-y-2">
-                    <h4 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
-                      Technologies & Frameworks
-                    </h4>
-                    <div className="flex flex-wrap gap-1.5">
-                      {(selectedProject.tags || selectedProject.technologies || []).map((tag) => (
-                        <span
-                          key={tag}
-                          className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono font-medium"
-                        >
-                          #{tag}
+                    {/* Scrollable Details Area */}
+                    <div className="overflow-y-auto space-y-3.5 py-3 pr-1.5 flex-1 min-h-0">
+                      {/* Card Summary */}
+                      <div className="p-3.5 sm:p-4 rounded-xl bg-zinc-900/80 border border-zinc-800 text-xs sm:text-sm text-zinc-300 leading-relaxed shadow-sm">
+                        <span className="text-emerald-400 font-mono font-semibold block mb-1 text-[11px] uppercase tracking-wider">
+                          Card Summary:
                         </span>
-                      ))}
+                        <FormattedText text={selectedProject.description} />
+                      </div>
+
+                      {/* Detailed Project Breakdown */}
+                      {((selectedProject as any).longDescription || (selectedProject as any).detailedDescription) && (
+                        <div className="p-4 rounded-xl bg-zinc-950 border border-emerald-500/25 text-xs sm:text-sm text-zinc-100 leading-relaxed space-y-2 shadow-inner">
+                          <span className="text-xs font-mono font-bold text-emerald-400 flex items-center gap-1.5 border-b border-zinc-800/80 pb-2">
+                            <Sparkles className="w-3.5 h-3.5 text-emerald-400 animate-pulse" />
+                            Detailed Project Breakdown:
+                          </span>
+                          <FormattedText text={(selectedProject as any).longDescription || (selectedProject as any).detailedDescription} />
+                        </div>
+                      )}
+
+                      {/* Tech Stack */}
+                      <div className="space-y-2 pt-1">
+                        <h4 className="text-[10px] font-mono font-bold text-zinc-400 uppercase tracking-wider">
+                          Technologies & Frameworks
+                        </h4>
+                        <div className="flex flex-wrap gap-1.5">
+                          {(selectedProject.tags || selectedProject.technologies || []).map((tag) => (
+                            <span
+                              key={tag}
+                              className="px-2.5 py-1 rounded-lg bg-zinc-900 border border-emerald-500/30 text-emerald-300 text-[11px] font-mono font-medium"
+                            >
+                              #{tag}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* External Action Links Footer */}
+                    <div className="pt-3.5 mt-auto border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        {liveUrl && liveUrl.trim() !== '' && (
+                          <a
+                            href={liveUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-950/60 hover:scale-105 active:scale-95"
+                          >
+                            <ExternalLink className="w-3.5 h-3.5" />
+                            <span>Live Product Demo</span>
+                          </a>
+                        )}
+                        {gitUrl && gitUrl.trim() !== '' && (
+                          <a
+                            href={gitUrl}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs border border-zinc-700 transition-all hover:border-emerald-500/50 hover:scale-105 active:scale-95"
+                          >
+                            <Github className="w-3.5 h-3.5 text-emerald-400" />
+                            <span>Git Repository</span>
+                          </a>
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setSelectedProject(null)}
+                        className="text-xs font-mono text-zinc-400 hover:text-white transition-colors cursor-pointer ml-auto"
+                      >
+                        Close Preview
+                      </button>
                     </div>
                   </div>
-                </div>
-
-                {/* External Action Links */}
-                <div className="pt-3 border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
-                  <div className="flex items-center gap-2 flex-wrap">
-                    {liveUrl && liveUrl.trim() !== '' && (
-                      <a
-                        href={liveUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-950/60 hover:scale-105"
-                      >
-                        <ExternalLink className="w-3.5 h-3.5" />
-                        <span>Live Product Demo</span>
-                      </a>
-                    )}
-                    {gitUrl && gitUrl.trim() !== '' && (
-                      <a
-                        href={gitUrl}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs border border-zinc-700 transition-all hover:border-emerald-500/50 hover:scale-105"
-                      >
-                        <Github className="w-3.5 h-3.5 text-emerald-400" />
-                        <span>Git Repository</span>
-                      </a>
-                    )}
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setSelectedProject(null)}
-                    className="text-xs font-mono text-zinc-400 hover:text-white cursor-pointer ml-auto"
-                  >
-                    Close Preview
-                  </button>
                 </div>
               </motion.div>
             </motion.div>

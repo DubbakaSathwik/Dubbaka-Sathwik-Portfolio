@@ -1,0 +1,46 @@
+{
+  "entities": {
+    "admin": {
+      "title": "Admin",
+      "description": "Administrator account authorized to manage portfolio CMS",
+      "type": "object",
+      "properties": {
+        "email": {
+          "type": "string",
+          "description": "Google verified email of the administrator"
+        },
+        "role": {
+          "type": "string",
+          "enum": ["admin", "superadmin"]
+        },
+        "createdAt": {
+          "type": "string"
+        }
+      },
+      "required": ["email", "role"]
+    },
+    "portfolioContent": {
+      "title": "PortfolioContent",
+      "description": "Full portfolio content state managed by CMS",
+      "type": "object",
+      "properties": {
+        "updatedAt": {
+          "type": "string"
+        },
+        "updatedBy": {
+          "type": "string"
+        }
+      }
+    }
+  },
+  "firestore": {
+    "/admins/{adminId}": {
+      "schema": "admin",
+      "description": "Registered administrator accounts"
+    },
+    "/portfolio/content": {
+      "schema": "portfolioContent",
+      "description": "CMS portfolio data"
+    }
+  }
+}
