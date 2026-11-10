@@ -38,6 +38,18 @@ export default function App() {
       window.history.replaceState(null, '', window.location.pathname + window.location.search);
     }
 
+    // Sync canonical link and og:url with current production domain (Netlify or custom domain)
+    if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('localhost')) {
+      const canonical = document.querySelector('link[rel="canonical"]');
+      if (canonical) {
+        canonical.setAttribute('href', window.location.origin + '/');
+      }
+      const ogUrl = document.querySelector('meta[property="og:url"]');
+      if (ogUrl) {
+        ogUrl.setAttribute('content', window.location.origin + '/');
+      }
+    }
+
     return () => clearTimeout(timer);
   }, []);
 
