@@ -629,22 +629,25 @@ export function CinematicLoadingScreen() {
             </AnimatePresence>
           </div>
 
-          {/* BOTTOM RIGHT: SKIP INTRO BUTTON */}
+          {/* TOP RIGHT: START / SKIP INTRO BUTTON (Placed top-right so Netlify badge does not obscure it) */}
           <motion.div
-            initial={{ opacity: 0, y: 15 }}
+            initial={{ opacity: 0, y: -15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, delay: 0.6 }}
-            className="absolute bottom-5 right-5 sm:bottom-8 sm:right-8 z-50 pointer-events-auto"
+            className="absolute top-5 right-5 sm:top-8 sm:right-8 z-50 pointer-events-auto"
           >
             <motion.button
               type="button"
               whileHover={{ scale: 1.05, y: -1 }}
               whileTap={{ scale: 0.95 }}
-              onClick={handleSkip}
-              className="inline-flex items-center gap-2 px-3.5 py-2 sm:px-4 sm:py-2 rounded-full bg-zinc-950/80 hover:bg-zinc-900 border border-emerald-500/30 hover:border-emerald-400 text-zinc-300 hover:text-white font-mono text-[11px] sm:text-xs font-medium shadow-[0_0_15px_rgba(16,185,129,0.15)] hover:shadow-[0_0_25px_rgba(16,185,129,0.4)] backdrop-blur-md transition-all duration-200 cursor-pointer group"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleSkip();
+              }}
+              className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-zinc-950/85 hover:bg-zinc-900 border border-emerald-500/40 hover:border-emerald-400 text-zinc-200 hover:text-white font-mono text-xs sm:text-sm font-medium shadow-[0_0_20px_rgba(16,185,129,0.25)] hover:shadow-[0_0_30px_rgba(16,185,129,0.5)] backdrop-blur-md transition-all duration-200 cursor-pointer group"
             >
-              <span>Skip Intro</span>
-              <FastForward className="w-3.5 h-3.5 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
+              <span>Start / Skip Intro</span>
+              <FastForward className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-400 group-hover:translate-x-0.5 transition-transform" />
             </motion.button>
           </motion.div>
         </motion.div>

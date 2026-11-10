@@ -67,29 +67,66 @@ export function ResumeSection() {
               </div>
             )}
 
-            {/* Resume Selection Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {/* Resume Selection Cards - Expanded wide to fill full container */}
+            <div
+              className={`grid gap-6 sm:gap-8 ${
+                resumes.length === 2
+                  ? 'grid-cols-1 md:grid-cols-2'
+                  : resumes.length === 1
+                  ? 'grid-cols-1'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-3'
+              }`}
+            >
               {resumes.map((res) => (
                 <div
                   key={res.id}
                   onClick={() => setIsResumeModalOpen(true, res.id)}
-                  className="p-6 rounded-2xl bg-zinc-900/50 border border-zinc-800 hover:border-emerald-500/40 shadow-xl cursor-pointer group transition-all transform hover:-translate-y-1 flex flex-col justify-between"
+                  className="p-6 sm:p-8 rounded-3xl bg-zinc-900/50 hover:bg-zinc-900/80 border border-zinc-800/90 hover:border-emerald-500/50 shadow-xl hover:shadow-[0_10px_35px_rgba(16,185,129,0.12)] cursor-pointer group transition-all duration-300 transform hover:-translate-y-1 flex flex-col justify-between"
                 >
-                  <div className="space-y-3">
-                    <div className="w-10 h-10 rounded-xl bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:scale-110 transition-transform">
-                      <FileText className="w-5 h-5" />
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="w-12 h-12 rounded-2xl bg-emerald-950/80 border border-emerald-500/30 text-emerald-400 flex items-center justify-center group-hover:scale-110 group-hover:bg-emerald-500 group-hover:text-black transition-all">
+                        <FileText className="w-6 h-6" />
+                      </div>
+                      <span className="text-[11px] font-mono font-medium px-3 py-1 rounded-full bg-zinc-800/90 text-zinc-300 border border-zinc-700/60 group-hover:border-emerald-500/40 transition-colors">
+                        {res.filename || 'PDF Document'}
+                      </span>
                     </div>
-                    <h3 className="text-base font-bold text-white group-hover:text-emerald-400 transition-colors">
-                      {res.title}
-                    </h3>
-                    <p className="text-xs text-zinc-400 leading-relaxed line-clamp-3">
-                      {res.summary}
-                    </p>
+
+                    <div className="space-y-2">
+                      <h3 className="text-lg sm:text-xl font-bold text-white group-hover:text-emerald-400 transition-colors">
+                        {res.title}
+                      </h3>
+                      <p className="text-xs sm:text-sm text-zinc-400 leading-relaxed line-clamp-3 group-hover:text-zinc-300 transition-colors">
+                        {res.summary}
+                      </p>
+                    </div>
+
+                    {res.skills && res.skills.length > 0 && (
+                      <div className="flex flex-wrap gap-1.5 pt-2">
+                        {res.skills.slice(0, 6).map((skill, sIdx) => (
+                          <span
+                            key={sIdx}
+                            className="text-[11px] font-mono px-2.5 py-1 rounded-lg bg-emerald-950/40 border border-emerald-500/20 text-emerald-300/90 group-hover:border-emerald-500/40 transition-colors"
+                          >
+                            {skill}
+                          </span>
+                        ))}
+                        {res.skills.length > 6 && (
+                          <span className="text-[11px] font-mono px-2 py-1 rounded-lg bg-zinc-800/60 text-zinc-400">
+                            +{res.skills.length - 6}
+                          </span>
+                        )}
+                      </div>
+                    )}
                   </div>
 
-                  <div className="pt-4 mt-4 border-t border-zinc-800/80 flex items-center justify-between text-xs font-mono text-emerald-400 font-medium">
-                    <span>View Options</span>
-                    <Download className="w-3.5 h-3.5 group-hover:translate-y-0.5 transition-transform" />
+                  <div className="pt-5 mt-6 border-t border-zinc-800/80 flex items-center justify-between text-xs sm:text-sm font-mono text-emerald-400 font-medium">
+                    <span className="group-hover:underline">View Options & Preview</span>
+                    <div className="flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 group-hover:bg-emerald-500 group-hover:text-black group-hover:border-emerald-500 transition-all font-semibold">
+                      <span>View Resume</span>
+                      <Download className="w-4 h-4 group-hover:translate-y-0.5 transition-transform" />
+                    </div>
                   </div>
                 </div>
               ))}

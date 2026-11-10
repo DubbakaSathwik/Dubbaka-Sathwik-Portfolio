@@ -157,33 +157,53 @@ Generated via Dubbaka Sathwik Personal Portfolio & CMS
 
           {/* Body */}
           <div className="p-6 overflow-y-auto space-y-6 flex-1">
-            {/* Resume Selection Cards */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Resume Selection Cards - Expanded wide to occupy full modal width */}
+            <div
+              className={`grid gap-3.5 sm:gap-4 ${
+                resumes.length === 2
+                  ? 'grid-cols-1 sm:grid-cols-2'
+                  : resumes.length === 1
+                  ? 'grid-cols-1'
+                  : resumes.length === 3
+                  ? 'grid-cols-1 sm:grid-cols-3'
+                  : 'grid-cols-1 sm:grid-cols-2 lg:grid-cols-4'
+              }`}
+            >
               {resumes.map((r) => {
                 const active = selectedId === r.id;
                 return (
                   <button
                     key={r.id}
                     onClick={() => setSelectedId(r.id)}
-                    className={`p-4 rounded-2xl border text-left transition-all relative flex flex-col justify-between ${
+                    className={`p-4 sm:p-5 rounded-2xl border text-left transition-all relative flex flex-col justify-between cursor-pointer ${
                       active
-                        ? 'bg-emerald-950/40 border-emerald-500/60 text-white shadow-[0_0_20px_rgba(16,185,129,0.2)]'
-                        : 'bg-zinc-900/40 border-zinc-800 hover:border-zinc-700 text-zinc-400 hover:text-white'
+                        ? 'bg-emerald-950/50 border-emerald-500/70 text-white shadow-[0_0_25px_rgba(16,185,129,0.25)] ring-1 ring-emerald-500/50'
+                        : 'bg-zinc-900/50 border-zinc-800 hover:border-zinc-700 hover:bg-zinc-900/80 text-zinc-400 hover:text-white'
                     }`}
                   >
-                    <div className="flex items-center justify-between mb-3">
-                      <div className="p-2 rounded-xl bg-zinc-950 border border-zinc-800">
+                    <div className="flex items-center justify-between mb-3.5">
+                      <div
+                        className={`p-2.5 rounded-xl border transition-colors ${
+                          active
+                            ? 'bg-emerald-900/60 border-emerald-500/40 text-emerald-400'
+                            : 'bg-zinc-950 border-zinc-800 text-zinc-400'
+                        }`}
+                      >
                         {getIcon(r.id)}
                       </div>
-                      {active && (
-                        <span className="p-1 rounded-full bg-emerald-500 text-black">
-                          <Check className="w-3.5 h-3.5 stroke-[3]" />
+                      {active ? (
+                        <span className="p-1.5 rounded-full bg-emerald-500 text-black shadow-[0_0_12px_rgba(16,185,129,0.6)]">
+                          <Check className="w-4 h-4 stroke-[3]" />
                         </span>
+                      ) : (
+                        <span className="text-[11px] font-mono text-zinc-500 group-hover:text-zinc-400">Select</span>
                       )}
                     </div>
                     <div>
-                      <h4 className="text-sm font-bold text-white mb-1">{r.title}</h4>
-                      <p className="text-[11px] text-zinc-400 line-clamp-2 leading-relaxed">
+                      <h4 className={`text-base font-bold mb-1.5 transition-colors ${active ? 'text-white' : 'text-zinc-200'}`}>
+                        {r.title}
+                      </h4>
+                      <p className="text-xs text-zinc-400 line-clamp-2 leading-relaxed">
                         {r.summary}
                       </p>
                     </div>
