@@ -39,6 +39,13 @@ import {
   Lock,
   Globe,
 } from 'lucide-react';
+import {
+  verifyGitHubTokenDirect,
+  pushToGitHubClientDirect,
+  safeFetchJson,
+  GITHUB_REPO,
+  GITHUB_BRANCH,
+} from '../../../lib/github-client';
 
 interface BackupRestoreTabProps {
   showToast: (section: string, msg: string, db?: string) => void;
@@ -90,17 +97,20 @@ export function BackupRestoreTab({
   const [previewData, setPreviewData] = useState<any | null>(null);
   const [parseError, setParseError] = useState<string>('');
 
-  // GitHub Sync State
+  // GitHub Sync State (Zero-Persistence: tokens are never stored, used purely on-demand)
   const [githubStatus, setGithubStatus] = useState<any>(null);
   const [isSyncingGithub, setIsSyncingGithub] = useState(false);
   const [customCommitMessage, setCustomCommitMessage] = useState('');
   const [personalAccessToken, setPersonalAccessToken] = useState('');
-  const [savedToken, setSavedToken] = useState<string>('');
-  const [showTokenInput, setShowTokenInput] = useState<boolean>(false);
-  const [showSavedKey, setShowSavedKey] = useState<boolean>(false);
+  const [showTokenInput, setShowTokenInput] = useState<boolean>(true);
   const [copiedToken, setCopiedToken] = useState<boolean>(false);
-  const [isSavingToken, setIsSavingToken] = useState<boolean>(false);
-  const [rememberKey, setRememberKey] = useState<boolean>(true);
+
+  // Clear any previously cached token for maximum security
+  useEffect(() => {
+    try {
+      localStorage.removeItem('sathwik_git_token');
+    } catch (e) {}
+  }, []);
 
   // Repository Telemetry & Data Usage State
   const [repoInfo, setRepoInfo] = useState<any>(null);
@@ -148,79 +158,45 @@ export function BackupRestoreTab({
   // 1. Fetch GitHub Status & Saved Token
   const fetchGithubStatus = async () => {
     try {
-      const res = await fetch('/api/github/status');
-      if (res.ok) {
-        const json = await res.json();
+      const { ok, data: json } = await safeFetchJson('/api/github/status');
+      if (ok && json) {
         setGithubStatus(json);
+      } else {
+        // Fallback for static hosting (Netlify)
+        setGithubStatus({
+          configured: true,
+          repo: GITHUB_REPO,
+          branch: GITHUB_BRANCH,
+          cliAvailable: false,
+          mode: 'client_rest',
+          status: 'Direct GitHub Sync Ready',
+          lastCommit: 'Synchronized on GitHub',
+        });
       }
     } catch (e) {
       console.warn('Failed to fetch GitHub status:', e);
     }
   };
 
-  const fetchSavedToken = async () => {
-    try {
-      // First check localStorage
-      const local = localStorage.getItem('sathwik_git_token') || '';
-      if (local) {
-        setSavedToken(local);
-        if (!personalAccessToken) {
-          setPersonalAccessToken(local);
-        }
-      }
-
-      // Then check backend
-      const res = await fetch('/api/github/token', { headers: getAuthHeaders() });
-      if (res.ok) {
-        const json = await res.json();
-        if (json.hasToken && json.token) {
-          setSavedToken(json.token);
-          localStorage.setItem('sathwik_git_token', json.token);
-          if (!personalAccessToken) {
-            setPersonalAccessToken(json.token);
-          }
-          // Quiet background verification
-          fetch('/api/github/verify', {
-            method: 'POST',
-            headers: getAuthHeaders(),
-            body: JSON.stringify({ token: json.token }),
-          })
-            .then((r) => r.json())
-            .then((v) => {
-              if (v.valid) setVerificationResult(v);
-            })
-            .catch(() => {});
-        }
-      }
-    } catch (e) {
-      console.warn('Failed to load saved git token:', e);
-    }
-  };
-
-  // Live Token Verification Handler
+  // Live Token Verification Handler (Direct GitHub API call with CORS support)
   const handleVerifyToken = async (customToken?: string) => {
-    const key = (customToken !== undefined ? customToken : (personalAccessToken || savedToken)).trim();
+    const key = (customToken !== undefined ? customToken : personalAccessToken).trim();
     if (!key) {
-      showToast('Token Required', 'Please enter or save a GitHub token to verify.', 'Alert');
+      showToast('Token Required', 'Please enter a GitHub Personal Access Token to verify.', 'Alert');
       return;
     }
 
     setIsVerifyingToken(true);
     try {
-      const res = await fetch('/api/github/verify', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ token: key }),
-      });
-      const json = await res.json();
-      setVerificationResult(json);
+      const res = await verifyGitHubTokenDirect(key);
+      setVerificationResult(res);
 
-      if (json.valid && json.hasRepoScope) {
-        showToast('Token Verified!', `Connected to @${json.login} with full repository write permissions!`, 'Verified');
-      } else if (json.valid) {
-        showToast('Scope Warning', `Valid token for @${json.login}, but missing the "repo" scope!`, 'Alert');
+      if (res.valid && res.hasRepoScope) {
+        showToast('Token Verified!', `Connected to @${res.login} with full repository write permissions!`, 'Verified');
+      } else if (res.valid) {
+        showToast('Scope Warning', `Valid token for @${res.login}, but missing the "repo" scope!`, 'Alert');
       } else {
-        showToast('Verification Failed', json.message || 'Invalid GitHub token. Please re-generate PAT.', 'Error');
+        showToast('Verification Failed', res.message || 'Invalid GitHub token. Please check credentials.', 'Error');
       }
     } catch (e: any) {
       showToast('Verification Error', e?.message || 'Could not verify token with GitHub.', 'Error');
@@ -233,10 +209,37 @@ export function BackupRestoreTab({
   const fetchGitHistory = async () => {
     setIsLoadingHistory(true);
     try {
-      const res = await fetch('/api/github/history');
-      if (res.ok) {
-        const json = await res.json();
+      const { ok, data: json } = await safeFetchJson('/api/github/history');
+      if (ok && json) {
         setHistoryData(json);
+      } else {
+        // Fallback: Query GitHub API directly for commits
+        const token = personalAccessToken.trim();
+        const headers: Record<string, string> = { Accept: 'application/vnd.github+json' };
+        if (token) headers['Authorization'] = `Bearer ${token}`;
+
+        const ghRes = await fetch(
+          `https://api.github.com/repos/${GITHUB_REPO}/commits?sha=${GITHUB_BRANCH}&per_page=15`,
+          { headers }
+        );
+        if (ghRes.ok) {
+          const commits = await ghRes.json();
+          setHistoryData({
+            commits: (Array.isArray(commits) ? commits : []).map((c: any) => ({
+              hash: c.sha,
+              shortHash: c.sha.slice(0, 7),
+              message: c.commit?.message || '',
+              author: c.commit?.author?.name || c.author?.login || 'Dubbaka Sathwik',
+              date: c.commit?.author?.date || new Date().toISOString(),
+              relativeDate: 'recently',
+              commitUrl: c.html_url || `https://github.com/${GITHUB_REPO}/commit/${c.sha}`,
+            })),
+            pushEvents: [],
+            branch: GITHUB_BRANCH,
+            repo: GITHUB_REPO,
+            repoUrl: `https://github.com/${GITHUB_REPO}`,
+          });
+        }
       }
     } catch (e) {
       console.warn('Failed to load git history:', e);
@@ -249,16 +252,36 @@ export function BackupRestoreTab({
   const fetchRepoInfo = async (customToken?: string) => {
     setIsLoadingRepoInfo(true);
     try {
-      const active = (customToken !== undefined ? customToken : (personalAccessToken || savedToken)).trim();
-      const headers: Record<string, string> = {};
-      if (active) {
-        headers['Authorization'] = `Bearer ${active}`;
-      }
-      const url = active ? `/api/github/repo-info?token=${encodeURIComponent(active)}` : '/api/github/repo-info';
-      const res = await fetch(url, { headers });
-      if (res.ok) {
-        const json = await res.json();
+      const active = (customToken !== undefined ? customToken : personalAccessToken).trim();
+      const headers: Record<string, string> = { Accept: 'application/vnd.github+json' };
+      if (active) headers['Authorization'] = `Bearer ${active}`;
+
+      const { ok, data: json } = await safeFetchJson(
+        active ? `/api/github/repo-info?token=${encodeURIComponent(active)}` : '/api/github/repo-info',
+        { headers: getAuthHeaders() }
+      );
+      if (ok && json) {
         setRepoInfo(json);
+      } else {
+        const ghRepoRes = await fetch(`https://api.github.com/repos/${GITHUB_REPO}`, { headers });
+        if (ghRepoRes.ok) {
+          const repo = await ghRepoRes.json();
+          setRepoInfo({
+            configured: true,
+            repoDetails: {
+              name: repo.name,
+              fullName: repo.full_name,
+              private: repo.private,
+              htmlUrl: repo.html_url,
+              cloneUrl: repo.clone_url,
+              defaultBranch: repo.default_branch,
+              sizeKb: repo.size,
+              openIssuesCount: repo.open_issues_count,
+              stargazersCount: repo.stargazers_count,
+              forksCount: repo.forks_count,
+            },
+          });
+        }
       }
     } catch (e) {
       console.warn('Failed to load repo info:', e);
@@ -269,7 +292,6 @@ export function BackupRestoreTab({
 
   useEffect(() => {
     fetchGithubStatus();
-    fetchSavedToken();
     fetchGitHistory();
     fetchRepoInfo();
   }, []);
@@ -283,90 +305,7 @@ export function BackupRestoreTab({
     }
   }, [activeSubTab]);
 
-  // 3. Save Git Token
-  const handleSaveToken = async (tokenToSave?: string) => {
-    const key = (tokenToSave !== undefined ? tokenToSave : personalAccessToken).trim();
-    if (!key) {
-      showToast('Key Empty', 'Please enter a GitHub Personal Access Token to save.', 'Alert');
-      return;
-    }
-
-    setIsSavingToken(true);
-    try {
-      // Save locally in browser
-      localStorage.setItem('sathwik_git_token', key);
-      setSavedToken(key);
-
-      // Save to server backend
-      const res = await fetch('/api/github/token', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify({ token: key }),
-      });
-      const json = await res.json();
-
-      if (json.success) {
-        showToast('Git Key Saved', 'GitHub Token saved securely! You can copy or push anytime.', 'Key Vault');
-        await fetchGithubStatus();
-      } else {
-        showToast('Save Warning', json.message || 'Token saved in browser storage only.', 'Notice');
-      }
-    } catch (e: any) {
-      showToast('Token Saved Locally', 'Key saved in browser localStorage successfully.', 'Key Vault');
-    } finally {
-      setIsSavingToken(false);
-    }
-  };
-
-  // 4. Copy Token to Clipboard
-  const handleCopyToken = (tokenToCopy?: string) => {
-    const key = (tokenToCopy !== undefined ? tokenToCopy : (savedToken || personalAccessToken)).trim();
-    if (!key) {
-      showToast('No Key Available', 'No token to copy. Enter a token first.', 'Alert');
-      return;
-    }
-
-    if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(key);
-      setCopiedToken(true);
-      showToast('Key Copied!', 'GitHub Access Token copied to clipboard.', 'Clipboard');
-      setTimeout(() => setCopiedToken(false), 2000);
-    } else {
-      // Fallback
-      const textArea = document.createElement('textarea');
-      textArea.value = key;
-      document.body.appendChild(textArea);
-      textArea.select();
-      document.execCommand('copy');
-      document.body.removeChild(textArea);
-      setCopiedToken(true);
-      showToast('Key Copied!', 'GitHub Access Token copied to clipboard.', 'Clipboard');
-      setTimeout(() => setCopiedToken(false), 2000);
-    }
-  };
-
-  // 5. Insert Saved Key into Token Field
-  const handleInsertSavedKey = () => {
-    if (!savedToken) {
-      showToast('No Saved Key', 'No saved token found. Please enter and save one.', 'Alert');
-      return;
-    }
-    setPersonalAccessToken(savedToken);
-    showToast('Key Inserted', 'Saved GitHub token placed in token input field.', 'Ready');
-  };
-
-  // 6. Clear / Delete Saved Key
-  const handleClearSavedKey = async () => {
-    localStorage.removeItem('sathwik_git_token');
-    setSavedToken('');
-    try {
-      await fetch('/api/github/token', { method: 'DELETE', headers: getAuthHeaders() });
-    } catch (e) {}
-    showToast('Saved Key Removed', 'Saved GitHub token has been cleared.', 'Storage');
-    await fetchGithubStatus();
-  };
-
-  // 7. Copy Commit Hash
+  // Copy Commit Hash
   const handleCopyCommitHash = (hash: string) => {
     if (navigator.clipboard) {
       navigator.clipboard.writeText(hash);
@@ -376,45 +315,36 @@ export function BackupRestoreTab({
     }
   };
 
-  // 8. Trigger Git Push
+  // 3. Trigger Git Push (Zero-Persistence: Token is never saved, executed on demand & cleared)
   const handleSyncGithub = async () => {
-    const effectiveToken = (personalAccessToken.trim() || savedToken.trim());
+    const effectiveToken = personalAccessToken.trim();
     if (!effectiveToken) {
-      showToast('Token Required', 'Please enter your GitHub Personal Access Token or save one.', 'Error');
+      showToast('Token Required', 'Please enter a GitHub Personal Access Token to push.', 'Error');
       return;
     }
 
     setIsSyncingGithub(true);
     try {
-      const payload: Record<string, any> = {
-        token: effectiveToken,
-        message: customCommitMessage.trim() || undefined,
-        saveToken: rememberKey,
-        data,
-      };
+      showToast('Pushing Changes', 'Connecting directly to GitHub repository from browser...', 'GitHub');
 
-      // Also ensure it's saved if rememberKey is true
-      if (rememberKey && effectiveToken) {
-        localStorage.setItem('sathwik_git_token', effectiveToken);
-        setSavedToken(effectiveToken);
-      }
+      const clientPush = await pushToGitHubClientDirect(
+        effectiveToken,
+        customCommitMessage.trim(),
+        data
+      );
 
-      const res = await fetch('/api/github/sync', {
-        method: 'POST',
-        headers: getAuthHeaders(),
-        body: JSON.stringify(payload),
-      });
-      const json = await res.json();
-      if (json.success) {
-        showToast('GitHub Sync Succeeded', `Pushed commit ${json.commit} to ${json.branch}!`, 'GitHub');
-        setCustomCommitMessage('');
-        await fetchGithubStatus();
-        await fetchGitHistory();
-      } else {
-        showToast('GitHub Sync Failed', json.message || 'Push failed', 'Error');
-      }
+      showToast(
+        'GitHub Push Succeeded!',
+        `Pushed commit ${clientPush.commit} to ${clientPush.branch}! Netlify will redeploy automatically.`,
+        'GitHub'
+      );
+      setCustomCommitMessage('');
+      setPersonalAccessToken(''); // Auto-clear token from memory after push
+      setVerificationResult(null);
+      await fetchGithubStatus();
+      await fetchGitHistory();
     } catch (err: any) {
-      showToast('GitHub Sync Error', err?.message || 'Network error during GitHub push', 'Error');
+      showToast('GitHub Push Error', err?.message || 'Network error during GitHub push', 'Error');
     } finally {
       setIsSyncingGithub(false);
     }
@@ -689,15 +619,15 @@ export function BackupRestoreTab({
               </div>
 
               <div className="flex items-center gap-2">
-                {savedToken || githubStatus?.configured ? (
+                {verificationResult?.valid || personalAccessToken.trim().length > 0 ? (
                   <div className="px-3 py-1.5 rounded-xl bg-zinc-950 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold flex items-center gap-1.5">
                     <CheckCircle2 className="w-4 h-4 text-emerald-400" />
-                    <span>Git Key Ready & Active</span>
+                    <span>Token Ready (On-Demand)</span>
                   </div>
                 ) : (
-                  <div className="px-3 py-1.5 rounded-xl bg-zinc-950 border border-amber-500/40 text-amber-400 text-xs font-mono font-bold flex items-center gap-1.5">
-                    <AlertTriangle className="w-4 h-4 text-amber-400" />
-                    <span>Token Required</span>
+                  <div className="px-3 py-1.5 rounded-xl bg-zinc-950 border border-emerald-500/30 text-emerald-300 text-xs font-mono flex items-center gap-1.5">
+                    <ShieldCheck className="w-4 h-4 text-emerald-400" />
+                    <span>Zero-Persistence Security</span>
                   </div>
                 )}
               </div>
@@ -737,126 +667,69 @@ export function BackupRestoreTab({
             </div>
 
             {/* ========================================================= */}
-            {/* GITHUB KEY VAULT & SAVE MANAGER */}
+            {/* DIRECT GITHUB TOKEN GENERATOR (ZERO PERSISTENCE) */}
             {/* ========================================================= */}
-            <div className="p-5 rounded-2xl bg-zinc-900/60 border border-zinc-800 space-y-4">
-              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                <div className="space-y-0.5">
+            <div className="p-5 rounded-2xl bg-gradient-to-r from-zinc-950 via-zinc-900/90 to-zinc-950 border border-emerald-500/30 space-y-4 shadow-xl">
+              <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+                <div className="space-y-1">
                   <div className="flex items-center gap-2">
-                    <div className="p-1.5 rounded-lg bg-amber-500/20 text-amber-400 border border-amber-500/30">
-                      <Key className="w-4 h-4" />
+                    <div className="p-1.5 rounded-lg bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
+                      <ShieldCheck className="w-4 h-4" />
                     </div>
                     <h4 className="text-sm font-bold text-white">
-                      GitHub Key Manager & Saved Access Token
+                      Zero-Persistence GitHub Security Mode
                     </h4>
-                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-zinc-950 text-zinc-400 border border-zinc-800">
-                      Vault
+                    <span className="text-[10px] font-mono px-2 py-0.5 rounded bg-emerald-950 text-emerald-300 border border-emerald-500/40">
+                      Ultra-Secure
                     </span>
                   </div>
-                  <p className="text-[11px] text-zinc-400">
-                    Save your GitHub Personal Access Token (PAT) here once. You can copy it with one click, insert it into the push field, or push automatically.
+                  <p className="text-xs text-zinc-400 leading-relaxed max-w-2xl">
+                    For maximum security, your GitHub token is <span className="text-white font-semibold">never stored</span> on any server, database, or browser storage. Whenever you want to push updates, generate a fresh token from GitHub, paste it below, and push. It is discarded immediately after pushing.
                   </p>
                 </div>
 
-                {savedToken && (
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyToken(savedToken)}
-                      className="px-3 py-1.5 rounded-lg bg-emerald-950 hover:bg-emerald-900 border border-emerald-500/40 text-emerald-300 hover:text-white text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
-                      title="Copy saved token to clipboard"
-                    >
-                      {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                      <span>{copiedToken ? 'Copied!' : 'Copy Saved Key'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleInsertSavedKey}
-                      className="px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 border border-zinc-700 text-zinc-200 text-xs font-mono font-semibold flex items-center gap-1.5 transition-all cursor-pointer"
-                      title="Insert saved key into push input field"
-                    >
-                      <Sparkles className="w-3.5 h-3.5 text-amber-400" />
-                      <span>Use Key</span>
-                    </button>
-                  </div>
-                )}
+                <a
+                  href="https://github.com/settings/tokens/new?scopes=repo&description=Dubbaka-Sathwik-Portfolio-Push"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-600 to-emerald-500 hover:from-emerald-500 hover:to-emerald-400 text-white font-mono font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer shadow-[0_0_20px_rgba(16,185,129,0.3)] shrink-0"
+                >
+                  <Github className="w-4 h-4" />
+                  <span>Generate New Git Token</span>
+                  <ArrowUpRight className="w-3.5 h-3.5" />
+                </a>
+              </div>
+            </div>
+
+            {/* ========================================================= */}
+            {/* PUSH CHANGES ACTION FORM (ON-DEMAND) */}
+            {/* ========================================================= */}
+            <div className="p-5 rounded-2xl bg-zinc-900/50 border border-zinc-800 space-y-4">
+              <div className="space-y-1">
+                <h4 className="text-sm font-bold text-white flex items-center gap-2">
+                  <Upload className="w-4 h-4 text-emerald-400" />
+                  <span>Push Changes to GitHub</span>
+                </h4>
+                <p className="text-xs text-zinc-400">
+                  Directly stages updated project JSON data (<code className="text-emerald-400 font-mono">src/seed_data.json</code>) and public backups from your browser to your GitHub repository (<code className="text-zinc-300 font-mono">DubbakaSathwik/Dubbaka-Sathwik-Portfolio</code>).
+                </p>
               </div>
 
-              {/* Saved Key Status Display Box */}
-              {savedToken ? (
-                <div className="p-4 rounded-xl bg-emerald-950/20 border border-emerald-500/30 flex flex-col md:flex-row md:items-center justify-between gap-3">
-                  <div className="space-y-1">
-                    <div className="flex items-center gap-2 text-xs text-emerald-400 font-mono font-bold">
-                      <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                      <span>Key Stored & Protected</span>
-                      <span className="text-[10px] px-2 py-0.2 rounded bg-emerald-950 border border-emerald-500/30 text-emerald-300">
-                        Browser & Server
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <code className="text-xs font-mono text-zinc-300 bg-zinc-950 px-3 py-1 rounded-lg border border-zinc-800">
-                        {showSavedKey
-                          ? savedToken
-                          : `${savedToken.slice(0, 4)}••••••••••••••••••••••••${savedToken.slice(-4)}`}
-                      </code>
-                      <button
-                        type="button"
-                        onClick={() => setShowSavedKey(!showSavedKey)}
-                        className="p-1 rounded-md text-zinc-400 hover:text-zinc-200 cursor-pointer transition-colors"
-                        title={showSavedKey ? 'Hide key' : 'Show key'}
-                      >
-                        {showSavedKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                      </button>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopyToken(savedToken)}
-                      className="px-3 py-1.5 rounded-lg bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-200 hover:text-white text-xs font-mono flex items-center gap-1.5 cursor-pointer"
-                    >
-                      {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-emerald-400" />}
-                      <span>{copiedToken ? 'Copied' : 'Copy Key'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleClearSavedKey}
-                      className="px-2.5 py-1.5 rounded-lg bg-zinc-900 hover:bg-red-950/60 border border-zinc-800 hover:border-red-500/40 text-zinc-400 hover:text-red-300 text-xs font-mono flex items-center gap-1 cursor-pointer transition-colors"
-                      title="Clear saved token from storage"
-                    >
-                      <Trash2 className="w-3.5 h-3.5" />
-                      <span>Clear</span>
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 text-xs text-amber-300 flex items-center justify-between gap-3">
-                  <div className="flex items-center gap-2">
-                    <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0" />
-                    <span>No Git key saved yet. Save your token below so you don't have to enter it again!</span>
-                  </div>
-                  <a
-                    href="https://github.com/settings/tokens"
-                    target="_blank"
-                    rel="noreferrer"
-                    className="text-[11px] font-mono underline hover:text-white text-amber-300 shrink-0 flex items-center gap-1"
-                  >
-                    <span>Get GitHub PAT</span>
-                    <ArrowUpRight className="w-3 h-3" />
-                  </a>
-                </div>
-              )}
-
-              {/* Input for Saving/Updating the Key */}
+              {/* Token Input Field */}
               <div className="space-y-2 pt-1">
                 <div className="flex items-center justify-between">
                   <label className="block text-xs font-mono text-zinc-300 font-medium">
-                    {savedToken ? 'Update / Re-Save GitHub Token:' : 'Enter & Save Your GitHub Token (PAT):'}
+                    Paste Temporary GitHub Token (PAT):
                   </label>
-                  <span className="text-[10px] text-zinc-500 font-mono">
-                    Requires <code className="text-amber-400">repo</code> permissions
-                  </span>
+                  <a
+                    href="https://github.com/settings/tokens/new?scopes=repo&description=Dubbaka-Sathwik-Portfolio-Push"
+                    target="_blank"
+                    rel="noreferrer"
+                    className="text-[11px] font-mono text-emerald-400 hover:underline flex items-center gap-1"
+                  >
+                    <span>Need a new token? Click here</span>
+                    <ArrowUpRight className="w-3 h-3" />
+                  </a>
                 </div>
 
                 <div className="flex flex-col sm:flex-row items-center gap-2">
@@ -865,8 +738,8 @@ export function BackupRestoreTab({
                       type={showTokenInput ? 'text' : 'password'}
                       value={personalAccessToken}
                       onChange={(e) => setPersonalAccessToken(e.target.value)}
-                      placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                      className="w-full pl-3.5 pr-20 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400 font-mono"
+                      placeholder="Paste ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                      className="w-full pl-3.5 pr-12 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-emerald-500 font-mono"
                     />
                     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex items-center gap-1">
                       <button
@@ -877,40 +750,19 @@ export function BackupRestoreTab({
                       >
                         {showTokenInput ? <EyeOff className="w-3.5 h-3.5" /> : <Eye className="w-3.5 h-3.5" />}
                       </button>
-                      {personalAccessToken && (
-                        <button
-                          type="button"
-                          onClick={() => handleCopyToken(personalAccessToken)}
-                          className="p-1 rounded text-zinc-400 hover:text-emerald-400 cursor-pointer"
-                          title="Copy input text"
-                        >
-                          {copiedToken ? <Check className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5" />}
-                        </button>
-                      )}
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      disabled={isVerifyingToken || (!personalAccessToken.trim() && !savedToken)}
-                      onClick={() => handleVerifyToken()}
-                      className="w-full sm:w-auto px-3.5 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
-                      title="Verify this token against GitHub API"
-                    >
-                      <ShieldCheck className={`w-3.5 h-3.5 ${isVerifyingToken ? 'animate-spin' : ''}`} />
-                      <span>{isVerifyingToken ? 'Verifying...' : 'Verify Key'}</span>
-                    </button>
-                    <button
-                      type="button"
-                      disabled={isSavingToken || !personalAccessToken.trim()}
-                      onClick={() => handleSaveToken()}
-                      className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-zinc-950 font-mono font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0 shadow-sm"
-                    >
-                      <Key className="w-3.5 h-3.5" />
-                      <span>{isSavingToken ? 'Saving...' : 'Save Key'}</span>
-                    </button>
-                  </div>
+                  <button
+                    type="button"
+                    disabled={isVerifyingToken || !personalAccessToken.trim()}
+                    onClick={() => handleVerifyToken()}
+                    className="w-full sm:w-auto px-4 py-2.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 disabled:bg-zinc-950 disabled:text-zinc-600 border border-emerald-500/40 text-emerald-400 text-xs font-mono font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer shrink-0"
+                    title="Verify this token against GitHub API"
+                  >
+                    <ShieldCheck className={`w-3.5 h-3.5 ${isVerifyingToken ? 'animate-spin' : ''}`} />
+                    <span>{isVerifyingToken ? 'Verifying...' : 'Verify Token'}</span>
+                  </button>
                 </div>
 
                 {/* Live Token Verification Result Box */}
@@ -959,7 +811,7 @@ export function BackupRestoreTab({
                         </div>
                         <p className="text-[11px] text-zinc-300 mt-0.5">
                           {verificationResult.valid
-                            ? `Authenticated for ${verificationResult.name || verificationResult.login}. Ready for pushing changes to GitHub!`
+                            ? `Authenticated for ${verificationResult.name || verificationResult.login}. Ready to push changes!`
                             : verificationResult.message || 'The token provided is invalid or expired. Check your GitHub PAT settings.'}
                         </p>
                       </div>
@@ -977,45 +829,9 @@ export function BackupRestoreTab({
                   </div>
                 )}
               </div>
-            </div>
 
-            {/* ========================================================= */}
-            {/* PUSH CHANGES ACTION FORM */}
-            {/* ========================================================= */}
-            <div className="p-5 rounded-xl bg-zinc-900/50 border border-zinc-800 space-y-4">
-              <div className="space-y-1">
-                <h4 className="text-sm font-bold text-white flex items-center gap-2">
-                  <Upload className="w-4 h-4 text-emerald-400" />
-                  <span>Push Changes to GitHub</span>
-                </h4>
-                <p className="text-xs text-zinc-400">
-                  Stages all updated project JSON data (<code className="text-emerald-400 font-mono">src/seed_data.json</code>) and uploaded images (<code className="text-emerald-400 font-mono">public/images/</code>) and pushes a clean commit to your GitHub repository.
-                </p>
-              </div>
-
-              {/* Token prompt if neither saved nor entered */}
-              {!savedToken && !personalAccessToken && (
-                <div className="p-3.5 rounded-xl bg-amber-500/10 border border-amber-500/30 space-y-2">
-                  <div className="flex items-center justify-between">
-                    <div className="flex items-center gap-2 text-amber-300 text-xs font-bold font-mono">
-                      <Key className="w-3.5 h-3.5 text-amber-400" />
-                      <span>GitHub Personal Access Token (PAT)</span>
-                    </div>
-                  </div>
-                  <p className="text-[11px] text-zinc-400 leading-relaxed">
-                    Enter your GitHub token with <code className="text-amber-300 font-mono">repo</code> scope, or save it above to push smoothly.
-                  </p>
-                  <input
-                    type="password"
-                    value={personalAccessToken}
-                    onChange={(e) => setPersonalAccessToken(e.target.value)}
-                    placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
-                    className="w-full px-3 py-2 rounded-lg bg-zinc-950 border border-zinc-700 text-xs text-white placeholder-zinc-600 focus:outline-none focus:border-amber-400 font-mono"
-                  />
-                </div>
-              )}
-
-              <div className="space-y-3">
+              {/* Commit Message & Push Action */}
+              <div className="space-y-3 pt-2">
                 <div>
                   <label className="block text-xs font-mono text-zinc-300 mb-1.5 font-medium">
                     Commit Message (Optional):
@@ -1029,27 +845,15 @@ export function BackupRestoreTab({
                   />
                 </div>
 
-                <div className="flex items-center gap-2">
-                  <label className="flex items-center gap-2 text-xs font-mono text-zinc-400 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={rememberKey}
-                      onChange={(e) => setRememberKey(e.target.checked)}
-                      className="rounded border-zinc-700 text-emerald-500 focus:ring-emerald-500"
-                    />
-                    <span>Remember and keep key saved for future pushes</span>
-                  </label>
-                </div>
-
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-3 pt-2">
                   <div className="text-[11px] text-zinc-400 flex items-center gap-1.5">
                     <ShieldCheck className="w-4 h-4 text-emerald-400" />
-                    <span>Safe & secure. Token is authenticated directly against GitHub and remains protected.</span>
+                    <span>Direct browser-to-GitHub push. Token is never saved and is cleared immediately after sync.</span>
                   </div>
 
                   <button
                     type="button"
-                    disabled={isSyncingGithub}
+                    disabled={isSyncingGithub || !personalAccessToken.trim()}
                     onClick={handleSyncGithub}
                     className="w-full sm:w-auto px-6 py-3 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:bg-zinc-800 disabled:text-zinc-600 text-white font-mono font-bold text-xs flex items-center justify-center gap-2 shadow-[0_0_20px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
                   >

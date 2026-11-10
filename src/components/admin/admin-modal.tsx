@@ -271,54 +271,31 @@ export function AdminPortalModal() {
   const [backupSubTab, setBackupSubTab] = useState<'github' | 'history' | 'export' | 'repo-info'>('github');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
 
-  // GitHub token state for Projects tab
+  // GitHub token state for Projects tab (Zero-Persistence: never stored, used strictly on-demand)
   const [showGitTokenInputInProjects, setShowGitTokenInputInProjects] = useState(false);
-  const [gitTokenInput, setGitTokenInput] = useState(() => {
-    try {
-      return typeof window !== 'undefined' ? localStorage.getItem('sathwik_git_token') || '' : '';
-    } catch (e) {
-      return '';
-    }
-  });
+  const [gitTokenInput, setGitTokenInput] = useState('');
 
-  const handleSaveGitTokenInProjects = async () => {
-    const trimmed = gitTokenInput.trim();
-    if (!trimmed) return;
+  // Clean up any stale tokens in storage for security
+  useEffect(() => {
     try {
-      localStorage.setItem('sathwik_git_token', trimmed);
-      await fetch('/api/github/token', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ token: trimmed }),
-      });
-      setShowGitTokenInputInProjects(false);
-      setToast({
-        visible: true,
-        sectionName: 'GitHub Token',
-        message: 'GitHub Personal Access Token saved successfully!',
-        database: 'GitHub API',
-      });
-      setTimeout(() => setToast(null), 3500);
-    } catch (e) {
-      console.warn('Failed to save GitHub token:', e);
-    }
-  };
+      if (typeof window !== 'undefined') {
+        localStorage.removeItem('sathwik_git_token');
+      }
+    } catch (e) {}
+  }, []);
 
   const handlePushProjectsOrderToGitHub = async () => {
     // Check if we have token
-    let token = gitTokenInput.trim();
-    if (!token && typeof window !== 'undefined') {
-      token = (localStorage.getItem('sathwik_git_token') || '').trim();
-    }
+    const token = gitTokenInput.trim();
     if (!token) {
       setShowGitTokenInputInProjects(true);
       setToast({
         visible: true,
         sectionName: 'GitHub Token Required',
-        message: 'Please provide your GitHub Personal Access Token to commit and push.',
+        message: 'Please paste your GitHub Personal Access Token (or click "Generate Token") to push.',
         database: 'GitHub API',
       });
-      setTimeout(() => setToast(null), 4000);
+      setTimeout(() => setToast(null), 5000);
       return;
     }
 
@@ -335,6 +312,8 @@ export function AdminPortalModal() {
     );
 
     if (res.success) {
+      setGitTokenInput('');
+      setShowGitTokenInputInProjects(false);
       setToast({
         visible: true,
         sectionName: 'GitHub Sync Complete',
@@ -2403,12 +2382,12 @@ export function AdminPortalModal() {
                           </div>
                         </div>
 
-                        {/* Collapsible GitHub Personal Access Token Input */}
+                        {/* Collapsible GitHub Personal Access Token Input (Zero-Persistence) */}
                         {showGitTokenInputInProjects && (
                           <div className="p-3.5 rounded-xl bg-zinc-900/90 border border-emerald-500/30 space-y-2.5">
                             <div className="flex items-center justify-between">
                               <span className="text-xs font-mono font-bold text-white flex items-center gap-1.5">
-                                <KeyRound className="w-3.5 h-3.5 text-emerald-400" /> GitHub Personal Access Token (classic / fine-grained)
+                                <KeyRound className="w-3.5 h-3.5 text-emerald-400" /> One-Time GitHub Push Token (Zero-Persistence)
                               </span>
                               <button
                                 type="button"
@@ -2418,23 +2397,32 @@ export function AdminPortalModal() {
                                 Close ✕
                               </button>
                             </div>
-                            <p className="text-[11px] text-zinc-400 font-mono">
-                              Used to authenticate Git commits directly to your GitHub repo without command line:
-                            </p>
+                            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2 p-2 rounded-lg bg-black/60 border border-zinc-800 text-[11px] font-mono text-zinc-400">
+                              <span>Tokens are never stored or logged. Discarded immediately after push.</span>
+                              <a
+                                href="https://github.com/settings/tokens/new?scopes=repo&description=Dubbaka-Sathwik-Portfolio-Push"
+                                target="_blank"
+                                rel="noreferrer"
+                                className="text-emerald-400 hover:underline font-bold flex items-center gap-1 shrink-0"
+                              >
+                                <span>Generate New Token ↗</span>
+                              </a>
+                            </div>
                             <div className="flex items-center gap-2">
                               <input
                                 type="password"
                                 value={gitTokenInput}
                                 onChange={(e) => setGitTokenInput(e.target.value)}
-                                placeholder="ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+                                placeholder="Paste token: ghp_xxxxxxxxxxxxxxxxxxxxxxxxxxxx"
                                 className="flex-1 px-3 py-1.5 rounded-lg bg-black border border-zinc-700 text-emerald-400 text-xs font-mono focus:outline-none focus:border-emerald-500"
                               />
                               <button
                                 type="button"
-                                onClick={handleSaveGitTokenInProjects}
-                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold transition-colors cursor-pointer shrink-0"
+                                onClick={handlePushProjectsOrderToGitHub}
+                                className="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-mono text-xs font-bold transition-colors cursor-pointer shrink-0 flex items-center gap-1.5"
                               >
-                                Save Token
+                                <Upload className="w-3.5 h-3.5" />
+                                <span>Push Now</span>
                               </button>
                             </div>
                           </div>

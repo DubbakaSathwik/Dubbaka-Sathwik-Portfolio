@@ -33,6 +33,7 @@ import {
 } from '../utils/card-id';
 import { auth, googleProvider, isAuthorizedAdmin } from '../lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import { pushToGitHubClientDirect, safeFetchJson } from '../lib/github-client';
 
 interface CMSContextType {
   data: CMSData & { contactMessages: ContactMessage[] };
@@ -857,33 +858,37 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   ): Promise<{ success: boolean; message: string; commit?: string; error?: string }> => {
     setIsGitSyncing(true);
     try {
-      let token = (explicitToken || '').trim();
-      if (!token && typeof window !== 'undefined') {
-        token = (localStorage.getItem('sathwik_git_token') || '').trim();
+      const token = (explicitToken || '').trim();
+      if (!token) {
+        setIsGitSyncing(false);
+        return {
+          success: false,
+          message: 'GitHub Personal Access Token is required to push changes.',
+          error: 'Token missing',
+        };
       }
 
       const defaultMsg =
         commitMessage?.trim() ||
         `update: reorder technical projects & sync portfolio data (${new Date().toLocaleString('en-US')})`;
 
-      const res = await fetch('/api/github/sync', {
+      // 1. Try server sync first
+      const { ok, data: json } = await safeFetchJson('/api/github/sync', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           ...(authToken ? { Authorization: `Bearer ${authToken}` } : {}),
         },
         body: JSON.stringify({
-          token: token || undefined,
+          token,
           message: defaultMsg,
-          saveToken: Boolean(token),
+          saveToken: false, // Never save token
           data,
         }),
       });
 
-      const json = await res.json();
-      setIsGitSyncing(false);
-
-      if (json.success) {
+      if (ok && json && json.success) {
+        setIsGitSyncing(false);
         setGitCardOrderPending(false);
         if (json.commit) {
           setLastGitCommit(json.commit);
@@ -899,13 +904,26 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           message: json.message || `Pushed commit ${json.commit} to GitHub!`,
           commit: json.commit,
         };
-      } else {
-        return {
-          success: false,
-          message: json.message || 'Failed to push to GitHub',
-          error: json.message,
-        };
       }
+
+      // 2. Client-side fallback via GitHub Git Data API (For Netlify / static hosts)
+      const clientPush = await pushToGitHubClientDirect(token, defaultMsg, data);
+      setIsGitSyncing(false);
+      setGitCardOrderPending(false);
+      setLastGitCommit(clientPush.commit);
+      refreshStaticBackupInfo();
+
+      sendTelegramConsoleLog(
+        'GitHub Sync Pushed (Client API)',
+        `Git commit ${clientPush.commit} pushed to GitHub repository via direct browser API:\n${defaultMsg}`,
+        'success'
+      );
+
+      return {
+        success: true,
+        message: `Pushed commit ${clientPush.commit} to GitHub! Netlify will redeploy automatically.`,
+        commit: clientPush.commit,
+      };
     } catch (err: any) {
       setIsGitSyncing(false);
       console.error('[CMSContext] GitHub Sync Error:', err);
