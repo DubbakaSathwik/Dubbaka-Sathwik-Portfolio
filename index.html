@@ -3,8 +3,14 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Favicon & Touch Icons for Google Search, Browsers, and Mobile -->
+    <link rel="icon" href="/favicon.ico" sizes="48x48" />
     <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
-    <link rel="apple-touch-icon" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/favicon-48x48.png" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="icon" type="image/png" sizes="192x192" href="/favicon-192x192.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
     <meta name="theme-color" content="#050505" />
 
     <!-- Google Search Engine Optimization (SEO) & Identity -->
@@ -32,7 +38,7 @@
       content="Explore technical projects, full-stack web applications, AI systems, creative designs, and achievements by Dubbaka Sathwik."
     />
     <meta property="og:url" content="https://dubbakasathwik.netlify.app/" />
-    <meta property="og:site_name" content="Dubbaka Sathwik Portfolio" />
+    <meta property="og:site_name" content="Dubbaka Sathwik" />
     <meta property="og:image" content="/uploads/assets/static_about_avatarUrl_a6839352e4.jpg" />
     <meta property="profile:first_name" content="Sathwik" />
     <meta property="profile:last_name" content="Dubbaka" />
@@ -104,9 +110,13 @@
           "@type": "WebSite",
           "@id": "https://dubbakasathwik.netlify.app/#website",
           "url": "https://dubbakasathwik.netlify.app/",
-          "name": "Dubbaka Sathwik Portfolio",
-          "headline": "Dubbaka Sathwik - Full-Stack Developer & AI Software Engineer",
-          "description": "Personal Portfolio and project showcase of Dubbaka Sathwik.",
+          "name": "Dubbaka Sathwik",
+          "alternateName": [
+            "Dubbaka Sathwik Portfolio",
+            "Sathwik Dubbaka",
+            "DubbakaSathwik"
+          ],
+          "description": "Official portfolio of Dubbaka Sathwik. Full-Stack Developer, AI Software Engineer & Cinematic Video Editor.",
           "author": {
             "@id": "https://dubbakasathwik.netlify.app/#dubbaka-sathwik"
           }
@@ -116,7 +126,27 @@
     </script>
   </head>
   <body>
-    <div id="root"></div>
+    <div id="root">
+      <main style="display:none;" aria-label="Dubbaka Sathwik Portfolio Content">
+        <h1>Dubbaka Sathwik | Official Personal Portfolio Website</h1>
+        <p>Full-Stack Developer, AI Software Engineer &amp; Cinematic Video Editor based in Hyderabad, Telangana.</p>
+        <p>Computer Science and Information Technology (CSIT) student at MVSR Engineering College.</p>
+        <section>
+          <h2>Featured Technical Projects &amp; AI Systems</h2>
+          <ul>
+            <li>Mock2Pitch - AI-powered presentation rehearsal tool built during the Build Theory Fellowship.</li>
+            <li>Full Stack Web Applications &amp; AI Automation Tools built with React, Node.js, TypeScript, Next.js, and Firebase.</li>
+          </ul>
+        </section>
+        <section>
+          <h2>Connect &amp; Profiles</h2>
+          <p>Official Website: https://dubbakasathwik.netlify.app/</p>
+          <p>GitHub: https://github.com/DubbakaSathwik</p>
+          <p>LinkedIn: https://linkedin.com/in/dubbakasathwik</p>
+          <p>Email: dubbakasathwik@gmail.com</p>
+        </section>
+      </main>
+    </div>
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
