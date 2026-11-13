@@ -117,20 +117,56 @@ export interface BufferedLogEntry {
 let consoleLogBuffer: BufferedLogEntry[] = [];
 let lastConsoleTimerFlushTime = Date.now();
 
-export async function sendTelegramMessageDirect(htmlText: string): Promise<boolean> {
-  if (!telegramSettings.masterEnabled) return false;
-  if (!config.TELEGRAM_BOT_TOKEN || !config.TELEGRAM_CHAT_ID) return false;
+export interface TelegramSendResult {
+  ok: boolean;
+  error?: string;
+  missingCredentials?: boolean;
+}
+
+export function getTelegramCredentialsStatus() {
+  const missing: string[] = [];
+  if (!config.TELEGRAM_BOT_TOKEN) missing.push('TELEGRAM_BOT_TOKEN');
+  if (!config.TELEGRAM_CHAT_ID) missing.push('TELEGRAM_CHAT_ID');
+  return {
+    configured: missing.length === 0,
+    botTokenSet: Boolean(config.TELEGRAM_BOT_TOKEN),
+    chatIdSet: Boolean(config.TELEGRAM_CHAT_ID),
+    missing,
+  };
+}
+
+export async function sendTelegramMessageDetailed(
+  htmlText: string,
+  options?: { bypassMaster?: boolean; botToken?: string; chatId?: string }
+): Promise<TelegramSendResult> {
+  if (!options?.bypassMaster && !telegramSettings.masterEnabled) {
+    return { ok: false, error: 'Telegram Master Switch is turned OFF.' };
+  }
+
+  const token = (options?.botToken || config.TELEGRAM_BOT_TOKEN || '').trim();
+  const chatId = (options?.chatId || config.TELEGRAM_CHAT_ID || '').trim();
+
+  if (!token || !chatId) {
+    const missing: string[] = [];
+    if (!token) missing.push('TELEGRAM_BOT_TOKEN');
+    if (!chatId) missing.push('TELEGRAM_CHAT_ID');
+    return {
+      ok: false,
+      missingCredentials: true,
+      error: `Missing ${missing.join(' and ')} in server environment variables.`,
+    };
+  }
 
   const controller = new AbortController();
   const timeoutId = setTimeout(() => controller.abort(), 7000); // 7s timeout
 
   try {
-    const url = `https://api.telegram.org/bot${config.TELEGRAM_BOT_TOKEN}/sendMessage`;
+    const url = `https://api.telegram.org/bot${token}/sendMessage`;
     const response = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        chat_id: config.TELEGRAM_CHAT_ID,
+        chat_id: chatId,
         text: htmlText,
         parse_mode: 'HTML',
         disable_web_page_preview: true,
@@ -139,17 +175,28 @@ export async function sendTelegramMessageDirect(htmlText: string): Promise<boole
     });
     clearTimeout(timeoutId);
 
-    const resJson = await response.json();
+    const resJson: any = await response.json();
     if (!resJson.ok) {
       console.warn('[Telegram API] Response error:', resJson);
-      return false;
+      return {
+        ok: false,
+        error: resJson.description || `Telegram API error (${resJson.error_code || response.status})`,
+      };
     }
-    return true;
+    return { ok: true };
   } catch (err: any) {
     clearTimeout(timeoutId);
     console.warn('[Telegram API] Direct send warning (non-blocking):', err?.message || err);
-    return false;
+    return {
+      ok: false,
+      error: err?.name === 'AbortError' ? 'Telegram API request timed out (7s)' : err?.message || 'Network error reaching api.telegram.org',
+    };
   }
+}
+
+export async function sendTelegramMessageDirect(htmlText: string): Promise<boolean> {
+  const result = await sendTelegramMessageDetailed(htmlText);
+  return result.ok;
 }
 
 export async function flushConsoleLogBuffer(): Promise<{ success: boolean; count: number }> {

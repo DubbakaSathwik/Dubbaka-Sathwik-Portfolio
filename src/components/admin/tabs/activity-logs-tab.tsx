@@ -30,14 +30,16 @@ import {
   Edit3,
   Power,
   Check,
+  KeyRound,
 } from 'lucide-react';
 import {
   sendTelegramConsoleLog,
-  getTelegramSettings,
+  getTelegramDiagnostics,
   updateTelegramSettings,
   testTelegramBot,
   flushConsoleTimerLogs,
   TelegramSettings,
+  TelegramCredentialsStatus,
 } from '../../../utils/telegram';
 
 export interface ActivityLogItem {
@@ -80,32 +82,56 @@ export function ActivityLogsTab({
   const [pendingTimerCount, setPendingTimerCount] = useState(0);
   const [customIntervalInput, setCustomIntervalInput] = useState('2');
   const [isCustomSelected, setIsCustomSelected] = useState(false);
+  const [credentialsStatus, setCredentialsStatus] = useState<TelegramCredentialsStatus | null>(null);
+  const [backendReachable, setBackendReachable] = useState<boolean>(true);
+  const [showQuickCredsPanel, setShowQuickCredsPanel] = useState<boolean>(false);
+  const [oneTimeBotToken, setOneTimeBotToken] = useState<string>('');
+  const [oneTimeChatId, setOneTimeChatId] = useState<string>('');
+  const [lastTestError, setLastTestError] = useState<string | null>(null);
+
+  const getAdminAuthHeaders = (): Record<string, string> => {
+    const token =
+      typeof window !== 'undefined' ? localStorage.getItem('sathwik_portfolio_auth_token') : null;
+    return token ? { Authorization: `Bearer ${token}` } : {};
+  };
 
   const fetchTimerStatus = async () => {
     try {
       const res = await fetch('/api/telegram/timer/status');
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
       const data = await res.json();
       if (data.success) {
-        setPendingTimerCount(data.pendingCount || 0);
+        setPendingTimerCount(data.status?.pendingCount ?? data.pendingCount ?? 0);
       }
     } catch (e) {
       // Ignore
     }
   };
 
-  useEffect(() => {
-    getTelegramSettings().then((s) => {
-      setTgSettings(s);
-      if (s.consoleTimerIntervalMinutes) {
-        setCustomIntervalInput(String(s.consoleTimerIntervalMinutes));
-        const presets = [1, 2, 3, 5, 10];
-        if (!presets.includes(s.consoleTimerIntervalMinutes)) {
-          setIsCustomSelected(true);
-        }
+  const refreshDiagnostics = async () => {
+    const diag = await getTelegramDiagnostics();
+    setTgSettings(diag.settings);
+    setBackendReachable(diag.backendReachable);
+    if (diag.credentials) {
+      setCredentialsStatus(diag.credentials);
+      if (!diag.credentials.configured) {
+        setShowQuickCredsPanel(true);
       }
-    });
+    }
+    if (diag.settings.consoleTimerIntervalMinutes) {
+      setCustomIntervalInput(String(diag.settings.consoleTimerIntervalMinutes));
+      const presets = [1, 2, 3, 5, 10];
+      if (!presets.includes(diag.settings.consoleTimerIntervalMinutes)) {
+        setIsCustomSelected(true);
+      }
+    }
+  };
+
+  useEffect(() => {
+    refreshDiagnostics();
     fetchTimerStatus();
-    const timerInterval = setInterval(fetchTimerStatus, 3000);
+    const timerInterval = setInterval(fetchTimerStatus, 5000);
     return () => clearInterval(timerInterval);
   }, []);
 
@@ -152,10 +178,6 @@ export function ActivityLogsTab({
     setIsFlushingTimer(false);
   };
 
-  useEffect(() => {
-    getTelegramSettings().then((s) => setTgSettings(s));
-  }, []);
-
   const handleToggleSetting = async (key: keyof TelegramSettings) => {
     const updatedValue = !tgSettings[key];
     const newSettings = { ...tgSettings, [key]: updatedValue };
@@ -186,10 +208,24 @@ export function ActivityLogsTab({
 
   const handleTestBotClick = async () => {
     setTestingBot(true);
-    const res = await testTelegramBot();
+    setLastTestError(null);
+    const res = await testTelegramBot(
+      oneTimeBotToken.trim() && oneTimeChatId.trim()
+        ? { botToken: oneTimeBotToken.trim(), chatId: oneTimeChatId.trim() }
+        : undefined
+    );
+    if (res.credentials) {
+      setCredentialsStatus(res.credentials);
+    }
     if (res.success) {
+      setOneTimeBotToken('');
+      setOneTimeChatId('');
       showToast('Telegram Bot Operational', res.message, 'Telegram API');
     } else {
+      setLastTestError(res.message);
+      if (res.missingCredentials) {
+        setShowQuickCredsPanel(true);
+      }
       showToast('Telegram Bot Error', res.message, 'Error');
     }
     setTestingBot(false);
@@ -198,7 +234,11 @@ export function ActivityLogsTab({
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const res = await fetch('/api/logs');
+      const res = await fetch('/api/logs', {
+        headers: getAdminAuthHeaders(),
+      });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
       const data = await res.json();
       if (data.logs) {
         setLogs(data.logs);
@@ -220,7 +260,12 @@ export function ActivityLogsTab({
   const handleClearLogs = async () => {
     if (!window.confirm('Are you sure you want to clear all activity console logs?')) return;
     try {
-      const res = await fetch('/api/logs', { method: 'DELETE' });
+      const res = await fetch('/api/logs', {
+        method: 'DELETE',
+        headers: getAdminAuthHeaders(),
+      });
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) return;
       const data = await res.json();
       if (data.success) {
         setLogs([]);
@@ -508,15 +553,37 @@ export function ActivityLogsTab({
                     : 'Muted'}
                 </span>
               </h4>
-              <p className="text-xs text-zinc-400 mt-0.5">
-                Bot: <span className="font-mono text-sky-300">@SathwikPortfolioNotification_bot</span> | Chat ID:{' '}
-                <span className="font-mono text-emerald-400">Connected</span>
+              <p className="text-xs text-zinc-400 mt-0.5 flex items-center gap-2 flex-wrap">
+                <span>
+                  Bot: <span className="font-mono text-sky-300">@SathwikPortfolioNotification_bot</span>
+                </span>
+                <span>|</span>
+                {credentialsStatus?.configured ? (
+                  <span className="font-mono text-emerald-400">Env Credentials Active</span>
+                ) : credentialsStatus && !credentialsStatus.configured ? (
+                  <span className="font-mono text-amber-400">
+                    Missing: {credentialsStatus.missing.join(', ')}
+                  </span>
+                ) : !backendReachable ? (
+                  <span className="font-mono text-amber-400">Serverless Bridge Pending Deploy</span>
+                ) : (
+                  <span className="font-mono text-zinc-400">Checking status...</span>
+                )}
               </p>
             </div>
           </div>
 
           {/* Master Switch & Test Bot Button */}
           <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+            <button
+              type="button"
+              onClick={() => setShowQuickCredsPanel((v) => !v)}
+              className="px-3 py-1.5 rounded-xl bg-zinc-900 hover:bg-zinc-800 border border-zinc-700 text-zinc-300 text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+            >
+              <KeyRound className="w-3.5 h-3.5 text-amber-400" />
+              <span>{showQuickCredsPanel ? 'Hide Setup' : 'Bot Setup / Test'}</span>
+            </button>
+
             <button
               type="button"
               onClick={handleTestBotClick}
@@ -541,6 +608,64 @@ export function ActivityLogsTab({
             </button>
           </div>
         </div>
+
+        {/* Telegram Diagnostics & One-Time Test Panel */}
+        {(showQuickCredsPanel || lastTestError) && (
+          <div className="p-4 rounded-xl bg-zinc-900/90 border border-amber-500/30 space-y-3">
+            {lastTestError && (
+              <div className="p-2.5 rounded-lg bg-red-950/60 border border-red-500/40 text-xs text-red-200 font-mono">
+                Error: {lastTestError}
+              </div>
+            )}
+
+            <div className="space-y-1.5 text-xs text-zinc-300">
+              <p className="font-bold text-white flex items-center gap-1.5">
+                <AlertTriangle className="w-3.5 h-3.5 text-amber-400" />
+                <span>How to enable automatic Telegram notifications in Production (Netlify):</span>
+              </p>
+              <ol className="list-decimal list-inside space-y-1 text-[11px] text-zinc-400 font-mono">
+                <li>
+                  Open Netlify Dashboard ➔ <span className="text-zinc-200">Site configuration ➔ Environment variables</span>
+                </li>
+                <li>
+                  Add <code className="text-emerald-400">TELEGRAM_BOT_TOKEN</code> (from @BotFather) and{' '}
+                  <code className="text-emerald-400">TELEGRAM_CHAT_ID</code> (from @userinfobot)
+                </li>
+                <li>Trigger a redeploy in Netlify so the serverless Telegram function picks up your keys.</li>
+              </ol>
+            </div>
+
+            <div className="pt-2 border-t border-zinc-800 space-y-2">
+              <p className="text-[11px] font-mono text-zinc-400">
+                Optional: One-time direct test (zero-persistence — never stored on disk or browser):
+              </p>
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                <input
+                  type="password"
+                  value={oneTimeBotToken}
+                  onChange={(e) => setOneTimeBotToken(e.target.value)}
+                  placeholder="Bot Token (123456:ABC...)"
+                  className="px-3 py-1.5 rounded-lg bg-black border border-zinc-700 text-sky-300 text-xs font-mono focus:outline-none focus:border-sky-500"
+                />
+                <input
+                  type="text"
+                  value={oneTimeChatId}
+                  onChange={(e) => setOneTimeChatId(e.target.value)}
+                  placeholder="Chat ID (e.g. 123456789)"
+                  className="px-3 py-1.5 rounded-lg bg-black border border-zinc-700 text-sky-300 text-xs font-mono focus:outline-none focus:border-sky-500"
+                />
+                <button
+                  type="button"
+                  onClick={handleTestBotClick}
+                  disabled={testingBot || !oneTimeBotToken.trim() || !oneTimeChatId.trim()}
+                  className="px-3 py-1.5 rounded-lg bg-sky-600 hover:bg-sky-500 disabled:opacity-50 text-white text-xs font-mono font-bold transition-colors cursor-pointer"
+                >
+                  {testingBot ? 'Sending...' : 'Run One-Time Test'}
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Individual Notification Type Toggle Buttons */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">

@@ -81,13 +81,17 @@ export const trackVisitorTelemetry = async (): Promise<boolean> => {
       referrer,
     };
 
-    // Send silently to server endpoint (no UI feedback or toasts)
+    // Send silently to server / Netlify serverless endpoint (no UI feedback or toasts)
     const response = await fetch('/api/telemetry/visit', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(payload),
     });
 
+    const contentType = response.headers.get('content-type') || '';
+    if (!contentType.includes('application/json')) {
+      return false;
+    }
     const data = await response.json();
     return !!data.success;
   } catch (err) {

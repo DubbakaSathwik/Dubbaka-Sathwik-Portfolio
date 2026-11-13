@@ -6,7 +6,8 @@ import {
   formatConsoleLogMessage,
   flushConsoleLogBuffer,
   getConsoleTimerStatus,
-  sendTelegramMessageDirect,
+  sendTelegramMessageDetailed,
+  getTelegramCredentialsStatus,
 } from '../services/telegram';
 import { requireAuth, telemetryRateLimiter } from '../middleware/auth';
 import { ActivityLogModel } from '../db/mongo';
@@ -18,6 +19,7 @@ router.get('/settings', (req: Request, res: Response) => {
   res.json({
     success: true,
     settings: getTelegramSettings(),
+    credentials: getTelegramCredentialsStatus(),
   });
 });
 
@@ -133,21 +135,28 @@ router.post('/console', telemetryRateLimiter, async (req: Request, res: Response
 // POST/GET /api/telegram/test - Send test ping (Protected Admin)
 router.all('/test', requireAuth, async (req: Request, res: Response): Promise<void> => {
   try {
+    const { botToken, chatId } = (req.body || {}) as { botToken?: string; chatId?: string };
     const timeStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     const html = `<b>🟢 TELEGRAM BOT TEST PING</b>
 ━━━━━━━━━━━━━━━━━━━━
 <b>Status:</b> Online & Operational
-<b>Database:</b> MongoDB Atlas
+<b>Source:</b> Portfolio Server API
 <b>Time (IST):</b> ${timeStr}
 ━━━━━━━━━━━━━━━━━━━━
 🟢 <i>Sathwik Portfolio Notification Engine</i>`;
 
-    const sent = await sendTelegramMessageDirect(html);
+    const result = await sendTelegramMessageDetailed(html, {
+      bypassMaster: true,
+      botToken,
+      chatId,
+    });
     res.json({
-      success: sent,
-      message: sent
+      success: result.ok,
+      missingCredentials: !!result.missingCredentials,
+      credentials: getTelegramCredentialsStatus(),
+      message: result.ok
         ? 'Test ping sent to Sathwik Telegram channel!'
-        : 'Failed to send test message. Check bot credentials in environment.',
+        : result.error || 'Failed to send test message. Check bot credentials in environment.',
     });
   } catch (err: any) {
     res.status(500).json({

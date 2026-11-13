@@ -3,6 +3,10 @@
   publish = "dist"
   command = "npm run build:client"
 
+[functions]
+  directory = "netlify/functions"
+  node_bundler = "esbuild"
+
 [build.environment]
   SECRETS_SCAN_OMIT_PATHS = "server/**,public/static_backup.json"
 
@@ -23,6 +27,25 @@
   from = "/server.cjs*"
   to = "/index.html"
   status = 404
+  force = true
+
+# Serverless API Bridge for Telegram Bot, Contact Inbox & Visitor Telemetry
+[[redirects]]
+  from = "/api/telegram/*"
+  to = "/.netlify/functions/telegram-bridge/:splat"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/contact"
+  to = "/.netlify/functions/telegram-bridge/contact"
+  status = 200
+  force = true
+
+[[redirects]]
+  from = "/api/telemetry/*"
+  to = "/.netlify/functions/telegram-bridge/:splat"
+  status = 200
   force = true
 
 # Single-Page Application (SPA) Client-Side Route Resolution
