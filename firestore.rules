@@ -7,6 +7,21 @@ service cloud.firestore {
     }
 
     // Helper functions
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string &&
+        id.size() >= 3 &&
+        id.size() <= 128 &&
+        id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
     function isSignedIn() {
       return request.auth != null;
     }
@@ -17,7 +32,21 @@ service cloud.firestore {
         request.auth.token.email == 'dubbakasathwik@gmail.com';
     }
 
-    // Admins collection: Super admin only (non-admins cannot inspect admin roster)
+    function isValidContactMessage(data) {
+      return data.keys().hasAll(['id', 'name', 'email', 'subject', 'message', 'date', 'time', 'status', 'createdAt']) &&
+        data.keys().hasOnly(['id', 'name', 'email', 'subject', 'message', 'date', 'time', 'status', 'createdAt']) &&
+        data.id is string && data.id.size() >= 3 && data.id.size() <= 128 && data.id.matches('^[a-zA-Z0-9_\\-]+$') &&
+        data.name is string && data.name.size() >= 1 && data.name.size() <= 100 &&
+        data.email is string && data.email.size() >= 3 && data.email.size() <= 150 && data.email.matches('^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$') &&
+        data.subject is string && data.subject.size() >= 1 && data.subject.size() <= 200 &&
+        data.message is string && data.message.size() >= 1 && data.message.size() <= 3000 &&
+        data.date is string && data.date.size() >= 4 && data.date.size() <= 40 &&
+        data.time is string && data.time.size() >= 3 && data.time.size() <= 30 &&
+        data.status is string && data.status in ['unread', 'read', 'archived'] &&
+        data.createdAt is timestamp;
+    }
+
+    // Admins collection: Super admin only
     match /admins/{adminId} {
       allow read, write: if isSuperAdmin();
     }
@@ -26,6 +55,30 @@ service cloud.firestore {
     match /portfolio/{document=**} {
       allow read: if true;
       allow write: if isSuperAdmin();
+    }
+
+    // Contact Messages: Public visitors can submit valid messages; only verified Super Admin can read, update status, or delete
+    match /contact_messages/{messageId} {
+      allow get: if isSuperAdmin() && isValidId(messageId);
+      allow list: if isSuperAdmin();
+      allow create: if isValidId(messageId) &&
+        isValidContactMessage(incoming()) &&
+        incoming().id == messageId &&
+        incoming().status == 'unread' &&
+        incoming().createdAt == request.time;
+      allow update: if isSuperAdmin() &&
+        isValidId(messageId) &&
+        isValidContactMessage(incoming()) &&
+        incoming().id == existing().id &&
+        incoming().name == existing().name &&
+        incoming().email == existing().email &&
+        incoming().subject == existing().subject &&
+        incoming().message == existing().message &&
+        incoming().date == existing().date &&
+        incoming().time == existing().time &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().diff(existing()).affectedKeys().hasOnly(['status']);
+      allow delete: if isSuperAdmin() && isValidId(messageId);
     }
 
     // Test connection doc

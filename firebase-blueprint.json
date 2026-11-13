@@ -31,6 +31,59 @@
           "type": "string"
         }
       }
+    },
+    "contactMessage": {
+      "title": "ContactMessage",
+      "description": "Visitor contact form inquiry submitted through the portfolio",
+      "type": "object",
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 128,
+          "pattern": "^[a-zA-Z0-9_\\-]+$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "email": {
+          "type": "string",
+          "format": "email",
+          "minLength": 3,
+          "maxLength": 150
+        },
+        "subject": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 200
+        },
+        "message": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 3000
+        },
+        "date": {
+          "type": "string",
+          "minLength": 4,
+          "maxLength": 40
+        },
+        "time": {
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 30
+        },
+        "status": {
+          "type": "string",
+          "enum": ["unread", "read", "archived"]
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time"
+        }
+      },
+      "required": ["id", "name", "email", "subject", "message", "date", "time", "status", "createdAt"]
     }
   },
   "firestore": {
@@ -41,6 +94,10 @@
     "/portfolio/content": {
       "schema": "portfolioContent",
       "description": "CMS portfolio data"
+    },
+    "/contact_messages/{messageId}": {
+      "schema": "contactMessage",
+      "description": "Visitor contact form messages stored for admin inbox"
     }
   }
 }

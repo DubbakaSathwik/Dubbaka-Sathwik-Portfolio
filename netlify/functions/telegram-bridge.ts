@@ -125,7 +125,7 @@ export const handler = async (event: NetlifyEvent) => {
     return jsonResponse(204, {});
   }
 
-  const reqPath = (event.path || '').toLowerCase();
+  const reqPath = (event.path || '').toLowerCase().replace(/\/+$/, '');
   const body = parseBody(event);
   const clientIp =
     event.headers?.['x-nf-client-connection-ip'] ||
@@ -268,7 +268,10 @@ ${colorBadge} <i>Sathwik Portfolio Console Monitor</i>`;
     }
 
     const now = new Date();
-    const id = 'msg-' + Date.now();
+    const id =
+      typeof body.id === 'string' && /^[a-zA-Z0-9_-]{3,128}$/.test(body.id)
+        ? body.id
+        : 'msg-' + Date.now();
     const date = now.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
     const time = now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
 

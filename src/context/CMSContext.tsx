@@ -31,9 +31,68 @@ import {
   DEFAULT_BACKUP_RULES,
   DEFAULT_PUSH_RULES,
 } from '../utils/card-id';
-import { auth, googleProvider, isAuthorizedAdmin } from '../lib/firebase';
+import { auth, db, googleProvider, isAuthorizedAdmin } from '../lib/firebase';
 import { signInWithPopup, signOut, onAuthStateChanged, User } from 'firebase/auth';
+import {
+  collection,
+  doc,
+  setDoc,
+  updateDoc,
+  deleteDoc,
+  onSnapshot,
+  query,
+  orderBy,
+  serverTimestamp,
+} from 'firebase/firestore';
 import { pushToGitHubClientDirect, safeFetchJson } from '../lib/github-client';
+
+enum OperationType {
+  CREATE = 'create',
+  UPDATE = 'update',
+  DELETE = 'delete',
+  LIST = 'list',
+  GET = 'get',
+  WRITE = 'write',
+}
+
+interface FirestoreErrorInfo {
+  error: string;
+  operationType: OperationType;
+  path: string | null;
+  authInfo: {
+    userId?: string | null;
+    email?: string | null;
+    emailVerified?: boolean | null;
+    isAnonymous?: boolean | null;
+    tenantId?: string | null;
+    providerInfo?: {
+      providerId?: string | null;
+      email?: string | null;
+    }[];
+  };
+}
+
+function handleFirestoreError(error: unknown, operationType: OperationType, path: string | null): never {
+  const errInfo: FirestoreErrorInfo = {
+    error: error instanceof Error ? error.message : String(error),
+    authInfo: {
+      userId: auth.currentUser?.uid,
+      email: auth.currentUser?.email,
+      emailVerified: auth.currentUser?.emailVerified,
+      isAnonymous: auth.currentUser?.isAnonymous,
+      tenantId: auth.currentUser?.tenantId,
+      providerInfo:
+        auth.currentUser?.providerData?.map((provider) => ({
+          providerId: provider.providerId,
+          email: provider.email,
+        })) || [],
+    },
+    operationType,
+    path,
+  };
+  console.error('Firestore Error: ', JSON.stringify(errInfo));
+  throw new Error(JSON.stringify(errInfo));
+}
 
 interface CMSContextType {
   data: CMSData & { contactMessages: ContactMessage[] };
@@ -344,6 +403,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   });
 
+  const [firestoreMessages, setFirestoreMessages] = useState<ContactMessage[]>([]);
+
   // Track Firebase Auth state changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -360,6 +421,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         } catch (e) {}
       } else {
         setAuthToken(null);
+        setFirestoreMessages([]);
         try {
           localStorage.removeItem(AUTH_STORAGE_KEY);
         } catch (e) {}
@@ -368,6 +430,44 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return () => unsubscribe();
   }, []);
+
+  // Real-time Firestore listener for visitor contact messages (Super Admin only)
+  useEffect(() => {
+    if (!isAdmin || !firebaseUser) {
+      return;
+    }
+
+    const path = 'contact_messages';
+    const q = query(collection(db, path), orderBy('createdAt', 'desc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const msgs: ContactMessage[] = snapshot.docs.map((d) => {
+          const raw = d.data() as any;
+          return {
+            id: raw.id || d.id,
+            name: String(raw.name || ''),
+            email: String(raw.email || ''),
+            subject: String(raw.subject || 'Portfolio Inquiry'),
+            message: String(raw.message || ''),
+            date: String(raw.date || ''),
+            time: String(raw.time || ''),
+            status: (raw.status as 'unread' | 'read' | 'archived') || 'unread',
+          };
+        });
+        setFirestoreMessages(msgs);
+      },
+      (error) => {
+        try {
+          handleFirestoreError(error, OperationType.LIST, path);
+        } catch (err) {
+          console.warn('[Firestore Contact Messages Listener Warning]:', err);
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isAdmin, firebaseUser]);
 
   // Modals state
   const [isResumeModalOpen, setIsResumeModalOpenState] = useState(false);
@@ -590,6 +690,28 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         const payloadData = staticJson.data || staticJson;
         if (payloadData && typeof payloadData === 'object' && payloadData.hero && !isStaleCMSData(payloadData)) {
           const formatted = formatCMSPayload(payloadData);
+
+          // Also merge any newer contact messages from live /api/cms (if backend server is active)
+          try {
+            const liveCmsRes = await fetch('/api/cms');
+            const liveContentType = liveCmsRes.headers.get('content-type') || '';
+            if (liveCmsRes.ok && liveContentType.includes('application/json')) {
+              const liveJson = await liveCmsRes.json();
+              const liveMsgs = Array.isArray(liveJson?.data?.messages) ? liveJson.data.messages : [];
+              if (liveMsgs.length > 0) {
+                const seen = new Set<string>();
+                const merged: ContactMessage[] = [];
+                for (const m of [...liveMsgs, ...(formatted.messages || [])]) {
+                  if (m?.id && !seen.has(m.id)) {
+                    seen.add(m.id);
+                    merged.push(m);
+                  }
+                }
+                formatted.messages = merged;
+              }
+            }
+          } catch (e) {}
+
           setData(formatted);
           setDbConnected(true);
           await setCachedCMSToIDB(formatted);
@@ -1624,34 +1746,93 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const updateContactInfo = (contactInfo: ContactInfo) =>
     setData((prev) => ({ ...prev, contactInfo }));
 
-  // Contact Messages
+  // Contact Messages (Persisted globally to Firestore + Telegram API bridge)
   const addMessage = (msg: Omit<ContactMessage, 'id' | 'date' | 'time' | 'status'>) => {
     const now = new Date();
+    const safeId = `msg-${Date.now()}-${Math.random().toString(36).substring(2, 6)}`.replace(/[^a-zA-Z0-9_-]/g, '');
+    const cleanName = String(msg.name || '').trim().slice(0, 100);
+    const cleanEmail = String(msg.email || '').trim().slice(0, 150);
+    const cleanSubject = (String(msg.subject || 'Portfolio Inquiry').trim() || 'Portfolio Inquiry').slice(0, 200);
+    const cleanMessage = String(msg.message || '').trim().slice(0, 3000);
+    const cleanDate = now.toISOString().split('T')[0].slice(0, 40);
+    const cleanTime = now.toTimeString().slice(0, 5).slice(0, 30);
+
     const newMsg: ContactMessage = {
-      ...msg,
-      id: 'msg-' + Date.now(),
-      date: now.toISOString().split('T')[0],
-      time: now.toTimeString().slice(0, 5),
+      id: safeId,
+      name: cleanName,
+      email: cleanEmail,
+      subject: cleanSubject,
+      message: cleanMessage,
+      date: cleanDate,
+      time: cleanTime,
       status: 'unread',
     };
+
     setData((prev) => ({
       ...prev,
       messages: [newMsg, ...(prev.messages || [])],
     }));
 
-    // Post to backend API (which automatically dispatches Telegram alerts & persists to DB)
+    // 1. Save to Cloud Firestore so message appears in Admin Portal CMS across all devices (Netlify & local)
+    const docPath = `contact_messages/${newMsg.id}`;
+    setDoc(doc(db, 'contact_messages', newMsg.id), {
+      ...newMsg,
+      createdAt: serverTimestamp(),
+    }).catch((err) => {
+      try {
+        handleFirestoreError(err, OperationType.CREATE, docPath);
+      } catch (formattedErr) {
+        console.warn('[Firestore Contact Save Warning]:', formattedErr);
+      }
+    });
+
+    // 2. Post to Express / Netlify Serverless API for instant Telegram notification & DB/disk backup
     fetch('/api/contact', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify(msg),
-    }).catch((err) => console.warn('Failed to send contact message to API:', err));
+      body: JSON.stringify({
+        id: safeId,
+        name: cleanName,
+        email: cleanEmail,
+        subject: cleanSubject,
+        message: cleanMessage,
+      }),
+    })
+      .then(async (res) => {
+        const contentType = res.headers.get('content-type') || '';
+        if (contentType.includes('application/json')) {
+          const json = await res.json();
+          if (!json.telegramSent && json.telegramError) {
+            console.warn('[Contact Telegram Bridge Warning]:', json.telegramError);
+          }
+        }
+      })
+      .catch((err) => console.warn('Failed to send contact message to Telegram API bridge:', err));
   };
 
   const markMessageStatus = (id: string, status: 'unread' | 'read' | 'archived') => {
-    setData((prev) => ({
-      ...prev,
-      messages: (prev.messages || []).map((m) => (m.id === id ? { ...m, status } : m)),
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        messages: (prev.messages || []).map((m) => (m.id === id ? { ...m, status } : m)),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+    setFirestoreMessages((prev) =>
+      prev.map((m) => (m.id === id ? { ...m, status } : m))
+    );
+
+    if (isAdmin && firebaseUser) {
+      const docPath = `contact_messages/${id}`;
+      updateDoc(doc(db, 'contact_messages', id), { status }).catch((err) => {
+        try {
+          handleFirestoreError(err, OperationType.UPDATE, docPath);
+        } catch (formattedErr) {
+          console.warn('[Firestore Message Status Warning]:', formattedErr);
+        }
+      });
+    }
   };
 
   const markMessageRead = (id: string) => {
@@ -1659,10 +1840,26 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   };
 
   const deleteMessage = (id: string) => {
-    setData((prev) => ({
-      ...prev,
-      messages: (prev.messages || []).filter((m) => m.id !== id),
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        messages: (prev.messages || []).filter((m) => m.id !== id),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+    setFirestoreMessages((prev) => prev.filter((m) => m.id !== id));
+
+    if (isAdmin && firebaseUser) {
+      const docPath = `contact_messages/${id}`;
+      deleteDoc(doc(db, 'contact_messages', id)).catch((err) => {
+        try {
+          handleFirestoreError(err, OperationType.DELETE, docPath);
+        } catch (formattedErr) {
+          console.warn('[Firestore Delete Message Warning]:', formattedErr);
+        }
+      });
+    }
   };
 
   const resetToDefaults = () => {
@@ -1687,6 +1884,20 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
   };
 
+  // Merge Firestore live visitor messages with local/backup messages (deduplicated by ID, Firestore authoritative)
+  const mergedMessages = React.useMemo(() => {
+    const map = new Map<string, ContactMessage>();
+    for (const m of firestoreMessages) {
+      if (m?.id) map.set(m.id, m);
+    }
+    for (const m of data.messages || []) {
+      if (m?.id && !map.has(m.id)) {
+        map.set(m.id, m);
+      }
+    }
+    return Array.from(map.values());
+  }, [firestoreMessages, data.messages]);
+
   const safeData = {
     ...data,
     intro: data.intro || initialCMSData.intro,
@@ -1696,8 +1907,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     gallery: data.gallery || [],
     blogs: data.blogs || [],
     resumes: data.resumes || [],
-    messages: data.messages || [],
-    contactMessages: data.messages || [],
+    messages: mergedMessages,
+    contactMessages: mergedMessages,
   };
 
   return (

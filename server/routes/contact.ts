@@ -13,7 +13,7 @@ const router = Router();
 // POST /api/contact - Submit visitor inquiry
 router.post('/', contactRateLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { name, email, subject, message } = req.body || {};
+    const { id, name, email, subject, message } = req.body || {};
 
     if (!name || !email || !message) {
       res.status(400).json({
@@ -37,8 +37,13 @@ router.post('/', contactRateLimiter, async (req: Request, res: Response): Promis
       return;
     }
 
+    const safeId =
+      typeof id === 'string' && /^[a-zA-Z0-9_-]{3,128}$/.test(id)
+        ? id
+        : 'msg-' + Date.now();
+
     const newMessage = {
-      id: 'msg-' + Date.now(),
+      id: safeId,
       name: String(name).trim().substring(0, 100),
       email: String(email).trim().substring(0, 150),
       subject: String(subject || 'Portfolio Inquiry').trim().substring(0, 200),
@@ -54,25 +59,38 @@ router.post('/', contactRateLimiter, async (req: Request, res: Response): Promis
 
     // 1. Send Telegram Notification (instant delivery)
     const telegramHtml = formatInboxNotificationMessage(newMessage);
-    sendTelegramNotification(telegramHtml, 'contactInbox', {
-      event: 'Contact Inbox Message Received',
-      details: `New inquiry from ${newMessage.name} (${newMessage.email}): "${newMessage.subject}"`,
-      level: 'success',
-      category: 'contact',
-      metadata: { name: newMessage.name, email: newMessage.email, subject: newMessage.subject },
-    }).catch((err) => console.warn('[Contact] Telegram notification error:', err));
-
-    // 2. Persist to MongoDB & Local Disk Backup
+    let telegramSent = false;
     try {
-      const backupPath = path.join(process.cwd(), 'cms_backup.json');
-      if (fs.existsSync(backupPath)) {
-        const raw = fs.readFileSync(backupPath, 'utf-8');
-        const diskData = JSON.parse(raw);
-        if (diskData && typeof diskData === 'object') {
-          diskData.messages = [newMessage, ...(diskData.messages || [])];
-          fs.writeFileSync(backupPath, JSON.stringify(diskData, null, 2), 'utf-8');
-        }
+      const tgResult = await sendTelegramNotification(telegramHtml, 'contactInbox', {
+        event: 'Contact Inbox Message Received',
+        details: `New inquiry from ${newMessage.name} (${newMessage.email}): "${newMessage.subject}"`,
+        level: 'success',
+        category: 'contact',
+        metadata: { name: newMessage.name, email: newMessage.email, subject: newMessage.subject },
+      });
+      telegramSent = Boolean(tgResult.success);
+    } catch (err) {
+      console.warn('[Contact] Telegram notification error:', err);
+    }
+
+    // 2. Persist to MongoDB & Local Disk Backups (deduplicated by id)
+    const upsertDiskFile = (filePath: string) => {
+      if (!fs.existsSync(filePath)) return;
+      const raw = fs.readFileSync(filePath, 'utf-8');
+      const diskData = JSON.parse(raw);
+      if (diskData && typeof diskData === 'object') {
+        const existing = Array.isArray(diskData.messages)
+          ? diskData.messages.filter((m: any) => m?.id !== newMessage.id)
+          : [];
+        diskData.messages = [newMessage, ...existing];
+        fs.writeFileSync(filePath, JSON.stringify(diskData, null, 2), 'utf-8');
       }
+    };
+
+    try {
+      upsertDiskFile(path.join(process.cwd(), 'cms_backup.json'));
+      upsertDiskFile(path.join(process.cwd(), 'static_backup.json'));
+      upsertDiskFile(path.join(process.cwd(), 'public', 'static_backup.json'));
     } catch (diskErr) {
       console.warn('[Contact] Error saving message to local disk backup:', diskErr);
     }
@@ -81,7 +99,9 @@ router.post('/', contactRateLimiter, async (req: Request, res: Response): Promis
       try {
         const cmsDoc = await CMSModel.findOne({ key: 'portfolio_cms_v1' }).exec();
         if (cmsDoc) {
-          const existingMessages = cmsDoc.data?.messages || [];
+          const existingMessages = (cmsDoc.data?.messages || []).filter(
+            (m: any) => m?.id !== newMessage.id
+          );
           cmsDoc.data.messages = [newMessage, ...existingMessages];
           cmsDoc.markModified('data');
           await cmsDoc.save();
@@ -105,6 +125,7 @@ router.post('/', contactRateLimiter, async (req: Request, res: Response): Promis
 
     res.json({
       success: true,
+      telegramSent,
       message: 'Thank you! Your message has been received and saved.',
       newMessage,
     });
