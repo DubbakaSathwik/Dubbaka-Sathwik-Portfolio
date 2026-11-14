@@ -6,7 +6,7 @@ export const SITE_CONFIG = {
   defaultTitle: 'Dubbaka Sathwik | Full-Stack Developer & AI Software Engineer',
   defaultDescription:
     'Official portfolio of Dubbaka Sathwik. Full-Stack Developer, AI Software Engineer & Cinematic Video Editor specializing in React, Node.js, Next.js, and GenAI.',
-  defaultImage: '/uploads/assets/static_about_avatarUrl_a6839352e4.jpg',
+  defaultImage: '/uploads/assets/static_asset_about_avatarUrl_s74ow4t7.jpg',
   author: {
     name: 'Dubbaka Sathwik',
     alternateNames: ['Sathwik Dubbaka', 'Dubbaka Sathwik Portfolio', 'DubbakaSathwik', 'Sathwik'],

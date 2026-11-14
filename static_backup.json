@@ -449,7 +449,7 @@
   ],
   "projectsSequence": {
     "version": "1.0.0",
-    "lastUpdated": "2026-09-22T04:41:03.401Z",
+    "lastUpdated": "2026-11-14T09:48:58.631Z",
     "totalProjects": 8,
     "sequence": [
       {
@@ -1198,6 +1198,8 @@
     }
   ],
   "blogs": [],
+  "events": [],
+  "pressMentions": [],
   "contactInfo": {
     "email": "dubbakasathwik@gmail.com",
     "phone": "+91 8527564839",
@@ -1254,8 +1256,16 @@
     "wordsSpeedSeconds": 4.8,
     "nameDelaySeconds": 1.2
   },
-  "messages": [],
-  "contactMessages": [],
-  "events": [],
-  "pressMentions": []
+  "messages": [
+    {
+      "id": "msg-1794590702087",
+      "name": "Diagnostic Check",
+      "email": "test@example.com",
+      "subject": "Verification",
+      "message": "Testing contact endpoint",
+      "date": "Nov 13, 2026",
+      "time": "05:25 PM",
+      "status": "unread"
+    }
+  ]
 }

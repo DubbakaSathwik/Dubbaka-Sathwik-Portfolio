@@ -454,32 +454,36 @@ function buildHomepageSchema(
           },
         })),
       },
-      {
-        '@type': 'ItemList',
-        '@id': `${base}/#insights-list`,
-        name: 'Articles, Blogs, Events & Features by Dubbaka Sathwik',
-        numberOfItems: blogs.length + events.length + pressMentions.length,
-        itemListElement: [
-          ...blogs.map((b: any, idx: number) => ({
-            '@type': 'ListItem',
-            position: idx + 1,
-            url: `${base}${getBlogPath(b)}`,
-            name: b.title,
-          })),
-          ...events.map((ev: any, idx: number) => ({
-            '@type': 'ListItem',
-            position: blogs.length + idx + 1,
-            url: `${base}/events/${getEventSlug(ev)}`,
-            name: ev.title,
-          })),
-          ...pressMentions.map((m: any, idx: number) => ({
-            '@type': 'ListItem',
-            position: blogs.length + events.length + idx + 1,
-            url: `${base}/press/${getPressSlug(m)}`,
-            name: `${m.title} — ${m.sourceName}`,
-          })),
-        ],
-      },
+      ...(blogs.length + events.length + pressMentions.length > 0
+        ? [
+            {
+              '@type': 'ItemList',
+              '@id': `${base}/#insights-list`,
+              name: 'Articles, Blogs, Events & Features by Dubbaka Sathwik',
+              numberOfItems: blogs.length + events.length + pressMentions.length,
+              itemListElement: [
+                ...blogs.map((b: any, idx: number) => ({
+                  '@type': 'ListItem',
+                  position: idx + 1,
+                  url: `${base}${getBlogPath(b)}`,
+                  name: b.title,
+                })),
+                ...events.map((ev: any, idx: number) => ({
+                  '@type': 'ListItem',
+                  position: blogs.length + idx + 1,
+                  url: `${base}/events/${getEventSlug(ev)}`,
+                  name: ev.title,
+                })),
+                ...pressMentions.map((m: any, idx: number) => ({
+                  '@type': 'ListItem',
+                  position: blogs.length + events.length + idx + 1,
+                  url: `${base}/press/${getPressSlug(m)}`,
+                  name: `${m.title} — ${m.sourceName}`,
+                })),
+              ],
+            },
+          ]
+        : []),
     ],
   };
 }
@@ -704,6 +708,16 @@ function run() {
     const homepageSchema = buildHomepageSchema(data, projects, blogs, events, pressMentions);
     const homepageNoscript = buildHomepageNoscript(data, projects, journey, blogs, events, pressMentions);
 
+    const homepageImage = resolveAbsoluteUrl(data.about?.avatarUrl || SITE_CONFIG.defaultImage, base);
+
+    distIndexHtml = distIndexHtml.replace(
+      /<meta\s+property="og:image"[^>]*>/i,
+      `<meta property="og:image" content="${escapeHtml(homepageImage)}" />`
+    );
+    distIndexHtml = distIndexHtml.replace(
+      /<meta\s+name="twitter:image"[^>]*>/i,
+      `<meta name="twitter:image" content="${escapeHtml(homepageImage)}" />`
+    );
     distIndexHtml = distIndexHtml.replace(
       /<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/i,
       `<script type="application/ld+json">${JSON.stringify(homepageSchema)}</script>`
