@@ -7,6 +7,8 @@ import {
   JourneyItem,
   GalleryItem,
   BlogPost,
+  EventItem,
+  PressMention,
   ResumeOption,
   ContactInfo,
   CMSData,
@@ -101,6 +103,10 @@ export const initialGalleryItems: GalleryItem[] = (seedData.gallery || []) as Ga
 
 export const initialBlogPosts: BlogPost[] = (seedData.blogs || []) as BlogPost[];
 
+export const initialEvents: EventItem[] = (((seedData as any).events || []) as EventItem[]);
+
+export const initialPressMentions: PressMention[] = (((seedData as any).pressMentions || []) as PressMention[]);
+
 export const initialResumeOptions: ResumeOption[] = (seedData.resumes || []) as ResumeOption[];
 
 export const initialContactInfo: ContactInfo = {
@@ -156,6 +162,8 @@ export const initialCMSData: CMSData = {
   journey: initialJourneyItems,
   gallery: initialGalleryItems,
   blogs: initialBlogPosts,
+  events: initialEvents,
+  pressMentions: initialPressMentions,
   resumes: initialResumeOptions,
   contactInfo: initialContactInfo,
   intro: initialIntroData,

@@ -48,6 +48,12 @@
   status = 200
   force = true
 
+[[redirects]]
+  from = "/api/seo/*"
+  to = "/.netlify/functions/seo-metadata/:splat"
+  status = 200
+  force = true
+
 # Single-Page Application (SPA) Client-Side Route Resolution
 [[redirects]]
   from = "/*"

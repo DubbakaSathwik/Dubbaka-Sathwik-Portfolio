@@ -1,0 +1,27 @@
+# Dubbaka Sathwik
+
+> Student • Full-Stack Developer • Creative Designer | Computer Science and Information Technology at MVSR Engineering College • Hyderabad, Telangana, India.
+
+Official personal portfolio of **Dubbaka Sathwik** (also known as Sathwik Dubbaka, Dubbaka Sathwik Portfolio, DubbakaSathwik, Sathwik).
+
+## Identity & Quick Facts
+- Website: https://dubbakasathwik.netlify.app/
+- Email: dubbakasathwik@gmail.com
+- Education: B.E. Computer Science & Information Technology at MVSR Engineering College (Third Year)
+- Roles: Full-Stack Developer, AI Software Engineer, Cinematic Video Editor, NSS Co-Lead
+- GitHub: https://github.com/DubbakaSathwik
+- LinkedIn: https://linkedin.com/in/dubbakasathwik
+
+## Technical Projects Built by Dubbaka Sathwik
+- [INTELLI-Query](https://dubbakasathwik.netlify.app/projects/intelli-query): A conversational BI web application that lets users upload CSV files, ask questions in plain English, and receive instant AI-generated SQL queries, interactive charts, and data…
+- [Nexora-AI](https://dubbakasathwik.netlify.app/projects/nexora-ai): Nexora AI is a modern multi-model dashboard that lets users simultaneously broadcast prompts to multiple AI models, compare responses side-by-side, analyze consensus, and view…
+- [MedLens](https://dubbakasathwik.netlify.app/projects/medlens): MedLens transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.
+- [Cobra Core & Tech](https://dubbakasathwik.netlify.app/projects/cobra-core-tech): Cobra Core & Tech is a modern, AI-powered EdTech ecosystem that enables student learning, assignment evaluation, and internship tracking, managed seamlessly through a multi-level…
+- [FoodFlow Connect](https://dubbakasathwik.netlify.app/projects/foodflow-connect): FoodFlow Connect is a role-based food rescue web application connecting surplus food providers, NGOs, and consumers to streamline food redistribution, minimize community waste…
+- [News Without the Noise](https://dubbakasathwik.netlify.app/projects/news-without-the-noise): News Without the Noise is an AI-powered personalized news ecosystem that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and…
+- [AI Hiring Assistant](https://dubbakasathwik.netlify.app/projects/ai-hiring-assistant): AI Hiring Assistant is a full-stack web application that uses OCR to extract text from candidate certificates and leverages LLaMA 3.1 to perform fraud analysis and ranking.
+- [VaultFlow](https://dubbakasathwik.netlify.app/projects/vaultflow): VaultFlow is a local Android personal finance application built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting…
+
+## Extended Context
+- Full technical details, articles & skills: https://dubbakasathwik.netlify.app/llms-full.txt
+- Sitemap: https://dubbakasathwik.netlify.app/sitemap.xml

@@ -9,6 +9,8 @@ import {
   JourneyItem,
   GalleryItem,
   BlogPost,
+  EventItem,
+  PressMention,
   ResumeOption,
   ContactInfo,
   ContactMessage,
@@ -156,6 +158,16 @@ interface CMSContextType {
   updateBlogPost: (post: BlogPost) => void;
   deleteBlogPost: (id: string) => void;
 
+  updateEvents: (events: EventItem[]) => void;
+  addEventItem: (event: any) => void;
+  updateEventItem: (event: EventItem) => void;
+  deleteEventItem: (id: string) => void;
+
+  updatePressMentions: (items: PressMention[]) => void;
+  addPressMention: (item: any) => void;
+  updatePressMention: (item: PressMention) => void;
+  deletePressMention: (id: string) => void;
+
   updateResumes: (resumes: ResumeOption[]) => void;
   addResume: (resume: Partial<ResumeOption>) => void;
   updateResumeItem: (resume: ResumeOption) => void;
@@ -202,7 +214,22 @@ interface CMSContextType {
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
 
 const AUTH_STORAGE_KEY = 'sathwik_portfolio_auth_token';
-const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v9';
+const CMS_CACHE_KEY = 'sathwik_portfolio_cms_cache_v10';
+
+const LEGACY_SEEDED_PLACEHOLDER_IDS = new Set<string>([
+  'blog-1',
+  'blog-2',
+  'blog-3',
+  'event-hackfest-2026',
+  'event-cyber-ekathon-2025',
+  'event-nss-digital-drive-2026',
+  'press-cultivating-art',
+  'press-devsemble-profile',
+  'press-edupodx-mock2pitch',
+]);
+
+const filterLegacySeedItems = <T extends { id?: string }>(items?: T[]): T[] =>
+  Array.isArray(items) ? items.filter((item) => item && (!item.id || !LEGACY_SEEDED_PLACEHOLDER_IDS.has(item.id))) : [];
 
 const sanitizeJourney = (items: JourneyItem[]): JourneyItem[] => {
   return (items || []).map((item) => {
@@ -337,10 +364,9 @@ function getInitialCachedCMSData(): CMSData {
             Array.isArray(parsed.resumes) && parsed.resumes.length >= initialCMSData.resumes.length
               ? parsed.resumes
               : initialCMSData.resumes,
-          blogs:
-            Array.isArray(parsed.blogs) && parsed.blogs.length >= initialCMSData.blogs.length
-              ? parsed.blogs
-              : initialCMSData.blogs,
+          blogs: filterLegacySeedItems(parsed.blogs),
+          events: filterLegacySeedItems(parsed.events),
+          pressMentions: filterLegacySeedItems(parsed.pressMentions),
           contactInfo: { ...initialCMSData.contactInfo, ...(parsed.contactInfo || {}) },
           intro: { ...initialCMSData.intro, ...(parsed.intro || {}), enabled: parsed.intro?.enabled !== false },
           messages: Array.isArray(parsed.messages) ? parsed.messages : [],
@@ -367,9 +393,17 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
           return;
         }
         if (cached && cached.hero && Array.isArray(cached.projects) && cached.projects.length >= initialCMSData.projects.length) {
+          const cleaned = formatCMSPayload(cached);
           setData((prev) => {
-            if (prev.projects && prev.projects.length >= initialCMSData.projects.length) return prev;
-            return formatCMSPayload(cached);
+            if (prev.projects && prev.projects.length >= initialCMSData.projects.length) {
+              return {
+                ...prev,
+                blogs: filterLegacySeedItems(prev.blogs),
+                events: filterLegacySeedItems(prev.events),
+                pressMentions: filterLegacySeedItems(prev.pressMentions),
+              };
+            }
+            return cleaned;
           });
         }
       })
@@ -636,10 +670,9 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         Array.isArray(rawData.resumes) && rawData.resumes.length >= initialCMSData.resumes.length
           ? rawData.resumes
           : initialCMSData.resumes,
-      blogs:
-        Array.isArray(rawData.blogs) && rawData.blogs.length >= initialCMSData.blogs.length
-          ? rawData.blogs
-          : initialCMSData.blogs,
+      blogs: filterLegacySeedItems(rawData.blogs),
+      events: filterLegacySeedItems(rawData.events),
+      pressMentions: filterLegacySeedItems(rawData.pressMentions),
       contactInfo: { ...initialCMSData.contactInfo, ...(rawData.contactInfo || {}) },
       intro: { ...initialCMSData.intro, ...(rawData.intro || {}), enabled: rawData.intro?.enabled !== false },
       messages: Array.isArray(rawData.messages) ? rawData.messages : [],
@@ -1114,6 +1147,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       featured: project.featured ?? true,
       status: project.status || 'Completed',
       year: project.year || '2026',
+      visibility: project.visibility || 'Published',
+      seo: project.seo,
     };
     setData((prev) => {
       const existing = (prev.projects || []).map((p, idx) => ({
@@ -1283,6 +1318,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       completionDate: item.completionDate || item.year || '2026',
       featured: item.featured ?? true,
       status: item.status || 'Published',
+      visibility: item.visibility || 'Published',
+      seo: item.seo,
     };
     setData((prev) => {
       const updated = [newItem, ...(prev.creativePortfolio || [])].map((c, idx) => ({
@@ -1410,6 +1447,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       image: firstImg,
       images: item.images && item.images.length > 0 ? item.images : [firstImg],
       tags: item.tags || [item.category || 'Achievement'],
+      visibility: item.visibility || 'Published',
+      seo: item.seo,
     };
     setData((prev) => ({
       ...prev,
@@ -1501,6 +1540,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       featured: item.featured ?? true,
       tags: item.tags || [item.category || 'Certificates'],
       technologies: item.technologies || [],
+      visibility: item.visibility || 'Published',
+      seo: item.seo,
     };
     setData((prev) => {
       const updated = [newItem, ...(prev.gallery || [])].map((g, idx) => ({
@@ -1617,40 +1658,205 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     });
   };
 
-  // Blogs
-  const updateBlogs = (blogs: BlogPost[]) => setData((prev) => ({ ...prev, blogs }));
+  // Blogs & Articles
+  const updateBlogs = (blogs: BlogPost[]) => {
+    setData((prev) => {
+      const next = { ...prev, blogs };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
   const addBlogPost = (post: any) => {
     const newPost: BlogPost = {
       id: 'blog-' + Date.now(),
       title: post.title || 'New Article',
-      slug: post.slug || (post.title || 'article').toLowerCase().replace(/\s+/g, '-'),
+      slug:
+        post.slug ||
+        String(post.title || 'article')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, ''),
+      kind: post.kind === 'Article' ? 'Article' : 'Blog',
+      difficulty: post.difficulty || 'Intermediate',
+      tldr: post.tldr || post.snippet || '',
       snippet: post.snippet || '',
       content: post.content || '',
-      date: post.date || 'July 2026',
+      date: post.date || new Date().toLocaleDateString('en-US', { month: 'long', year: 'numeric' }),
       readTime: post.readTime || '5 min read',
-      category: post.category || 'Tech',
-      tags: post.tags || ['Article'],
+      category: post.category || 'Web Engineering',
+      tags: Array.isArray(post.tags) ? post.tags : ['Article'],
       coverImage:
         post.coverImage ||
         '/uploads/assets/static_creativePortfolio_1_ima_3b559722e8.jpg',
-      status: post.status || 'Published',
+      relatedProjectId: post.relatedProjectId || undefined,
+      externalUrl: post.externalUrl || undefined,
+      featured: post.featured ?? true,
+      status: post.status === 'Draft' ? 'Draft' : 'Published',
+      seo: post.seo,
     };
-    setData((prev) => ({
-      ...prev,
-      blogs: [newPost, ...(prev.blogs || [])],
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        blogs: [newPost, ...(prev.blogs || [])],
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const updateBlogPost = (post: BlogPost) => {
-    setData((prev) => ({
-      ...prev,
-      blogs: (prev.blogs || []).map((b) => (b.id === post.id ? post : b)),
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        blogs: (prev.blogs || []).map((b) => (b.id === post.id ? post : b)),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
   const deleteBlogPost = (id: string) => {
-    setData((prev) => ({
-      ...prev,
-      blogs: (prev.blogs || []).filter((b) => b.id !== id),
-    }));
+    setData((prev) => {
+      const next = {
+        ...prev,
+        blogs: (prev.blogs || []).filter((b) => b.id !== id),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+
+  // Events
+  const updateEvents = (events: EventItem[]) => {
+    setData((prev) => {
+      const next = { ...prev, events };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const addEventItem = (event: any) => {
+    const newEvent: EventItem = {
+      id: 'event-' + Date.now(),
+      title: event.title || 'New Event',
+      slug:
+        event.slug ||
+        String(event.title || 'event')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, ''),
+      category: event.category || 'Hackathons',
+      role: event.role || 'Coordinator',
+      date: event.date || new Date().toISOString().split('T')[0],
+      displayDate: event.displayDate || event.date || '2026',
+      endDate: event.endDate || undefined,
+      eventStatus: event.eventStatus === 'Upcoming' ? 'Upcoming' : 'Past',
+      venue: event.venue || 'MVSR Engineering College, Hyderabad',
+      summary: event.summary || '',
+      detailedDescription: event.detailedDescription || event.summary || '',
+      highlights: Array.isArray(event.highlights) ? event.highlights : [],
+      stats: Array.isArray(event.stats) ? event.stats : [],
+      coverImage:
+        event.coverImage ||
+        '/uploads/assets/static_asset_gallery_0_image_yrodqodp.jpg',
+      images:
+        Array.isArray(event.images) && event.images.length > 0
+          ? event.images
+          : [event.coverImage || '/uploads/assets/static_asset_gallery_0_image_yrodqodp.jpg'],
+      videoUrl: event.videoUrl || undefined,
+      registrationUrl: event.registrationUrl || undefined,
+      relatedProjectId: event.relatedProjectId || undefined,
+      certificateUrl: event.certificateUrl || undefined,
+      featured: event.featured ?? true,
+      visibility: event.visibility === 'Draft' ? 'Draft' : 'Published',
+      seo: event.seo,
+    };
+    setData((prev) => {
+      const next = {
+        ...prev,
+        events: [newEvent, ...(prev.events || [])],
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const updateEventItem = (event: EventItem) => {
+    setData((prev) => {
+      const next = {
+        ...prev,
+        events: (prev.events || []).map((ev) => (ev.id === event.id ? event : ev)),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const deleteEventItem = (id: string) => {
+    setData((prev) => {
+      const next = {
+        ...prev,
+        events: (prev.events || []).filter((ev) => ev.id !== id),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+
+  // Press & Features Mentions
+  const updatePressMentions = (pressMentions: PressMention[]) => {
+    setData((prev) => {
+      const next = { ...prev, pressMentions };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const addPressMention = (item: any) => {
+    const newItem: PressMention = {
+      id: 'press-' + Date.now(),
+      title: item.title || 'Featured Mention',
+      slug:
+        item.slug ||
+        String(item.title || 'feature')
+          .toLowerCase()
+          .replace(/[^a-z0-9]+/g, '-')
+          .replace(/^-+|-+$/g, ''),
+      sourceName: item.sourceName || 'External Publication',
+      externalUrl: item.externalUrl || '',
+      category: item.category || 'Press & Media',
+      date: item.date || '2026',
+      summary: item.summary || '',
+      detailedNotes: item.detailedNotes || item.summary || '',
+      highlights: Array.isArray(item.highlights) ? item.highlights : [],
+      coverImage: item.coverImage || '/uploads/assets/static_asset_projects_0_thumbnail_hc35tyd7.png',
+      relatedProjectId: item.relatedProjectId || undefined,
+      featured: item.featured ?? true,
+      visibility: item.visibility === 'Draft' ? 'Draft' : 'Published',
+      seo: item.seo,
+    };
+    setData((prev) => {
+      const next = {
+        ...prev,
+        pressMentions: [newItem, ...(prev.pressMentions || [])],
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const updatePressMention = (item: PressMention) => {
+    setData((prev) => {
+      const next = {
+        ...prev,
+        pressMentions: (prev.pressMentions || []).map((p) => (p.id === item.id ? item : p)),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
+  };
+  const deletePressMention = (id: string) => {
+    setData((prev) => {
+      const next = {
+        ...prev,
+        pressMentions: (prev.pressMentions || []).filter((p) => p.id !== id),
+      };
+      persistCMSDataInstantly(next);
+      return next;
+    });
   };
 
   // Resumes
@@ -1906,6 +2112,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     journey: data.journey || [],
     gallery: data.gallery || [],
     blogs: data.blogs || [],
+    events: data.events || [],
+    pressMentions: data.pressMentions || [],
     resumes: data.resumes || [],
     messages: mergedMessages,
     contactMessages: mergedMessages,
@@ -1975,6 +2183,14 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         addBlogPost,
         updateBlogPost,
         deleteBlogPost,
+        updateEvents,
+        addEventItem,
+        updateEventItem,
+        deleteEventItem,
+        updatePressMentions,
+        addPressMention,
+        updatePressMention,
+        deletePressMention,
         updateResumes,
         addResume,
         updateResumeItem,

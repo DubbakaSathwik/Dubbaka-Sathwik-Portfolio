@@ -7,10 +7,11 @@ import { FormattedText } from '../lib/text-formatter';
 import { NeonIcon } from './ui/neon-icon';
 import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
 import { DataLoadingState } from './ui/data-loading-state';
+import { isItemPublished } from '../config/seo';
 
 export function JourneySection() {
   const { data } = useCMS();
-  const items = data.journey || [];
+  const items = (data.journey || []).filter(isItemPublished);
   const [activeCategory, setActiveCategory] = useState<string>('All');
   const [selectedJourneyItem, setSelectedJourneyItem] = useState<JourneyItem | null>(null);
 

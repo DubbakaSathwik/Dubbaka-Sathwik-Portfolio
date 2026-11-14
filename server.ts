@@ -19,6 +19,7 @@ import telegramRouter from './server/routes/telegram';
 import telemetryRouter from './server/routes/telemetry';
 import logsRouter from './server/routes/logs';
 import githubRouter from './server/routes/github';
+import seoRouter from './server/routes/seo';
 
 async function startServer() {
   const envValidation = validateConfig();
@@ -140,6 +141,7 @@ async function startServer() {
   app.use('/api/telemetry', telemetryRouter);
   app.use('/api/logs', logsRouter);
   app.use('/api/github', githubRouter);
+  app.use('/api/seo', seoRouter);
 
   // Central error handler for API routes
   app.use(errorHandler);

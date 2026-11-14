@@ -6,6 +6,7 @@ import { GalleryItem } from '../types';
 import { FormattedText } from '../lib/text-formatter';
 import { StackedCardDeck } from './ui/stacked-card-deck';
 import { DataLoadingState } from './ui/data-loading-state';
+import { isItemPublished } from '../config/seo';
 import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
 
 // Mini card slideshow with 4-second auto shift & sliding motion effect
@@ -83,7 +84,7 @@ function GalleryCardSlideshow({ images, title }: { images: string[]; title: stri
 
 export function GallerySection() {
   const { data } = useCMS();
-  const items = data.gallery || [];
+  const items = (data.gallery || []).filter(isItemPublished);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [activeItem, setActiveItem] = useState<GalleryItem | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);

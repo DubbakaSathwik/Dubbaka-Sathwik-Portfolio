@@ -14,6 +14,14 @@ export interface SkillCategory {
   skills: string[];
 }
 
+export interface SEOMetadata {
+  slug?: string;
+  seoTitle?: string;
+  metaDescription?: string;
+  keywords?: string[];
+  tldr?: string;
+}
+
 export interface Project {
   id: string;
   title: string;
@@ -33,6 +41,8 @@ export interface Project {
   featured: boolean;
   status: 'Completed' | 'In Progress' | 'Maintained' | string;
   year: string;
+  visibility?: 'Published' | 'Draft';
+  seo?: SEOMetadata;
 }
 
 export interface ProjectSequenceItem {
@@ -99,6 +109,8 @@ export interface CreativeItem {
   completionDate: string;
   featured: boolean;
   status: string;
+  visibility?: 'Published' | 'Draft';
+  seo?: SEOMetadata;
 }
 
 export interface JourneyItem {
@@ -114,6 +126,8 @@ export interface JourneyItem {
   icon?: string;
   image?: string;
   images?: string[];
+  visibility?: 'Published' | 'Draft';
+  seo?: SEOMetadata;
 }
 
 export type GalleryCategory =
@@ -146,12 +160,17 @@ export interface GalleryItem {
   credentialUrl?: string;
   image: string;
   images?: string[];
+  visibility?: 'Published' | 'Draft';
+  seo?: SEOMetadata;
 }
 
 export interface BlogPost {
   id: string;
   title: string;
   slug: string;
+  kind?: 'Blog' | 'Article';
+  difficulty?: 'Beginner' | 'Intermediate' | 'Advanced';
+  tldr?: string;
   snippet: string;
   content: string;
   date: string;
@@ -159,7 +178,71 @@ export interface BlogPost {
   category: string;
   tags: string[];
   coverImage: string;
+  relatedProjectId?: string;
+  externalUrl?: string;
+  featured?: boolean;
   status: 'Published' | 'Draft';
+  seo?: SEOMetadata;
+}
+
+export type EventCategory =
+  | 'Hackathons'
+  | 'NSS Drives'
+  | 'IEEE Workshops'
+  | 'Tech Talks'
+  | 'Media & Editing'
+  | string;
+
+export interface EventItem {
+  id: string;
+  title: string;
+  slug: string;
+  category: EventCategory;
+  role: string;
+  date: string;
+  displayDate?: string;
+  endDate?: string;
+  eventStatus: 'Upcoming' | 'Past';
+  venue: string;
+  summary: string;
+  detailedDescription: string;
+  highlights?: string[];
+  stats?: string[];
+  coverImage: string;
+  images?: string[];
+  videoUrl?: string;
+  registrationUrl?: string;
+  relatedProjectId?: string;
+  certificateUrl?: string;
+  featured?: boolean;
+  visibility?: 'Published' | 'Draft';
+  seo?: SEOMetadata;
+}
+
+export type PressCategory =
+  | 'Press & Media'
+  | 'Developer Profiles'
+  | 'Competitions & Awards'
+  | 'Fellowships & Spotlights'
+  | 'College & Community'
+  | string;
+
+export interface PressMention {
+  id: string;
+  title: string;
+  slug: string;
+  sourceName: string;
+  externalUrl: string;
+  category: PressCategory;
+  date: string;
+  summary: string;
+  detailedNotes?: string;
+  highlights?: string[];
+  coverImage: string;
+  relatedProjectId?: string;
+  featured?: boolean;
+  visibility?: 'Published' | 'Draft';
+  seo?: SEOMetadata;
 }
 
 export interface ResumeOption {
@@ -261,6 +344,8 @@ export interface CMSData {
   journey: JourneyItem[];
   gallery: GalleryItem[];
   blogs: BlogPost[];
+  events?: EventItem[];
+  pressMentions?: PressMention[];
   resumes: ResumeOption[];
   contactInfo: ContactInfo;
   intro?: IntroData;

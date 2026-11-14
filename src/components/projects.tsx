@@ -7,6 +7,7 @@ import { FormattedText } from '../lib/text-formatter';
 import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
 import { StackedCardDeck } from './ui/stacked-card-deck';
 import { DataLoadingState } from './ui/data-loading-state';
+import { getProjectSlug, isItemPublished } from '../config/seo';
 
 // Mini card slideshow with 4-second auto shift & sliding motion effect
 function ProjectCardSlideshow({ images, title }: { images: string[]; title: string }) {
@@ -83,7 +84,7 @@ function ProjectCardSlideshow({ images, title }: { images: string[]; title: stri
 
 export function ProjectsSection() {
   const { data } = useCMS();
-  const projects = data.projects || [];
+  const projects = (data.projects || []).filter(isItemPublished);
 
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [selectedProject, setSelectedProject] = useState<Project | null>(null);
@@ -500,17 +501,34 @@ export function ProjectsSection() {
                     </div>
 
                     {/* External Action Links Footer */}
-                    <div className="pt-3.5 mt-auto border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-3 shrink-0">
+                    <div className="pt-3.5 mt-auto border-t border-zinc-800/80 flex flex-wrap items-center justify-between gap-2.5 shrink-0">
                       <div className="flex items-center gap-2 flex-wrap">
+                        <a
+                          href={`/projects/${getProjectSlug(selectedProject)}`}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            const slug = getProjectSlug(selectedProject);
+                            setSelectedProject(null);
+                            window.dispatchEvent(
+                              new CustomEvent('portfolio:navigate', {
+                                detail: { path: `/projects/${slug}` },
+                              })
+                            );
+                          }}
+                          className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-950/60 hover:scale-105 active:scale-95"
+                        >
+                          <span>Full Case Study</span>
+                          <ArrowUpRight className="w-3.5 h-3.5" />
+                        </a>
                         {liveUrl && liveUrl.trim() !== '' && (
                           <a
                             href={liveUrl}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition-all shadow-md shadow-emerald-950/60 hover:scale-105 active:scale-95"
+                            className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-emerald-300 font-semibold text-xs border border-emerald-500/40 transition-all hover:scale-105 active:scale-95"
                           >
                             <ExternalLink className="w-3.5 h-3.5" />
-                            <span>Live Product Demo</span>
+                            <span>Live Demo</span>
                           </a>
                         )}
                         {gitUrl && gitUrl.trim() !== '' && (
@@ -521,7 +539,7 @@ export function ProjectsSection() {
                             className="inline-flex items-center gap-1.5 px-3.5 sm:px-4 py-2 rounded-xl bg-zinc-900 hover:bg-zinc-800 text-white font-semibold text-xs border border-zinc-700 transition-all hover:border-emerald-500/50 hover:scale-105 active:scale-95"
                           >
                             <Github className="w-3.5 h-3.5 text-emerald-400" />
-                            <span>Git Repository</span>
+                            <span>Git Repo</span>
                           </a>
                         )}
                       </div>

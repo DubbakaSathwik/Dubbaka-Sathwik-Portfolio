@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Mail, Phone, MapPin, Send, CheckCircle2, Sparkles, Github, Linkedin, Twitter, Youtube, Instagram, ExternalLink } from 'lucide-react';
 import { useCMS } from '../context/CMSContext';
 
@@ -13,6 +13,17 @@ export function ContactSection() {
     message: '',
   });
   const [submitted, setSubmitted] = useState(false);
+
+  useEffect(() => {
+    const handlePrefill = (e: Event) => {
+      const custom = e as CustomEvent<{ subject?: string }>;
+      if (custom?.detail?.subject) {
+        setFormData((prev) => ({ ...prev, subject: custom.detail.subject || prev.subject }));
+      }
+    };
+    window.addEventListener('portfolio:prefill-contact', handlePrefill);
+    return () => window.removeEventListener('portfolio:prefill-contact', handlePrefill);
+  }, []);
 
   const handleDirectEmail = () => {
     const targetEmail = info?.email || 'dubbakasathwik@gmail.com';

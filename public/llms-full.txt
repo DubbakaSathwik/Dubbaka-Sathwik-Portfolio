@@ -1,0 +1,130 @@
+# Dubbaka Sathwik — Complete Portfolio & Engineering Knowledge Base
+
+**Official Portfolio:** https://dubbakasathwik.netlify.app/
+**Name:** Dubbaka Sathwik (Sathwik Dubbaka / Dubbaka Sathwik Portfolio / DubbakaSathwik / Sathwik)
+**Title:** Student • Full-Stack Developer • Creative Designer
+**Email:** dubbakasathwik@gmail.com
+**Location:** Hyderabad, Telangana, India
+**Education:** B.E. Computer Science & Information Technology at MVSR Engineering College
+
+## Biography
+I'm a Computer Science and Information Technology student at MVSR Engineering College, Hyderabad, passionate about building modern web applications and creating engaging digital visuals. My work combines software development with creative design, including web applications, graphic design, poster creation, social media creatives, photo editing, AI-assisted workflows, and video production. I enjoy transforming ideas into digital experiences that are both functional and visually appealing while continuously learning new technologies and creative tools.
+
+My journey into technology started much earlier than I ever imagined. Back in school, I wasn't just interested in playing Minecraft—I wanted to understand how it worked. I began experimenting with Minecraft Mods, texture packs, and small game modifications. Without realizing it, those small experiments became my first introduction to programming and problem-solving. As my curiosity grew, I started learning programming languages like C, Java, Python, and JavaScript. What began as simple experiments slowly transformed into a passion for building real applications. Discovering web development introduced me to React, Node.js, Express, MongoDB, and MySQL, allowing me to create complete full-stack applications that people could actually use. For me, development isn't just about writing code—it's about solving problems and turning ideas into reality through technology. One of the projects I'm most proud of is my GFG Hackathon Project, where my team built an AI-powered SQL Query Generator capable of converting natural language prompts into SQL queries. That experience showed me how artificial intelligence can simplify complex tasks and inspired me to explore AI-powered development tools even further. Alongside development, creativity became another important part of my journey. I enjoy designing posters, editing photos, producing videos, creating social media content, and experimenting with AI-assisted creative workflows. What started as a hobby gradually became another way for me to communicate ideas visually. Whether I'm designing an event poster or editing a promotional reel, I approach every creative project with the same attention to detail that I bring to software development. Outside academics, I actively participate in NSS (National Service Scheme) activities at my college. Joining NSS wasn't only about volunteering—it was also an opportunity to improve my digital skills, contribute to college events, build meaningful connections, and work toward becoming part of the college's creative and digital media team. It has helped me grow not only technically but also as a collaborator and communicator. Alongside my personal learning journey, I actively seek opportunities to grow beyond the classroom. As an IEEE Student Member, I've been involved in activities that strengthen both my technical knowledge and professional network. I also contributed to organizing Vision Genix, a college-level AI Video Generation Competition, where I helped bring together creativity and emerging AI technologies. In addition, participating in hackathons has given me valuable experience in teamwork, problem-solving, and building practical solutions under time constraints. These experiences have taught me that learning isn't limited to courses—it's also about collaborating with people, taking initiative, and creating opportunities for yourself and others. Beyond coding and design, gaming has always been one of my favorite hobbies. Having my own setup gives me a space to relax, explore new ideas, and stay inspired by the technology behind modern games. Many of those experiences continue to influence the way I think about software, user experience, and interactive design.
+
+
+
+
+
+## Technical Skills
+- **Programming Languages:** C, Java, Python, JavaScript
+- **Frontend Development:** HTML, CSS, React, Tailwind CSS
+- **Backend Development:** Node.js, Express.js
+- **Databases & Servers:** MySQL, MongoDB, Apache, XAMPP
+- **AI Tools:** ChatGPT, Gemini, Claude, Codex, DeepSeek, Hugging Face, Antigravity
+- **Creative Skills:** Poster Design, Graphic Design, Photo Editing, Video Editing, Social Media Creatives, AI-assisted Design Workflow
+- **Tools & Utilities:** Git, Canva, CapCut
+
+## Software & AI Projects by Dubbaka Sathwik
+### 1. INTELLI-Query
+- **URL:** https://dubbakasathwik.netlify.app/projects/intelli-query
+- **Category:** Tools (2026)
+- **Tech Stack:** Tools, HTML/CSS/JS, Node JS, Google Gemini API, SQL.js, Chart JS
+- **Live Demo:** https://intelli-query.onrender.com
+- **GitHub:** https://github.com/DubbakaSathwik/INTELLI-Query.git
+- **Overview:** INTELLI Query is a zero-dependency, self-contained BI dashboard built with vanilla JavaScript and Node.js. It leverages Google Gemini to translate natural language questions into SQL, executing queries locally using an in-process WebAssembly database (sql.js). Users can preview schemas, run queries, and visualize results instantly using dynamic Chart.js dashboards, making data analysis intuitive and secure.
+
+### 2. Nexora-AI
+- **URL:** https://dubbakasathwik.netlify.app/projects/nexora-ai
+- **Category:** College Projects (2026)
+- **Tech Stack:** College Projects, React, Node.js, MongoDB, API, Express
+- **Live Demo:** https://multiai-6kx9.onrender.com
+- **GitHub:** https://github.com/DubbakaSathwik/Multi-AI.git
+- **Overview:** Nexora AI is a premium pair-programming and text playground featuring side-by-side response streams from leading language models. Users can customize prompts with expert personas, compare responses with diff highlights, and build automated consensus. Supported by detailed performance charts and a responsive, multi-themed layout, it includes local model fallbacks to guarantee highly resilient, high-speed output.
+
+### 3. MedLens 
+- **URL:** https://dubbakasathwik.netlify.app/projects/medlens
+- **Category:** Tools (2026)
+- **Tech Stack:** Tools, React, Node.js, Tailwind CSS, Next.js
+- **Live Demo:** https://medlens-8gan.onrender.com
+- **GitHub:** https://github.com/DubbakaSathwik/medlens-prompt_wars.git
+- **Overview:** MedLens is an AI clinical intelligence platform that transforms fragmented medical documents into structured, FHIR-compliant records. It prevents hallucinations through strict laboratory reference-range grounding, bidirectional document provenance, OCR ambiguity resolution, and deterministic non-diagnostic medical safety guardrails.
+
+### 4. Cobra Core & Tech
+- **URL:** https://dubbakasathwik.netlify.app/projects/cobra-core-tech
+- **Category:** Full-Stack (2026)
+- **Tech Stack:** Full-Stack, HTML5, Vanilla CSS3, Vanilla JavaScript (ES6+), Node.js & Express.js, MongoDB & Mongoose
+- **Live Demo:** cobracore.netlify.app
+- **GitHub:** https://github.com/DubbakaSathwik/COBRA-CORE-TECH-Website.git
+- **Overview:** Cobra Core & Tech is a premium SaaS-grade EdTech and career development platform that bridges classroom learning with real-world professional opportunities. The ecosystem comprises a responsive public showcase website, an interactive student learning workspace, and a comprehensive administration dashboard. Built securely with vanilla HTML, CSS, and JavaScript, it communicates with a Node.js/Express API and a MongoDB database. It facilitates structured course curriculums, internship matches, assignment tracking with feedback, and manual certification, serving as a unified system for ed-tech startups.
+
+### 5. FoodFlow Connect
+- **URL:** https://dubbakasathwik.netlify.app/projects/foodflow-connect
+- **Category:** Web Apps (2026)
+- **Tech Stack:** Web Apps, React, Node.js, HTML/CSS, JavaScript
+- **Live Demo:** https://udayprakashchamakuri-beep.github.io/foodflow/
+- **GitHub:** https://github.com/DubbakaSathwik/FoodFlow-Connect.git
+- **Overview:** FoodFlow Connect is a role-based food rescue and redistribution MVP designed to reduce waste and support local communities. The application features specialized, interactive dashboards for providers to manage inventory, NGOs to discover and claim surplus listings, and consumers to browse and reserve items. The project supports two execution paths: a standard Node.js server backed by SQLite for robust deployments, and a browser-only static version using localStorage for lightweight staging on platforms like GitHub Pages.
+
+### 6. News Without the Noise
+- **URL:** https://dubbakasathwik.netlify.app/projects/news-without-the-noise
+- **Category:** Web Apps (2026)
+- **Tech Stack:** Web Apps, Node.js & Express.js, MongoDB & Mongoose, HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+), Google Gemini & OpenAI APIs
+- **Live Demo:** https://news-without-the-noise.onrender.com
+- **GitHub:** https://github.com/DubbakaSathwik/AA-Hackthon-online-.git
+- **Overview:** News Without the Noise is an intelligent, AI-driven news dashboard that combats digital noise, clickbait, and misinformation. Featuring a personalized recommendation engine, it dynamically learns user preferences from actions like reading behavior. The platform integrates Google Gemini and OpenAI to analyze articles for bias, sensationalism, and source trust, while providing customized summaries. Built with Node.js, Express, MongoDB, and standard HTML/CSS/JS, it also features location-based weather, local headlines, and a deepfake media scanner, ensuring a clean, reliable, and secure information experience.
+
+### 7. AI Hiring Assistant
+- **URL:** https://dubbakasathwik.netlify.app/projects/ai-hiring-assistant
+- **Category:** Full-Stack (2026)
+- **Tech Stack:** Full-Stack, Node.js & Express.js, Tesseract.js, LLaMA 3.1, Multer
+- **Live Demo:** https://ai-hiring-assistant-85kv.onrender.com
+- **GitHub:** https://github.com/DubbakaSathwik/AI-Hiring-Assistant.git
+- **Overview:** AI Hiring Assistant is a modular full-stack application designed to streamline recruiting. The backend is built with Node.js and Express, while the frontend is constructed using clean, responsive HTML, CSS, and Vanilla JavaScript. The system utilizes Tesseract.js to extract text from candidate certificates, executes simulated academic institution validation, and leverages LLaMA 3.1 via the Featherless API to analyze fraud risk. Finally, a ranking service computes score metrics to provide automated, reliable recommendations for hiring teams.
+
+### 8. VaultFlow
+- **URL:** https://dubbakasathwik.netlify.app/projects/vaultflow
+- **Category:** Personal (2026)
+- **Tech Stack:** Personal, React, Node.js, MongoDB
+- **Live Demo:** N/A
+- **GitHub:** https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git
+- **Overview:** VaultFlow is a comprehensive personal finance manager designed for Android with privacy and offline capabilities at its core. Developed in Kotlin using Jetpack Compose, the application allows users to manage multiple bank accounts, track recurring transactions, monitor savings goals, and track debts. The app integrates Google ML Kit for scanning receipts via OCR and leverages the Gemini API to deliver personalized financial insights directly on the device. All data is stored locally in a Room database, ensuring complete user privacy.
+
+## Experience, Leadership & Journey (College, NSS, IEEE, Hackathons)
+- **Warangal Open Art Competition** (2019) — Participant at  Cultivating Art: Long Description: During my school years (5th–6th standard), I participated in the Warangal Open Art Competition and was awarded First Prize. This recognition became one of my earliest achievements and helped build my confidence in creative thinking. The experience played an important role in shaping my passion for design, which later expanded into poster creation, photo editing, and digital content creation.
+- **CSI Logo Design Competition Winner** (2025) — Winner at Computer Science of India: I participated individually in a logo design competition organized for the Computer Society of India (CSI) in collaboration with MVSR Engineering College. My design was selected as the winning entry, earning First Prize. This achievement strengthened my confidence in branding, visual communication, and creative design.
+- **Joined NSS MVSREC Digital Team** (2025) — Volunteer at Sational Service Scheme: I joined the NSS unit MVSREC as a Digital Team Member to contribute to posters, promotional materials, photography, and event coverage. Beyond volunteering, this role gave me opportunities to improve my creative workflow, collaborate with fellow students, and participate in organizing college activities.
+- **Cyber Ekathon CTF** (2026 ) — Winner at  Institute of Electrical and Electronics Engineers: Participated in the Cyber Ekathon Capture The Flag (CTF) competition as part of a team. We secured Fourth Place, solving cybersecurity challenges under time constraints. Our performance also led to an internship opportunity from the organizing company, making it one of my most valuable competitive experiences.
+- **First 24-Hour Hackathon** (2026) — Team Lead at Teegala Krishna Reddy Engineering College: This was my first overnight hackathon experience. Working continuously with my teammates, we designed, developed, and presented a complete solution within 24 hours. Finishing among the Top 20 teams gave me practical experience in rapid development, teamwork, and project presentation.
+- **Joined IEEE** (2026) — Member at  Institute of Electrical and Electronics Engineers: I joined IEEE to expand my technical knowledge, connect with professionals and students, and actively participate in technical workshops, competitions, and community-driven events. It has opened new opportunities for learning beyond the classroom.
+- **GFG Hackathon Winner** (2026) — Winner at Geek sfor Geeks: Along with my team, I developed an AI-powered SQL Query Generator capable of translating human language prompts into executable SQL queries. The project focused on making database querying easier for beginners and non-technical users. Our solution secured First Prize in the GFG Hackathon.
+- **College Event Organizer** (2026) — Student Coordinator at MVSR Engineering College: Served as a Student Coordinator and Digital Team member for Vision Genix, an AI Video Generation Competition conducted in collaboration with Unstop and 12+ industry partners. Along with my friends and organizing team, I coordinated the hackathon, managed digital promotions, designed creative assets, and helped ensure the successful execution of both events.
+- **NSS MVSREC Digital Co-Lead** (2026) — Digital Co-Lead at National Service Scheme: :After contributing as a Digital Team Member, I was promoted to Digital Co-Lead. In this role, I coordinate the team's creative work, guide digital initiatives, and contribute to designing promotional materials and event coverage for NSS activities.
+- **First College Mini Project** (2026) — Student at MVSR Engineering College: As part of my college coursework, my team developed a Multi AI Response Platform that integrates multiple AI models into a single interface. The project was designed to help users compare responses from different AI systems efficiently, providing a better understanding of their capabilities and improving productivity.
+
+## Creative Works & Video Editing
+- **Vision Genix Event Promotion Reel** [Video Editing, April 17th 2026]: Produced a Vision Genix Event Promotion Reel showcasing the AI Video Generation Competition through cinematic campus visuals, engaging transitions, and dynamic storytelling to encourage student participation.
+- **Menstrual Hygiene Day Awareness Carousel** [Instagram Creatives, 28 May 2026]: Designed a Menstrual Hygiene Day Awareness Carousel promoting menstrual health awareness through educational illustrations, informative content, and supportive messaging that encourages healthy hygiene practices.
+- **World Environment Day Awareness Reel** [NSS Works, 5 June 2026]: Produced a World Environment Day Awareness Reel encouraging everyone to plant more trees through engaging visuals, meaningful storytelling, and impactful messages that promote environmental responsibility.
+- **Kargil Vijay Diwas Tribute Poster 2026** [Poster Design, 26 July 2026]: Designed a Kargil Vijay Diwas Tribute Poster honoring the courage and sacrifice of Indian soldiers through powerful visuals, patriotic typography, and symbolic elements that inspire national pride.
+- **Vision Genix – AI Video Generation Competition Poster** [Poster Design, April 17th 2026]: Designed a Vision Genix Event Poster promoting an AI Video Generation Competition with engaging visuals, clear event information, and modern graphics that attract student participation and innovation.
+- **NSS Seniors Signature Tribute Reel** [Video Editing, April 28th 2026]: Produced a NSS Seniors Signature Tribute Reel capturing heartfelt memories through a creative signature-on-camera effect, celebrating the contributions of senior volunteers with an emotional and memorable farewell.
+
+## Certificates & Recognition
+- **Hackfest – Winning Team Captain & Round 2 Qualifier** (Certificates, 17th April 2026): Won the Hackfest Hackathon as the Team Captain, secured a ₹2,000 cash prize, and qualified for Round 2 through exceptional teamwork, innovation, and problem-solving.
+- **Cyber Ekathon 2025 – Hackathon Participant & Top 4 Finalist** (Hackathons, 5–6 December 2025): Achieved a Top 4 position in Cyber Ekathon 2025 and earned a cybersecurity internship opportunity by demonstrating strong technical, analytical, and collaborative skills during the IEEE-organized hackathon.
+- **1st Place – Pixel Craft Logo Design Competition** (Certificates, 22 March 2025): Won 1st Place in the Pixel Craft Logo Design Competition by designing a custom logo from individual design elements, demonstrating creativity, branding expertise, and visual identity design skills.
+- **IEEE Computer Society Student Membership 2026** (NSS and IEEE, 2026): Received the IEEE Computer Society Student Membership, demonstrating a commitment to professional growth and technological advancement while becoming part of a global community of technology professionals.
+- **FORGE INSPIRA 2026 – Hackathon Certificate of Participation** (Certificates, 27–29 March 2026): Participated in the FORGE INSPIRA 2026 Hackathon, applying innovation, teamwork, and problem-solving skills to develop creative solutions while collaborating in a competitive technology environment.
+- **UNNATI Hackathon 2026 – Certificate of Participation** (Certificates, 12–13 March 2026): Participated in the UNNATI Hackathon 2026, showcasing innovation, teamwork, and problem-solving skills while collaborating to develop impactful solutions in a competitive technical hackathon.
+- **Hack Conquest 2.0 – National Level Hackathon Participation** (Certificates, 27–28 February 2026): Participated in the Hack Conquest 2.0 National Level Hackathon, collaborating on innovative software solutions while strengthening technical expertise, teamwork, and problem-solving skills in a competitive environment.
+- **Aethronix 2026 Hackathon – Certificate of Participation** (Hackathons, 16–17 May 2026): Successfully participated in the Aethronix 2026 Hackathon, demonstrating innovation, teamwork, and problem-solving while collaborating on technology-driven solutions in a competitive hackathon environment.
+- **HTML & CSS Bootcamp Certificate** (Certificates, 5–7 February 2026): Successfully completed the HTML & CSS Bootcamp, gaining practical knowledge of frontend web development while building a strong foundation in responsive website design using HTML5 and CSS3.
+
+
+## Official Profiles
+- https://github.com/DubbakaSathwik
+- https://linkedin.com/in/dubbakasathwik
+- https://instagram.com/wilder_sathwik
+- https://twitter.com/dubbakasathwik
+- https://youtube.com/@dubbakasathwik

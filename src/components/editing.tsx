@@ -22,10 +22,11 @@ import { FormattedText } from '../lib/text-formatter';
 import { StackedCardDeck } from './ui/stacked-card-deck';
 import { DataLoadingState } from './ui/data-loading-state';
 import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
+import { isItemPublished } from '../config/seo';
 
 export function EditingSection() {
   const { data } = useCMS();
-  const items = data.creativePortfolio || [];
+  const items = (data.creativePortfolio || []).filter(isItemPublished);
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
   const [activeItem, setActiveItem] = useState<CreativeItem | null>(null);
   const [activeImageIndex, setActiveImageIndex] = useState<number>(0);

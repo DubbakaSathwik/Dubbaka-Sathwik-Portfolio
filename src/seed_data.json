@@ -1107,63 +1107,7 @@
       ]
     }
   ],
-  "blogs": [
-    {
-      "id": "blog-1",
-      "title": "My Journey from Minecraft Mods in 8th Class to Full-Stack Development",
-      "slug": "minecraft-mods-to-full-stack-development",
-      "snippet": "How curious experimentation with Minecraft textures and small game tweaks ignited a lifelong passion for computer science and web engineering.",
-      "content": "Back in 8th class, I was fascinated by Minecraft. What started as simple curiosity about texture packs and game modifications quickly sparked a deep interest in how software works behind the scenes.\n\n### From Modding to Programming\n\nTinkering with configuration files and basic code logic taught me problem-solving early on. Eventually, that curiosity led me to explore fundamental programming languages like C, Java, and Python.\n\n### Stepping Into Web Development\n\nWhen I entered Computer Science Engineering at MVSR Engineering College, I turned that interest towards full-stack web development. Learning React, Node.js, Express, and databases (MySQL & MongoDB) allowed me to build functional applications that solve real student and campus needs.\n\nNever underestimate small sparks of curiosity—they often lead to your greatest skills.",
-      "date": "July 2025",
-      "readTime": "4 min read",
-      "category": "Personal Story",
-      "tags": [
-        "Minecraft",
-        "Full-Stack",
-        "Coding Journey",
-        "MVSR"
-      ],
-      "coverImage": "/uploads/assets/static_creativePortfolio_1_ima_3b559722e8.jpg",
-      "status": "Published"
-    },
-    {
-      "id": "blog-2",
-      "title": "Designing Eye-Catching College Event Posters with Canva & AI Tools",
-      "slug": "designing-college-event-posters-canva-ai",
-      "snippet": "Practical tips for engineering students on blending AI design tools, Canva, and clean typography to create striking event posters.",
-      "content": "As a Computer Science student who loves creative design, I often design posters for MVSR college events and NSS activities.\n\n### Key Principles for Event Posters:\n\n1. **Hierarchy First**: Make the event name and key date/time immediately readable from a distance.\n2. **Color Contrast**: Use clean dark backgrounds paired with sharp white and vibrant accent colors.\n3. **AI Assistance**: Utilize AI tools like ChatGPT or Gemini to brainstorm catchy taglines, then use Canva or Photoshop for final composition.\n\nCombining tech with creative design allows engineering projects and campus events to stand out!",
-      "date": "June 2025",
-      "readTime": "5 min read",
-      "category": "Creative Design",
-      "tags": [
-        "Poster Design",
-        "Canva",
-        "AI Tools",
-        "Graphics"
-      ],
-      "coverImage": "/uploads/assets/static_creativePortfolio_2_ima_c7b0a1905c.jpg",
-      "status": "Published"
-    },
-    {
-      "id": "blog-3",
-      "title": "Building Practical Web Apps with React, Express, and MongoDB",
-      "slug": "building-practical-web-apps-react-express-mongodb",
-      "snippet": "A student developer guide on setting up full-stack MERN architecture for campus projects and portfolio applications.",
-      "content": "Building web applications as a student is one of the best ways to solidify classroom computer science concepts.\n\n### Why MERN Stack Works Well:\n\n* **JavaScript Everywhere**: Write frontend React components and backend Node/Express routes in the same language.\n* **Flexible Schemas**: MongoDB allows rapid iteration when adding new features.\n* **Tailwind CSS Utility Styling**: Achieve clean Vercel/Apple inspired layouts with minimal custom CSS overhead.\n\nKeep building real projects—hands-on practice beats theoretical reading every time!",
-      "date": "May 2025",
-      "readTime": "6 min read",
-      "category": "Web Engineering",
-      "tags": [
-        "React",
-        "Express",
-        "MongoDB",
-        "Node.js",
-        "Tailwind CSS"
-      ],
-      "coverImage": "/uploads/assets/static_projects_0_images_2_6cfa237658.png",
-      "status": "Published"
-    }
-  ],
+  "blogs": [],
   "contactInfo": {
     "email": "dubbakasathwik@gmail.com",
     "phone": "+91 8527564839",
@@ -1221,5 +1165,7 @@
     "nameDelaySeconds": 1.2
   },
   "messages": [],
-  "contactMessages": []
+  "contactMessages": [],
+  "events": [],
+  "pressMentions": []
 }

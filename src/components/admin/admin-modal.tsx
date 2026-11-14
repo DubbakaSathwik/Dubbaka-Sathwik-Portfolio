@@ -51,6 +51,10 @@ import {
   ListOrdered,
   RefreshCw,
   ShieldCheck,
+  EyeOff,
+  Globe,
+  Wand2,
+  Newspaper,
 } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
 import { initialIntroData } from '../../data';
@@ -66,6 +70,9 @@ import { PhotoDropdownSelector } from '../ui/photo-dropdown';
 import { BackupRestoreTab } from './tabs/backup-tab';
 import { JSONBackupTab } from './tabs/json-backup-tab';
 import { ActivityLogsTab } from './tabs/activity-logs-tab';
+import { BlogsTab } from './tabs/blogs-tab';
+import { EventsTab } from './tabs/events-tab';
+import { PressTab } from './tabs/press-tab';
 
 function PdfDropzoneSelector({
   pdfUrl,
@@ -254,6 +261,7 @@ export function AdminPortalModal() {
     isAuthenticated,
     isAdmin,
     currentUser,
+    authToken,
     loginWithGoogle,
     logout,
     syncToGitHub,
@@ -266,7 +274,7 @@ export function AdminPortalModal() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState<
-    'journey' | 'projects' | 'creative' | 'gallery' | 'resumes' | 'hero' | 'about' | 'intro' | 'contact' | 'inbox' | 'backup' | 'json-backup' | 'logs'
+    'journey' | 'projects' | 'creative' | 'gallery' | 'blogs' | 'events' | 'press' | 'resumes' | 'hero' | 'about' | 'intro' | 'contact' | 'inbox' | 'backup' | 'json-backup' | 'logs'
   >('journey');
   const [backupSubTab, setBackupSubTab] = useState<'github' | 'history' | 'export' | 'repo-info'>('github');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -547,11 +555,14 @@ export function AdminPortalModal() {
     description: '',
     detailedDescription: '',
     photoUrlsInput: '',
+    visibility: 'Published' as 'Published' | 'Draft',
   });
 
   // Project Form State
   const [editingProjectId, setEditingProjectId] = useState<string | null>(null);
   const [isReindexingCardIds, setIsReindexingCardIds] = useState(false);
+  const [isGeneratingProjectSeo, setIsGeneratingProjectSeo] = useState(false);
+  const [projectSeoStatus, setProjectSeoStatus] = useState<{ type: 'success' | 'error'; message: string } | null>(null);
   const [newProject, setNewProject] = useState({
     title: '',
     cardIdNo: '',
@@ -565,6 +576,12 @@ export function AdminPortalModal() {
     demoUrl: '',
     githubUrl: '',
     featured: true,
+    visibility: 'Published' as 'Published' | 'Draft',
+    seoSlug: '',
+    seoTitle: '',
+    metaDescription: '',
+    seoKeywordsInput: '',
+    seoTldr: '',
   });
 
   const handleReindexCardIds = async () => {
@@ -612,6 +629,7 @@ export function AdminPortalModal() {
     tags: ['Poster', 'Design'],
     shortDescription: '',
     detailedDescription: '',
+    visibility: 'Published' as 'Published' | 'Draft',
   });
 
   const handleReindexCreativeCardIds = async () => {
@@ -659,6 +677,7 @@ export function AdminPortalModal() {
     tags: ['Certificates', 'Full-Stack'],
     description: '',
     detailedDescription: '',
+    visibility: 'Published' as 'Published' | 'Draft',
   });
 
   const handleReindexGalleryCardIds = async () => {
@@ -760,6 +779,7 @@ export function AdminPortalModal() {
       description: item.description || '',
       detailedDescription: item.detailedDescription || item.description || '',
       photoUrlsInput: photoList,
+      visibility: (item.visibility === 'Draft' ? 'Draft' : 'Published') as 'Published' | 'Draft',
     });
   };
 
@@ -776,6 +796,7 @@ export function AdminPortalModal() {
       description: '',
       detailedDescription: '',
       photoUrlsInput: '',
+      visibility: 'Published',
     });
   };
 
@@ -802,6 +823,7 @@ export function AdminPortalModal() {
         tags: combinedTags,
         images: photoList,
         image: photoList[0] || '',
+        visibility: newJourney.visibility,
       });
       setEditingJourneyId(null);
     } else {
@@ -816,6 +838,7 @@ export function AdminPortalModal() {
         tags: combinedTags,
         images: photoList,
         image: photoList[0] || '',
+        visibility: newJourney.visibility,
       });
     }
 
@@ -831,12 +854,73 @@ export function AdminPortalModal() {
       description: '',
       detailedDescription: '',
       photoUrlsInput: '',
+      visibility: 'Published',
     });
     showSaveToast(wasEditing ? 'Milestone Entry Updated' : 'Milestone Entry Saved');
   };
 
+  const handleGenerateProjectSeoMetadata = async () => {
+    if (!newProject.title || newProject.title.trim().length < 2) {
+      setProjectSeoStatus({ type: 'error', message: 'Enter a Project Title first to generate metadata.' });
+      return;
+    }
+
+    setIsGeneratingProjectSeo(true);
+    setProjectSeoStatus(null);
+    try {
+      const headers: Record<string, string> = { 'Content-Type': 'application/json' };
+      if (authToken) headers['Authorization'] = `Bearer ${authToken}`;
+
+      const res = await fetch('/api/seo/generate-metadata', {
+        method: 'POST',
+        headers,
+        body: JSON.stringify({
+          type: 'project',
+          title: newProject.title,
+          summary: newProject.description,
+          description: newProject.longDescription || newProject.description,
+          category: newProject.customCategoryInput || newProject.category,
+          tags: newProject.tags,
+          year: '2026',
+        }),
+      });
+
+      const contentType = res.headers.get('content-type') || '';
+      if (!contentType.includes('application/json')) {
+        throw new Error('SEO Metadata endpoint returned non-JSON response.');
+      }
+
+      const json = await res.json();
+      if (!res.ok || !json.success || !json.metadata) {
+        throw new Error(json?.error?.message || 'Failed to generate SEO metadata via Gemini');
+      }
+
+      const meta = json.metadata;
+      setNewProject((prev) => ({
+        ...prev,
+        seoSlug: meta.slug || prev.seoSlug,
+        seoTitle: meta.seoTitle || prev.seoTitle,
+        metaDescription: meta.metaDescription || prev.metaDescription,
+        seoKeywordsInput: Array.isArray(meta.keywords) ? meta.keywords.join(', ') : prev.seoKeywordsInput,
+        seoTldr: meta.tldr || prev.seoTldr,
+      }));
+      setProjectSeoStatus({
+        type: 'success',
+        message: 'Generated SEO & AI Search metadata with Gemini! Review or edit any field below.',
+      });
+    } catch (err: any) {
+      setProjectSeoStatus({
+        type: 'error',
+        message: err?.message || 'Could not generate metadata right now.',
+      });
+    } finally {
+      setIsGeneratingProjectSeo(false);
+    }
+  };
+
   const handleStartEditProject = (item: any) => {
     setEditingProjectId(item.id);
+    setProjectSeoStatus(null);
     const photoList = item.images && item.images.length > 0
       ? item.images.join('\n')
       : item.thumbnail || item.image || '';
@@ -856,11 +940,18 @@ export function AdminPortalModal() {
       demoUrl: item.demoUrl || item.liveUrl || '',
       githubUrl: item.githubUrl || '',
       featured: item.featured ?? true,
+      visibility: (item.visibility === 'Draft' ? 'Draft' : 'Published') as 'Published' | 'Draft',
+      seoSlug: item.seo?.slug || '',
+      seoTitle: item.seo?.seoTitle || '',
+      metaDescription: item.seo?.metaDescription || '',
+      seoKeywordsInput: Array.isArray(item.seo?.keywords) ? item.seo.keywords.join(', ') : '',
+      seoTldr: item.seo?.tldr || '',
     });
   };
 
   const handleCancelEditProject = () => {
     setEditingProjectId(null);
+    setProjectSeoStatus(null);
     setNewProject({
       title: '',
       cardIdNo: '',
@@ -874,6 +965,12 @@ export function AdminPortalModal() {
       demoUrl: '',
       githubUrl: '',
       featured: true,
+      visibility: 'Published',
+      seoSlug: '',
+      seoTitle: '',
+      metaDescription: '',
+      seoKeywordsInput: '',
+      seoTldr: '',
     });
   };
 
@@ -894,6 +991,26 @@ export function AdminPortalModal() {
 
     const firstImage = photoList[0] || '/uploads/assets/static_projects_0_thumbnail_ae4790213b.png';
 
+    const parsedKeywords = newProject.seoKeywordsInput
+      .split(',')
+      .map((k) => k.trim())
+      .filter(Boolean);
+    const hasCustomSeo =
+      Boolean(newProject.seoSlug.trim()) ||
+      Boolean(newProject.seoTitle.trim()) ||
+      Boolean(newProject.metaDescription.trim()) ||
+      parsedKeywords.length > 0 ||
+      Boolean(newProject.seoTldr.trim());
+    const seoPayload = hasCustomSeo
+      ? {
+          slug: newProject.seoSlug.trim() || undefined,
+          seoTitle: newProject.seoTitle.trim() || undefined,
+          metaDescription: newProject.metaDescription.trim() || undefined,
+          keywords: parsedKeywords.length > 0 ? parsedKeywords : undefined,
+          tldr: newProject.seoTldr.trim() || undefined,
+        }
+      : undefined;
+
     if (editingProjectId) {
       updateProject({
         id: editingProjectId,
@@ -913,6 +1030,8 @@ export function AdminPortalModal() {
         featured: newProject.featured,
         status: 'Completed',
         year: '2026',
+        visibility: newProject.visibility,
+        seo: seoPayload,
       });
       setEditingProjectId(null);
     } else {
@@ -933,10 +1052,13 @@ export function AdminPortalModal() {
         featured: newProject.featured,
         status: 'Completed',
         year: '2026',
+        visibility: newProject.visibility,
+        seo: seoPayload,
       });
     }
 
     const wasEditing = !!editingProjectId;
+    setProjectSeoStatus(null);
     setNewProject({
       title: '',
       cardIdNo: '',
@@ -950,6 +1072,12 @@ export function AdminPortalModal() {
       demoUrl: '',
       githubUrl: '',
       featured: true,
+      visibility: 'Published',
+      seoSlug: '',
+      seoTitle: '',
+      metaDescription: '',
+      seoKeywordsInput: '',
+      seoTldr: '',
     });
     showSaveToast(wasEditing ? 'Technical Project Updated' : 'Technical Project Saved');
   };
@@ -982,7 +1110,8 @@ export function AdminPortalModal() {
         tags: combinedTags,
         completionDate: newCreative.completionDate || '2026',
         featured: newCreative.featured,
-        status: 'Published',
+        status: newCreative.visibility,
+        visibility: newCreative.visibility,
       });
       setEditingCreativeId(null);
     } else {
@@ -1000,7 +1129,8 @@ export function AdminPortalModal() {
         tags: combinedTags,
         completionDate: newCreative.completionDate || '2026',
         featured: newCreative.featured,
-        status: 'Published',
+        status: newCreative.visibility,
+        visibility: newCreative.visibility,
       });
     }
 
@@ -1018,6 +1148,7 @@ export function AdminPortalModal() {
       tags: ['Poster', 'Design'],
       shortDescription: '',
       detailedDescription: '',
+      visibility: 'Published',
     });
     showSaveToast(wasEditing ? 'Creative Work Updated' : 'Creative Work Saved');
   };
@@ -1038,6 +1169,7 @@ export function AdminPortalModal() {
       tags: item.tags || ['Design'],
       shortDescription: item.shortDescription || '',
       detailedDescription: item.detailedDescription || item.shortDescription || '',
+      visibility: (item.visibility === 'Draft' ? 'Draft' : 'Published') as 'Published' | 'Draft',
     });
   };
 
@@ -1056,6 +1188,7 @@ export function AdminPortalModal() {
       tags: ['Poster', 'Design'],
       shortDescription: '',
       detailedDescription: '',
+      visibility: 'Published',
     });
   };
 
@@ -1078,6 +1211,7 @@ export function AdminPortalModal() {
       tags: item.tags || ['Certificates'],
       description: item.description || '',
       detailedDescription: item.detailedDescription || item.description || '',
+      visibility: (item.visibility === 'Draft' ? 'Draft' : 'Published') as 'Published' | 'Draft',
     });
   };
 
@@ -1096,6 +1230,7 @@ export function AdminPortalModal() {
       tags: ['Certificates', 'Full-Stack'],
       description: '',
       detailedDescription: '',
+      visibility: 'Published',
     });
   };
 
@@ -1127,6 +1262,7 @@ export function AdminPortalModal() {
         tags: combinedTags,
         description: newGallery.description,
         detailedDescription: newGallery.detailedDescription || newGallery.description,
+        visibility: newGallery.visibility,
       });
       setEditingGalleryId(null);
     } else {
@@ -1144,6 +1280,7 @@ export function AdminPortalModal() {
         tags: combinedTags,
         description: newGallery.description,
         detailedDescription: newGallery.detailedDescription || newGallery.description,
+        visibility: newGallery.visibility,
       });
     }
 
@@ -1161,6 +1298,7 @@ export function AdminPortalModal() {
       tags: ['Certificates', 'Full-Stack'],
       description: '',
       detailedDescription: '',
+      visibility: 'Published',
     });
     showSaveToast(wasEditing ? 'Certificate / Award Updated' : 'Certificate / Award Saved');
   };
@@ -1487,6 +1625,9 @@ export function AdminPortalModal() {
                       { id: 'projects', label: 'Technical Projects', count: (data.projects || []).length, icon: FolderPlus },
                       { id: 'creative', label: 'Creative Work', count: (data.creativePortfolio || []).length, icon: Palette },
                       { id: 'gallery', label: 'Certificates & Awards', count: (data.gallery || []).length, icon: Award },
+                      { id: 'blogs', label: 'Blogs & Journal', count: (data.blogs || []).length, icon: BookOpen },
+                      { id: 'events', label: 'Events & Workshops', count: (data.events || []).length, icon: Calendar },
+                      { id: 'press', label: 'Features & Press', count: (data.pressMentions || []).length, icon: Newspaper },
                       { id: 'resumes', label: 'Resumes & PDFs', count: (data.resumes || []).length, icon: FileText },
                     ].map((tab) => {
                       const Icon = tab.icon;
@@ -1620,6 +1761,9 @@ export function AdminPortalModal() {
                               { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
                               { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
                               { id: 'gallery', label: `Certificates (${(data.gallery || []).length})`, icon: Award },
+                              { id: 'blogs', label: `Blogs & Journal (${(data.blogs || []).length})`, icon: BookOpen },
+                              { id: 'events', label: `Events (${(data.events || []).length})`, icon: Calendar },
+                              { id: 'press', label: `Features & Press (${(data.pressMentions || []).length})`, icon: Newspaper },
                               { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                               { id: 'hero', label: 'Hero Section', icon: Sparkles },
                               { id: 'about', label: 'About Details', icon: User },
@@ -1639,6 +1783,9 @@ export function AdminPortalModal() {
                             { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
                             { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
                             { id: 'gallery', label: `Certificates (${(data.gallery || []).length})`, icon: Award },
+                            { id: 'blogs', label: `Blogs & Journal (${(data.blogs || []).length})`, icon: BookOpen },
+                            { id: 'events', label: `Events (${(data.events || []).length})`, icon: Calendar },
+                            { id: 'press', label: `Features & Press (${(data.pressMentions || []).length})`, icon: Newspaper },
                             { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                             { id: 'hero', label: 'Hero Section', icon: Sparkles },
                             { id: 'about', label: 'About Details', icon: User },
@@ -1680,6 +1827,9 @@ export function AdminPortalModal() {
                             { id: 'projects', label: `Projects (${(data.projects || []).length})`, icon: FolderPlus },
                             { id: 'creative', label: `Creative (${(data.creativePortfolio || []).length})`, icon: Palette },
                             { id: 'gallery', label: `Certificates & Awards (${(data.gallery || []).length})`, icon: Award },
+                            { id: 'blogs', label: `Blogs & Journal (${(data.blogs || []).length})`, icon: BookOpen },
+                            { id: 'events', label: `Events & Workshops (${(data.events || []).length})`, icon: Calendar },
+                            { id: 'press', label: `Features & Press (${(data.pressMentions || []).length})`, icon: Newspaper },
                             { id: 'resumes', label: `Resumes (${(data.resumes || []).length})`, icon: FileText },
                             { id: 'hero', label: 'Hero Section', icon: Sparkles },
                             { id: 'about', label: 'About Details', icon: User },
@@ -1723,6 +1873,9 @@ export function AdminPortalModal() {
                       { id: 'projects', label: 'Projects', icon: FolderPlus },
                       { id: 'creative', label: 'Creative', icon: Palette },
                       { id: 'gallery', label: 'Certificates', icon: Award },
+                      { id: 'blogs', label: 'Journal', icon: BookOpen },
+                      { id: 'events', label: 'Events', icon: Calendar },
+                      { id: 'press', label: 'Features', icon: Newspaper },
                       { id: 'resumes', label: 'Resumes', icon: FileText },
                       { id: 'hero', label: 'Hero', icon: Sparkles },
                       { id: 'about', label: 'About', icon: User },
@@ -1895,6 +2048,39 @@ export function AdminPortalModal() {
                           label="2. Popup Description (Reflects inside detail popup modal)"
                           placeholder="Detailed breakdown for modal popup... Supports toolbar markers!"
                         />
+
+                        <div className="flex items-center justify-between gap-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
+                          <div>
+                            <span className="text-xs font-mono font-bold text-white block">Visibility Status</span>
+                            <span className="text-[11px] font-mono text-zinc-400">
+                              Draft entries stay hidden from public visitors &amp; Google indexing.
+                            </span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setNewJourney((prev) => ({
+                                ...prev,
+                                visibility: prev.visibility === 'Draft' ? 'Published' : 'Draft',
+                              }))
+                            }
+                            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 border transition-all cursor-pointer shrink-0 ${
+                              newJourney.visibility === 'Published'
+                                ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                                : 'bg-zinc-900 border-amber-500/50 text-amber-300'
+                            }`}
+                          >
+                            {newJourney.visibility === 'Published' ? (
+                              <>
+                                <Eye className="w-3.5 h-3.5" /> Published
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="w-3.5 h-3.5" /> Draft
+                              </>
+                            )}
+                          </button>
+                        </div>
 
                         <div className="flex items-center gap-3 pt-1">
                           <button
@@ -2281,6 +2467,150 @@ export function AdminPortalModal() {
                           </p>
                         </div>
 
+                        {/* SEO, Visibility & Gemini AI Metadata Generator */}
+                        <div className="space-y-4 p-4 rounded-xl bg-zinc-900/60 border border-emerald-500/30">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-zinc-800 pb-3">
+                            <div>
+                              <h6 className="text-xs font-mono font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                                <Globe className="w-3.5 h-3.5" />
+                                <span>SEO, Google &amp; AI Chat Search Metadata</span>
+                              </h6>
+                              <p className="text-[10px] font-mono text-zinc-400 mt-0.5">
+                                Controls /projects/[slug], Google snippets, sitemap.xml, and ChatGPT/Gemini/Claude discovery.
+                              </p>
+                            </div>
+                            <div className="flex items-center gap-2 shrink-0 flex-wrap">
+                              <button
+                                type="button"
+                                onClick={() =>
+                                  setNewProject((prev) => ({
+                                    ...prev,
+                                    visibility: prev.visibility === 'Draft' ? 'Published' : 'Draft',
+                                  }))
+                                }
+                                className={`px-3 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                                  newProject.visibility === 'Published'
+                                    ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                                    : 'bg-zinc-900 border-amber-500/50 text-amber-300'
+                                }`}
+                              >
+                                {newProject.visibility === 'Published' ? (
+                                  <>
+                                    <Eye className="w-3.5 h-3.5" /> Published
+                                  </>
+                                ) : (
+                                  <>
+                                    <EyeOff className="w-3.5 h-3.5" /> Draft
+                                  </>
+                                )}
+                              </button>
+
+                              <button
+                                type="button"
+                                onClick={handleGenerateProjectSeoMetadata}
+                                disabled={isGeneratingProjectSeo}
+                                className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 disabled:opacity-60 text-white text-xs font-mono font-bold flex items-center gap-1.5 shadow-[0_0_12px_rgba(16,185,129,0.3)] transition-all cursor-pointer"
+                              >
+                                {isGeneratingProjectSeo ? (
+                                  <>
+                                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                                    <span>Generating...</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Wand2 className="w-3.5 h-3.5" />
+                                    <span>Generate Meta Data</span>
+                                  </>
+                                )}
+                              </button>
+                            </div>
+                          </div>
+
+                          {projectSeoStatus && (
+                            <div
+                              className={`p-2.5 rounded-lg text-[11px] font-mono flex items-center gap-2 border ${
+                                projectSeoStatus.type === 'success'
+                                  ? 'bg-emerald-950/50 border-emerald-500/40 text-emerald-300'
+                                  : 'bg-red-950/40 border-red-500/40 text-red-300'
+                              }`}
+                            >
+                              {projectSeoStatus.type === 'success' ? (
+                                <CheckCircle2 className="w-3.5 h-3.5 shrink-0" />
+                              ) : (
+                                <AlertCircle className="w-3.5 h-3.5 shrink-0" />
+                              )}
+                              <span>{projectSeoStatus.message}</span>
+                            </div>
+                          )}
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[10px] font-mono text-zinc-400 block mb-1">
+                                Custom URL Slug (/projects/...)
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. ai-hiring-assistant (auto if blank)"
+                                value={newProject.seoSlug}
+                                onChange={(e) => setNewProject({ ...newProject, seoSlug: e.target.value })}
+                                className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-emerald-300 font-mono placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-mono text-zinc-400 block mb-1">
+                                SEO Page Title (40–62 chars recommended)
+                              </label>
+                              <input
+                                type="text"
+                                placeholder="e.g. AI Hiring Assistant — Built by Dubbaka Sathwik"
+                                value={newProject.seoTitle}
+                                onChange={(e) => setNewProject({ ...newProject, seoTitle: e.target.value })}
+                                className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                              />
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-mono text-zinc-400 block mb-1">
+                              Meta Description (120–160 chars for Google Search &amp; social cards)
+                            </label>
+                            <textarea
+                              rows={2}
+                              placeholder="Compelling search snippet describing what this project does and your tech stack..."
+                              value={newProject.metaDescription}
+                              onChange={(e) => setNewProject({ ...newProject, metaDescription: e.target.value })}
+                              className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                            />
+                          </div>
+
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="text-[10px] font-mono text-zinc-400 block mb-1">
+                                Search Keywords (Comma-separated phrases)
+                              </label>
+                              <textarea
+                                rows={2}
+                                placeholder="AI Hiring Assistant, Dubbaka Sathwik, React, Gemini AI..."
+                                value={newProject.seoKeywordsInput}
+                                onChange={(e) => setNewProject({ ...newProject, seoKeywordsInput: e.target.value })}
+                                className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white font-mono placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                              />
+                            </div>
+                            <div>
+                              <label className="text-[10px] font-mono text-zinc-400 block mb-1">
+                                AI Summary / Key Takeaway (TL;DR for ChatGPT, Gemini &amp; Claude)
+                              </label>
+                              <textarea
+                                rows={2}
+                                placeholder="Concise 1-2 sentence technical takeaway displayed on the case study & llms.txt..."
+                                value={newProject.seoTldr}
+                                onChange={(e) => setNewProject({ ...newProject, seoTldr: e.target.value })}
+                                className="w-full px-3.5 py-2 rounded-xl bg-zinc-900 border border-zinc-800 text-xs text-white placeholder:text-zinc-600 focus:outline-none focus:border-emerald-500/50"
+                              />
+                            </div>
+                          </div>
+                        </div>
+
                         {/* Submit & Cancel Edit Buttons */}
                         <div className="flex items-center gap-3 pt-1">
                           <button
@@ -2627,6 +2957,12 @@ export function AdminPortalModal() {
                                     </span>
                                   )}
 
+                                  {p.visibility === 'Draft' && (
+                                    <span className="px-2 py-0.5 rounded bg-amber-950/80 text-amber-300 text-[10px] font-mono font-bold border border-amber-500/40 shrink-0">
+                                      DRAFT
+                                    </span>
+                                  )}
+
                                   {isEditingThis && (
                                     <span className="px-2 py-0.5 rounded bg-emerald-500/20 text-emerald-400 text-[10px] font-mono border border-emerald-500/40 animate-pulse shrink-0">
                                       Editing Now...
@@ -2787,18 +3123,45 @@ export function AdminPortalModal() {
                             )}
                           </h5>
 
-                          {/* Featured Toggle Button */}
-                          <button
-                            type="button"
-                            onClick={() => setNewCreative({ ...newCreative, featured: !newCreative.featured })}
-                            className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                              newCreative.featured
-                                ? 'bg-emerald-600 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]'
-                                : 'bg-zinc-900 text-zinc-400 border border-zinc-800'
-                            }`}
-                          >
-                            ★ {newCreative.featured ? 'Featured Work' : 'Mark as Featured'}
-                          </button>
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() =>
+                                setNewCreative((prev) => ({
+                                  ...prev,
+                                  visibility: prev.visibility === 'Draft' ? 'Published' : 'Draft',
+                                }))
+                              }
+                              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 border transition-all cursor-pointer ${
+                                newCreative.visibility === 'Published'
+                                  ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                                  : 'bg-zinc-900 border-amber-500/50 text-amber-300'
+                              }`}
+                            >
+                              {newCreative.visibility === 'Published' ? (
+                                <>
+                                  <Eye className="w-3.5 h-3.5" /> Published
+                                </>
+                              ) : (
+                                <>
+                                  <EyeOff className="w-3.5 h-3.5" /> Draft
+                                </>
+                              )}
+                            </button>
+
+                            {/* Featured Toggle Button */}
+                            <button
+                              type="button"
+                              onClick={() => setNewCreative({ ...newCreative, featured: !newCreative.featured })}
+                              className={`px-3 py-1.5 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
+                                newCreative.featured
+                                  ? 'bg-emerald-600 text-white shadow-[0_0_10px_rgba(16,185,129,0.3)]'
+                                  : 'bg-zinc-900 text-zinc-400 border border-zinc-800'
+                              }`}
+                            >
+                              ★ {newCreative.featured ? 'Featured Work' : 'Mark as Featured'}
+                            </button>
+                          </div>
                         </div>
 
                         {/* Title & Category & Card ID No & Date */}
@@ -3440,22 +3803,48 @@ export function AdminPortalModal() {
                           </div>
                         </div>
 
-                        {/* Featured Button Toggle */}
-                        <div className="flex items-center gap-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
+                        {/* Featured & Visibility Toggles */}
+                        <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl bg-zinc-900/60 border border-zinc-800">
+                          <div className="flex items-center gap-3 flex-wrap">
+                            <button
+                              type="button"
+                              onClick={() => setNewGallery({ ...newGallery, featured: !newGallery.featured })}
+                              className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
+                                newGallery.featured
+                                  ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
+                                  : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                              }`}
+                            >
+                              {newGallery.featured ? '★ Featured Button Active' : '☆ Standard Entry'}
+                            </button>
+                            <span className="text-[11px] font-mono text-zinc-400">
+                              {newGallery.featured ? 'Featured badge will be displayed on the certificate card.' : 'Click button to feature this certificate.'}
+                            </span>
+                          </div>
                           <button
                             type="button"
-                            onClick={() => setNewGallery({ ...newGallery, featured: !newGallery.featured })}
-                            className={`px-4 py-2 rounded-xl text-xs font-mono font-bold transition-all cursor-pointer ${
-                              newGallery.featured
-                                ? 'bg-emerald-600 text-white shadow-[0_0_12px_rgba(16,185,129,0.4)]'
-                                : 'bg-zinc-800 text-zinc-400 hover:text-white'
+                            onClick={() =>
+                              setNewGallery((prev) => ({
+                                ...prev,
+                                visibility: prev.visibility === 'Draft' ? 'Published' : 'Draft',
+                              }))
+                            }
+                            className={`px-3.5 py-2 rounded-xl text-xs font-mono font-bold flex items-center gap-1.5 border transition-all cursor-pointer shrink-0 ${
+                              newGallery.visibility === 'Published'
+                                ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300'
+                                : 'bg-zinc-900 border-amber-500/50 text-amber-300'
                             }`}
                           >
-                            {newGallery.featured ? '★ Featured Button Active' : '☆ Standard Entry'}
+                            {newGallery.visibility === 'Published' ? (
+                              <>
+                                <Eye className="w-3.5 h-3.5" /> Published
+                              </>
+                            ) : (
+                              <>
+                                <EyeOff className="w-3.5 h-3.5" /> Draft
+                              </>
+                            )}
                           </button>
-                          <span className="text-[11px] font-mono text-zinc-400">
-                            {newGallery.featured ? 'Featured badge will be displayed on the certificate card.' : 'Click button to feature this certificate.'}
-                          </span>
                         </div>
 
                         {/* Certificate Photo Dropzone & Selector */}
@@ -5157,6 +5546,21 @@ export function AdminPortalModal() {
                         }
                       />
                     </div>
+                  )}
+
+                  {/* Blogs & Journal Tab */}
+                  {activeTab === 'blogs' && (
+                    <BlogsTab onShowToast={(label) => showSaveToast(label)} />
+                  )}
+
+                  {/* Events & Workshops Tab */}
+                  {activeTab === 'events' && (
+                    <EventsTab onShowToast={(label) => showSaveToast(label)} />
+                  )}
+
+                  {/* Features & Press Tab */}
+                  {activeTab === 'press' && (
+                    <PressTab onShowToast={(label) => showSaveToast(label)} />
                   )}
 
                   {/* Activity Console Log Tab */}

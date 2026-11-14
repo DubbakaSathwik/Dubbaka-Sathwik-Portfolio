@@ -10,7 +10,10 @@ const navLinks = [
   { name: 'Projects', href: '#projects' },
   { name: 'Creative', href: '#editing' },
   { name: 'Journey', href: '#journey' },
+  { name: 'Events', href: '#events' },
   { name: 'Certificates', href: '#gallery' },
+  { name: 'Journal', href: '#journal' },
+  { name: 'Features', href: '#features' },
   { name: 'Resume', href: '#resume' },
   { name: 'Contact', href: '#contact' },
 ];
@@ -53,6 +56,15 @@ export function Navbar() {
     const targetId = href.replace('#', '');
     setIsMobileMenuOpen(false);
 
+    if (typeof window !== 'undefined' && window.location.pathname !== '/') {
+      window.dispatchEvent(
+        new CustomEvent('portfolio:navigate', {
+          detail: { path: '/', scrollToId: targetId },
+        })
+      );
+      return;
+    }
+
     setTimeout(() => {
       const element = document.getElementById(targetId);
       if (element) {
@@ -81,11 +93,11 @@ export function Navbar() {
           : 'bg-[rgba(8,8,8,0.5)] backdrop-blur-[10px] border-b border-white/5'
       }`}
     >
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
         {/* Left: Brand Name */}
-        <div className="flex-1 flex justify-start">
+        <div className="flex-1 lg:flex-initial flex justify-start shrink-0">
           <a
-            href="#home"
+            href="/"
             onClick={(e) => {
               handleNavClick(e, '#home');
               loadStaticBackup();
@@ -94,7 +106,7 @@ export function Navbar() {
             title="Dubbaka Sathwik Portfolio (Click to load Static Backup)"
           >
             <div className="flex flex-col">
-              <span className="text-white font-bold text-base sm:text-lg tracking-tight group-hover:text-emerald-400 transition-colors">
+              <span className="text-white font-bold text-base sm:text-lg tracking-tight group-hover:text-emerald-400 transition-colors whitespace-nowrap">
                 Dubbaka Sathwik
               </span>
               <span className="text-[10px] uppercase tracking-widest text-zinc-400 font-mono flex items-center gap-1">
@@ -105,8 +117,8 @@ export function Navbar() {
         </div>
 
         {/* Center: Desktop Nav */}
-        <div className="hidden lg:flex justify-center">
-          <nav className="flex items-center gap-1 bg-zinc-900/60 p-1.5 rounded-full border border-zinc-800/80 backdrop-blur-md shadow-inner">
+        <div className="hidden lg:flex justify-center min-w-0">
+          <nav className="flex items-center gap-0.5 xl:gap-1 bg-zinc-900/60 p-1 rounded-full border border-zinc-800/80 backdrop-blur-md shadow-inner overflow-x-auto scrollbar-none [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {navLinks.map((link) => {
               const isActive = activeSection === link.href.substring(1);
 
@@ -115,7 +127,7 @@ export function Navbar() {
                   key={link.name}
                   href={link.href}
                   onClick={(e) => handleNavClick(e, link.href)}
-                  className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all duration-200 relative whitespace-nowrap ${
+                  className={`px-2.5 xl:px-3 py-1.5 rounded-full text-[11px] xl:text-xs font-medium transition-all duration-200 relative whitespace-nowrap shrink-0 ${
                     isActive
                       ? 'text-white font-bold'
                       : 'text-zinc-400 hover:text-white hover:bg-zinc-800/60'
@@ -136,12 +148,12 @@ export function Navbar() {
         </div>
 
         {/* Right: Desktop "Hire Sathwik" & Mobile/Tablet Controls */}
-        <div className="flex-1 flex justify-end items-center gap-2.5 sm:gap-3">
+        <div className="flex-1 lg:flex-initial flex justify-end items-center gap-2.5 sm:gap-3 shrink-0">
           {/* Desktop "Hire Sathwik" Button */}
           <a
             href="#contact"
             onClick={(e) => handleNavClick(e, '#contact')}
-            className="hidden lg:inline-flex items-center gap-1.5 px-4 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-green-500 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.35)] hover:shadow-[0_0_22px_rgba(16,185,129,0.6)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer shrink-0"
+            className="hidden lg:inline-flex items-center gap-1.5 px-3.5 xl:px-4 py-2 rounded-full text-xs font-bold text-white bg-gradient-to-r from-emerald-600 via-emerald-500 to-green-600 hover:from-emerald-500 hover:to-green-500 border border-emerald-400/40 shadow-[0_0_15px_rgba(16,185,129,0.35)] hover:shadow-[0_0_22px_rgba(16,185,129,0.6)] hover:scale-105 active:scale-95 transition-all duration-200 cursor-pointer shrink-0"
           >
             <Sparkles className="w-3.5 h-3.5 text-amber-300 animate-pulse" />
             <span className="whitespace-nowrap">Hire Sathwik</span>
@@ -177,7 +189,7 @@ export function Navbar() {
             animate={{ opacity: 1, height: 'auto' }}
             exit={{ opacity: 0, height: 0 }}
             transition={{ duration: 0.25 }}
-            className="lg:hidden bg-[#0a0a0d]/95 backdrop-blur-2xl border-b border-emerald-500/20 shadow-2xl overflow-hidden"
+            className="lg:hidden bg-[#0a0a0d]/95 backdrop-blur-2xl border-b border-emerald-500/20 shadow-2xl overflow-y-auto max-h-[calc(100vh-5rem)]"
           >
             <div className="px-5 py-5 grid grid-cols-2 gap-2.5 max-w-lg mx-auto">
               {navLinks.map((link) => (
