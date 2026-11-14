@@ -154,6 +154,7 @@
     {
       "id": "proj-1785569765444",
       "title": "INTELLI-Query",
+      "cardIdNo": "{intelli-query-001}",
       "summary": "A conversational BI web application that lets users upload CSV files, ask questions in plain English, and receive instant {bold & highlight}AI-generated SQL queries{bold & highlight}, interactive charts, and data insights.",
       "description": "A conversational BI web application that lets users upload CSV files, ask questions in plain English, and receive instant {bold & highlight}AI-generated SQL queries{bold & highlight}, interactive charts, and data insights.",
       "longDescription": "{bold}INTELLI Query{bold} is a zero-dependency, self-contained BI dashboard built with vanilla JavaScript and Node.js. It leverages {bold}Google Gemini{bold} to{bold & highlight} translate natural language questions into SQL{bold & highlight}, executing queries locally using an in-process WebAssembly database (sql.js). Users can preview schemas, run queries, and visualize results instantly using dynamic Chart.js dashboards, making data analysis intuitive and secure.",
@@ -174,8 +175,8 @@
         "SQL.js",
         "Chart JS"
       ],
-      "thumbnail": "/uploads/assets/static_asset_projects_0_thumbnail_hc35tyd7.png",
-      "image": "/uploads/assets/static_asset_projects_0_image_x3ffr96r.png",
+      "thumbnail": "/uploads/assets/static_asset_projects_0_images_0_uvpwovtd.png",
+      "image": "/uploads/assets/static_asset_projects_0_images_0_uvpwovtd.png",
       "images": [
         "/uploads/assets/static_asset_projects_0_images_0_uvpwovtd.png",
         "/uploads/assets/static_asset_projects_0_images_1_zbqfaemv.png",
@@ -187,12 +188,29 @@
       "featured": true,
       "status": "Completed",
       "year": "2026",
-      "cardIdNo": "{intelli-query-001}",
+      "visibility": "Published",
+      "seo": {
+        "slug": "intelli-query-conversational-bi",
+        "seoTitle": "INTELLI-Query: AI SQL BI Tool | Dubbaka Sathwik",
+        "metaDescription": "Explore INTELLI-Query by Dubbaka Sathwik: a conversational BI app using Google Gemini, SQL.js, Node.js, and Chart.js to turn CSV prompts into SQL charts.",
+        "keywords": [
+          "INTELLI-Query",
+          "INTELLI-Query Dubbaka Sathwik",
+          "Dubbaka Sathwik portfolio",
+          "conversational BI web application",
+          "Google Gemini natural language to SQL",
+          "SQL.js WebAssembly CSV dashboard",
+          "Node.js Chart.js BI tool",
+          "AI SQL query generator"
+        ],
+        "tldr": "INTELLI-Query, built by full-stack and AI software engineer Dubbaka Sathwik, enables effortless CSV data exploration by converting plain English questions into executable SQL queries and interactive Chart.js visualizations. Using Node.js, vanilla JavaScript, the Google Gemini API, and an in-process SQL.js WebAssembly database, it delivers fast, zero-dependency, and secure business intelligence without external database setup."
+      },
       "sequenceNumber": 1
     },
     {
       "id": "proj-1785576197261",
       "title": "Nexora-AI",
+      "cardIdNo": "{nexora-002}",
       "summary": "{bold}Nexora AI{bold} is a modern multi-model dashboard that lets users simultaneously{bold & highlight} broadcast prompts to multiple AI models{bold & highlight}, compare responses side-by-side, analyze consensus, and view visual performance insights.",
       "description": "{bold}Nexora AI{bold} is a modern multi-model dashboard that lets users simultaneously{bold & highlight} broadcast prompts to multiple AI models{bold & highlight}, compare responses side-by-side, analyze consensus, and view visual performance insights.",
       "longDescription": "{bold}Nexora AI{bold} is a premium pair-programming and text playground featuring{bold} side-by-side response{bold} streams from leading language models. Users can customize prompts with expert personas, compare responses with diff highlights, and build automated consensus. Supported by detailed performance charts and a responsive, multi-themed layout, it includes local model fallbacks to guarantee highly resilient, high-speed output.",
@@ -213,25 +231,42 @@
         "API",
         "Express"
       ],
-      "thumbnail": "/uploads/assets/static_asset_projects_1_thumbnail_09io6cpq.jpg",
-      "image": "/uploads/assets/static_asset_projects_1_image_crpqeyow.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_1_images_0_4u83kbdi.jpg",
+      "image": "/uploads/assets/static_asset_projects_1_images_0_4u83kbdi.jpg",
       "images": [
         "/uploads/assets/static_asset_projects_1_images_0_4u83kbdi.jpg",
         "/uploads/assets/static_asset_projects_1_images_1_mytt646z.jpg",
         "/uploads/assets/static_asset_projects_1_images_2_halfgmkv.jpg",
         "/uploads/assets/static_asset_projects_1_images_3_5g236kyo.jpg"
       ],
-      "githubUrl": "https://github.com/DubbakaSathwik/Multi-AI.git",
       "demoUrl": "https://multiai-6kx9.onrender.com",
+      "githubUrl": "https://github.com/DubbakaSathwik/Multi-AI.git",
       "featured": true,
       "status": "Completed",
       "year": "2026",
-      "cardIdNo": "{nexora-002}",
+      "visibility": "Published",
+      "seo": {
+        "slug": "nexora-ai-multi-model-dashboard",
+        "seoTitle": "Nexora-AI: Multi-Model AI Dashboard | Dubbaka Sathwik",
+        "metaDescription": "Explore Nexora-AI by Dubbaka Sathwik: a React, Node.js, and MongoDB multi-model AI dashboard for side-by-side LLM comparison, consensus, and analytics.",
+        "keywords": [
+          "Nexora-AI",
+          "Nexora-AI Dubbaka Sathwik",
+          "Dubbaka Sathwik portfolio",
+          "multi-model AI dashboard React Node.js",
+          "side-by-side LLM comparison tool",
+          "MERN stack AI playground",
+          "Express MongoDB AI API integration",
+          "Dubbaka Sathwik full-stack AI engineer"
+        ],
+        "tldr": "Nexora-AI is a full-stack multi-model AI dashboard built by Dubbaka Sathwik using React, Node.js, Express, and MongoDB to solve single-model blind spots by broadcasting prompts simultaneously across multiple language models. With side-by-side response streams, diff highlights, automated consensus, performance visualizations, and local model fallbacks, it enables fast, resilient, and verifiable AI pair-programming and text workflows."
+      },
       "sequenceNumber": 2
     },
     {
       "id": "proj-1788716566911",
       "title": "MedLens ",
+      "cardIdNo": "{medlens-008}",
       "summary": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
       "description": "{bold & highlight}MedLens{bold & highlight} transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.",
       "longDescription": "{bold & highlight}MedLens{bold & highlight} is an{bold & highlight} AI clinical intelligence platform{bold & highlight} that transforms fragmented medical documents into structured, FHIR-compliant records. It prevents hallucinations through strict laboratory reference-range grounding, bidirectional document provenance, OCR ambiguity resolution, and deterministic non-diagnostic medical safety guardrails.",
@@ -250,8 +285,8 @@
         "Tailwind CSS",
         "Next.js"
       ],
-      "thumbnail": "/uploads/assets/static_asset_projects_7_thumbnail_sxtsijmg.jpg",
-      "image": "/uploads/assets/static_asset_projects_7_image_lwztz5bf.jpg",
+      "thumbnail": "/uploads/assets/static_asset_projects_7_images_0_d3cle6pr.jpg",
+      "image": "/uploads/assets/static_asset_projects_7_images_0_d3cle6pr.jpg",
       "images": [
         "/uploads/assets/static_asset_projects_7_images_0_d3cle6pr.jpg",
         "/uploads/assets/static_asset_projects_7_images_1_nd6knmgc.jpg",
@@ -263,7 +298,23 @@
       "featured": true,
       "status": "Completed",
       "year": "2026",
-      "cardIdNo": "{medlens-008}",
+      "visibility": "Published",
+      "seo": {
+        "slug": "medlens-clinical-intelligence-platform",
+        "seoTitle": "MedLens: AI Clinical Record Intelligence | Dubbaka Sathwik",
+        "metaDescription": "Explore MedLens by Dubbaka Sathwik: a Next.js and Node.js AI platform turning unstructured medical reports into FHIR-compliant records with provenance.",
+        "keywords": [
+          "MedLens",
+          "MedLens Dubbaka Sathwik",
+          "Dubbaka Sathwik portfolio",
+          "AI clinical intelligence platform",
+          "FHIR compliant medical records AI",
+          "Next.js healthcare AI project",
+          "Node.js medical OCR parser",
+          "Dubbaka Sathwik AI software engineer"
+        ],
+        "tldr": "MedLens by Dubbaka Sathwik is an AI clinical intelligence platform built with Next.js, React, Node.js, and Tailwind CSS that converts unstructured medical reports into validated, FHIR-compliant patient records. It eliminates AI hallucinations through laboratory reference-range grounding, OCR ambiguity resolution, bidirectional source provenance, and deterministic non-diagnostic safety guardrails."
+      },
       "sequenceNumber": 3
     },
     {
@@ -601,6 +652,208 @@
       "sequenceNumber": 6
     }
   ],
+  "journey": [
+    {
+      "id": "j-1785500570630",
+      "year": "2019",
+      "title": "Warangal Open Art Competition",
+      "organization": " Cultivating Art",
+      "role": "Participant",
+      "description": "Secured {bold & highlight}1st Place{bold & highlight} in the Warangal Open Art Competition during my school years. This early achievement strengthened my interest in creativity and visual expression, which continues to influence my design work today.",
+      "detailedDescription": "Long Description: During my school years (5th–6th standard), I participated in the Warangal Open Art Competition and was awarded {bold & highlight}First Prize{bold & highlight}. This recognition became one of my earliest achievements and helped build my confidence in creative thinking. The experience played an important role in shaping my passion for design, which later expanded into poster creation, photo editing, and digital content creation.",
+      "category": "Achievement",
+      "tags": [
+        "Achievement",
+        "Art",
+        "Creativity",
+        "Design"
+      ],
+      "images": [
+        "/uploads/assets/static_asset_journey_0_images_0_egxrfdoh.jpg",
+        "/uploads/assets/static_asset_journey_0_images_1_hplqqwus.jpg"
+      ],
+      "image": "/uploads/assets/static_asset_journey_0_image_9wtxgoqh.jpg"
+    },
+    {
+      "id": "j-1785525170186",
+      "year": "2025",
+      "title": "CSI Logo Design Competition Winner",
+      "organization": "Computer Science of India",
+      "role": "Winner",
+      "category": "Achievement",
+      "description": "Won {bold & highlight}1st Prize{bold & highlight} in a logo design competition by creating the official logo for the Computer Society of India (CSI) in collaboration with MVSR Engineering College.",
+      "detailedDescription": "I participated individually in a logo design competition organized for the Computer Society of India (CSI) in collaboration with MVSR Engineering College. My design was selected as the winning entry, earning {bold & highlight}First Prize{bold & highlight}. This achievement strengthened my confidence in branding, visual communication, and creative design.",
+      "tags": [
+        "Achievement",
+        "Canva",
+        "Graphic Design",
+        "Branding",
+        "Creativity"
+      ],
+      "images": [],
+      "image": ""
+    },
+    {
+      "id": "j-1785525355455",
+      "year": "2025",
+      "title": "Joined NSS MVSREC Digital Team",
+      "organization": "Sational Service Scheme",
+      "role": "Volunteer",
+      "description": "Joined the {bold & highlight}NSS Digital Team{bold & highlight} to contribute to event promotions, creative media, and digital initiatives while expanding my leadership and collaboration skills.",
+      "detailedDescription": "I joined the NSS unit MVSREC as a Digital Team Member to contribute to posters, promotional materials, photography, and event coverage. Beyond volunteering, this role gave me opportunities to improve my creative workflow, collaborate with fellow students, and participate in organizing college activities.",
+      "category": "NSS",
+      "tags": [
+        "NSS",
+        "Teamwork",
+        "Canva",
+        "Design",
+        "Media"
+      ],
+      "images": [],
+      "image": ""
+    },
+    {
+      "id": "j-1785525617252",
+      "year": "2026 ",
+      "title": "Cyber Ekathon CTF",
+      "organization": " Institute of Electrical and Electronics Engineers",
+      "role": "Winner",
+      "category": "IEEE",
+      "description": "Secured {bold & highlight}4th Place{bold & highlight} in the Cyber Ekathon Capture The Flag competition and earned an {bold & highlight}Internship Opportunity{bold & highlight} through the event.",
+      "detailedDescription": "Participated in the Cyber Ekathon{highlight} Capture The Flag (CTF){highlight} competition as part of a team. We secured Fourth Place, solving cybersecurity challenges under time constraints. Our performance also led to an {bold & highlight}internship opportunity{bold & highlight} from the organizing company, making it one of my most valuable competitive experiences.",
+      "tags": [
+        "IEEE",
+        "Cyber Security",
+        "CTF",
+        "Linux",
+        "Networking",
+        "Teamwork"
+      ],
+      "images": [],
+      "image": ""
+    },
+    {
+      "id": "j-1785525823250",
+      "year": "2026",
+      "title": "First 24-Hour Hackathon",
+      "organization": "Teegala Krishna Reddy Engineering College",
+      "role": "Team Lead",
+      "category": "Hackathon",
+      "description": " Participated in my {bold & highlight}first 24-hour Hackathon{bold & highlight} at TKR College, finishing among the Top 20 Teams out of over 50 participating teams.",
+      "detailedDescription": "This was my first overnight hackathon experience. Working continuously with my teammates, we designed, developed, and presented a complete solution within 24 hours. Finishing among the Top 20 teams gave me practical experience in rapid development, teamwork, and project presentation.",
+      "tags": [
+        "Hackathon",
+        "React",
+        "Node.js",
+        "Teamwork",
+        "Problem Solving"
+      ],
+      "images": [],
+      "image": ""
+    },
+    {
+      "id": "j-1785525982867",
+      "year": "2026",
+      "title": "Joined IEEE",
+      "organization": " Institute of Electrical and Electronics Engineers",
+      "role": "Member",
+      "category": "IEEE",
+      "description": "Became an {bold & highlight}IEEE Student Member{bold & highlight}, joining a global community of engineers, innovators, and technology enthusiasts.",
+      "detailedDescription": "I joined IEEE to expand my technical knowledge, connect with professionals and students, and actively participate in technical workshops, competitions, and community-driven events. It has opened new opportunities for learning beyond the classroom.",
+      "tags": [
+        "IEEE",
+        "Learning",
+        "Technology",
+        "Networking"
+      ],
+      "images": [],
+      "image": ""
+    },
+    {
+      "id": "j-1785526156341",
+      "year": "2026",
+      "title": "GFG Hackathon Winner",
+      "organization": "Geek sfor Geeks",
+      "role": "Winner",
+      "category": "Hackathon",
+      "description": "Won {bold & highlight}1st Prize{bold & highlight} by building an AI-powered SQL Query Generator that converts natural language prompts into SQL queries.",
+      "detailedDescription": "Along with my team, I developed an AI-powered SQL Query Generator capable of translating human language prompts into executable SQL queries. The project focused on making database querying easier for beginners and non-technical users. Our solution secured First Prize in the GFG Hackathon.",
+      "tags": [
+        "Hackathon",
+        "Prompt Engineering",
+        "Database",
+        "Node js",
+        "MongoDB",
+        "LLM",
+        "AI",
+        "SQL"
+      ],
+      "images": [],
+      "image": ""
+    },
+    {
+      "id": "j-1785526320585",
+      "year": "2026",
+      "title": "College Event Organizer",
+      "organization": "MVSR Engineering College",
+      "role": "Student Coordinator",
+      "category": "Event",
+      "description": "Successfully {bold & highlight}organized Vision Genix{bold & highlight} an AI Video Generation Competition, while also coordinating the college Hackathon in collaboration with Unstop and multiple industry partners.",
+      "detailedDescription": "Served as a Student Coordinator and Digital Team member for Vision Genix, an {bold & highlight}AI Video Generation Competition{bold & highlight} conducted in collaboration with Unstop and {highlight}12+ industry partners{highlight}. Along with my friends and organizing team, I coordinated the hackathon, managed digital promotions, designed creative assets, and helped ensure the successful execution of both events.",
+      "tags": [
+        "Event",
+        "Leadership",
+        "Event Management",
+        "AI",
+        "Canva",
+        "Coordination",
+        "IEEE",
+        "Unstop"
+      ],
+      "images": [],
+      "image": ""
+    },
+    {
+      "id": "j-1785526494530",
+      "year": "2026",
+      "title": "NSS MVSREC Digital Co-Lead",
+      "organization": "National Service Scheme",
+      "role": "Digital Co-Lead",
+      "category": "NSS",
+      "description": "Appointed as {bold & highlight}Digital Co-Lead{bold & highlight} for the NSS unit, leading digital media, creative content, and promotional activities.",
+      "detailedDescription": ":After contributing as a Digital Team Member, I was {highlight}promoted to Digital Co-Lead{highlight}. In this role, I coordinate the team's creative work, guide digital initiatives, and contribute to designing promotional materials and event coverage for NSS activities.",
+      "tags": [
+        "NSS",
+        "Leadership",
+        "Canva",
+        "Team Management",
+        "Design"
+      ],
+      "images": [],
+      "image": ""
+    },
+    {
+      "id": "j-1785526604346",
+      "year": "2026",
+      "title": "First College Mini Project",
+      "organization": "MVSR Engineering College",
+      "role": "Student",
+      "category": "College",
+      "description": "Developed and submitted my first college {bold & highlight}Mini Project{bold & highlight}—a Multi AI Response Platform that compares responses from multiple AI models in one place.",
+      "detailedDescription": "As part of my college coursework, my team developed a{highlight} Multi AI Response Platform{highlight} that integrates multiple AI models into a single interface. The project was designed to help users compare responses from different AI systems efficiently, providing a better understanding of their capabilities and improving productivity.",
+      "tags": [
+        "College",
+        "MongoDB",
+        "Full Stack",
+        "APIs",
+        "AI",
+        "Node.js",
+        "React"
+      ],
+      "images": [],
+      "image": ""
+    }
+  ],
   "gallery": [
     {
       "id": "g-1785862244982",
@@ -838,208 +1091,9 @@
       "sequenceNumber": 9
     }
   ],
-  "journey": [
-    {
-      "id": "j-1785500570630",
-      "year": "2019",
-      "title": "Warangal Open Art Competition",
-      "organization": " Cultivating Art",
-      "role": "Participant",
-      "description": "Secured {bold & highlight}1st Place{bold & highlight} in the Warangal Open Art Competition during my school years. This early achievement strengthened my interest in creativity and visual expression, which continues to influence my design work today.",
-      "detailedDescription": "Long Description: During my school years (5th–6th standard), I participated in the Warangal Open Art Competition and was awarded {bold & highlight}First Prize{bold & highlight}. This recognition became one of my earliest achievements and helped build my confidence in creative thinking. The experience played an important role in shaping my passion for design, which later expanded into poster creation, photo editing, and digital content creation.",
-      "category": "Achievement",
-      "tags": [
-        "Achievement",
-        "Art",
-        "Creativity",
-        "Design"
-      ],
-      "images": [
-        "/uploads/assets/static_asset_journey_0_images_0_egxrfdoh.jpg",
-        "/uploads/assets/static_asset_journey_0_images_1_hplqqwus.jpg"
-      ],
-      "image": "/uploads/assets/static_asset_journey_0_image_9wtxgoqh.jpg"
-    },
-    {
-      "id": "j-1785525170186",
-      "year": "2025",
-      "title": "CSI Logo Design Competition Winner",
-      "organization": "Computer Science of India",
-      "role": "Winner",
-      "category": "Achievement",
-      "description": "Won {bold & highlight}1st Prize{bold & highlight} in a logo design competition by creating the official logo for the Computer Society of India (CSI) in collaboration with MVSR Engineering College.",
-      "detailedDescription": "I participated individually in a logo design competition organized for the Computer Society of India (CSI) in collaboration with MVSR Engineering College. My design was selected as the winning entry, earning {bold & highlight}First Prize{bold & highlight}. This achievement strengthened my confidence in branding, visual communication, and creative design.",
-      "tags": [
-        "Achievement",
-        "Canva",
-        "Graphic Design",
-        "Branding",
-        "Creativity"
-      ],
-      "images": [],
-      "image": ""
-    },
-    {
-      "id": "j-1785525355455",
-      "year": "2025",
-      "title": "Joined NSS MVSREC Digital Team",
-      "organization": "Sational Service Scheme",
-      "role": "Volunteer",
-      "description": "Joined the {bold & highlight}NSS Digital Team{bold & highlight} to contribute to event promotions, creative media, and digital initiatives while expanding my leadership and collaboration skills.",
-      "detailedDescription": "I joined the NSS unit MVSREC as a Digital Team Member to contribute to posters, promotional materials, photography, and event coverage. Beyond volunteering, this role gave me opportunities to improve my creative workflow, collaborate with fellow students, and participate in organizing college activities.",
-      "category": "NSS",
-      "tags": [
-        "NSS",
-        "Teamwork",
-        "Canva",
-        "Design",
-        "Media"
-      ],
-      "images": [],
-      "image": ""
-    },
-    {
-      "id": "j-1785525617252",
-      "year": "2026 ",
-      "title": "Cyber Ekathon CTF",
-      "organization": " Institute of Electrical and Electronics Engineers",
-      "role": "Winner",
-      "category": "IEEE",
-      "description": "Secured {bold & highlight}4th Place{bold & highlight} in the Cyber Ekathon Capture The Flag competition and earned an {bold & highlight}Internship Opportunity{bold & highlight} through the event.",
-      "detailedDescription": "Participated in the Cyber Ekathon{highlight} Capture The Flag (CTF){highlight} competition as part of a team. We secured Fourth Place, solving cybersecurity challenges under time constraints. Our performance also led to an {bold & highlight}internship opportunity{bold & highlight} from the organizing company, making it one of my most valuable competitive experiences.",
-      "tags": [
-        "IEEE",
-        "Cyber Security",
-        "CTF",
-        "Linux",
-        "Networking",
-        "Teamwork"
-      ],
-      "images": [],
-      "image": ""
-    },
-    {
-      "id": "j-1785525823250",
-      "year": "2026",
-      "title": "First 24-Hour Hackathon",
-      "organization": "Teegala Krishna Reddy Engineering College",
-      "role": "Team Lead",
-      "category": "Hackathon",
-      "description": " Participated in my {bold & highlight}first 24-hour Hackathon{bold & highlight} at TKR College, finishing among the Top 20 Teams out of over 50 participating teams.",
-      "detailedDescription": "This was my first overnight hackathon experience. Working continuously with my teammates, we designed, developed, and presented a complete solution within 24 hours. Finishing among the Top 20 teams gave me practical experience in rapid development, teamwork, and project presentation.",
-      "tags": [
-        "Hackathon",
-        "React",
-        "Node.js",
-        "Teamwork",
-        "Problem Solving"
-      ],
-      "images": [],
-      "image": ""
-    },
-    {
-      "id": "j-1785525982867",
-      "year": "2026",
-      "title": "Joined IEEE",
-      "organization": " Institute of Electrical and Electronics Engineers",
-      "role": "Member",
-      "category": "IEEE",
-      "description": "Became an {bold & highlight}IEEE Student Member{bold & highlight}, joining a global community of engineers, innovators, and technology enthusiasts.",
-      "detailedDescription": "I joined IEEE to expand my technical knowledge, connect with professionals and students, and actively participate in technical workshops, competitions, and community-driven events. It has opened new opportunities for learning beyond the classroom.",
-      "tags": [
-        "IEEE",
-        "Learning",
-        "Technology",
-        "Networking"
-      ],
-      "images": [],
-      "image": ""
-    },
-    {
-      "id": "j-1785526156341",
-      "year": "2026",
-      "title": "GFG Hackathon Winner",
-      "organization": "Geek sfor Geeks",
-      "role": "Winner",
-      "category": "Hackathon",
-      "description": "Won {bold & highlight}1st Prize{bold & highlight} by building an AI-powered SQL Query Generator that converts natural language prompts into SQL queries.",
-      "detailedDescription": "Along with my team, I developed an AI-powered SQL Query Generator capable of translating human language prompts into executable SQL queries. The project focused on making database querying easier for beginners and non-technical users. Our solution secured First Prize in the GFG Hackathon.",
-      "tags": [
-        "Hackathon",
-        "Prompt Engineering",
-        "Database",
-        "Node js",
-        "MongoDB",
-        "LLM",
-        "AI",
-        "SQL"
-      ],
-      "images": [],
-      "image": ""
-    },
-    {
-      "id": "j-1785526320585",
-      "year": "2026",
-      "title": "College Event Organizer",
-      "organization": "MVSR Engineering College",
-      "role": "Student Coordinator",
-      "category": "Event",
-      "description": "Successfully {bold & highlight}organized Vision Genix{bold & highlight} an AI Video Generation Competition, while also coordinating the college Hackathon in collaboration with Unstop and multiple industry partners.",
-      "detailedDescription": "Served as a Student Coordinator and Digital Team member for Vision Genix, an {bold & highlight}AI Video Generation Competition{bold & highlight} conducted in collaboration with Unstop and {highlight}12+ industry partners{highlight}. Along with my friends and organizing team, I coordinated the hackathon, managed digital promotions, designed creative assets, and helped ensure the successful execution of both events.",
-      "tags": [
-        "Event",
-        "Leadership",
-        "Event Management",
-        "AI",
-        "Canva",
-        "Coordination",
-        "IEEE",
-        "Unstop"
-      ],
-      "images": [],
-      "image": ""
-    },
-    {
-      "id": "j-1785526494530",
-      "year": "2026",
-      "title": "NSS MVSREC Digital Co-Lead",
-      "organization": "National Service Scheme",
-      "role": "Digital Co-Lead",
-      "category": "NSS",
-      "description": "Appointed as {bold & highlight}Digital Co-Lead{bold & highlight} for the NSS unit, leading digital media, creative content, and promotional activities.",
-      "detailedDescription": ":After contributing as a Digital Team Member, I was {highlight}promoted to Digital Co-Lead{highlight}. In this role, I coordinate the team's creative work, guide digital initiatives, and contribute to designing promotional materials and event coverage for NSS activities.",
-      "tags": [
-        "NSS",
-        "Leadership",
-        "Canva",
-        "Team Management",
-        "Design"
-      ],
-      "images": [],
-      "image": ""
-    },
-    {
-      "id": "j-1785526604346",
-      "year": "2026",
-      "title": "First College Mini Project",
-      "organization": "MVSR Engineering College",
-      "role": "Student",
-      "category": "College",
-      "description": "Developed and submitted my first college {bold & highlight}Mini Project{bold & highlight}—a Multi AI Response Platform that compares responses from multiple AI models in one place.",
-      "detailedDescription": "As part of my college coursework, my team developed a{highlight} Multi AI Response Platform{highlight} that integrates multiple AI models into a single interface. The project was designed to help users compare responses from different AI systems efficiently, providing a better understanding of their capabilities and improving productivity.",
-      "tags": [
-        "College",
-        "MongoDB",
-        "Full Stack",
-        "APIs",
-        "AI",
-        "Node.js",
-        "React"
-      ],
-      "images": [],
-      "image": ""
-    }
-  ],
+  "blogs": [],
+  "events": [],
+  "pressMentions": [],
   "resumes": [
     {
       "id": "res-1785870184089",
@@ -1107,7 +1161,6 @@
       ]
     }
   ],
-  "blogs": [],
   "contactInfo": {
     "email": "dubbakasathwik@gmail.com",
     "phone": "+91 8527564839",
@@ -1165,7 +1218,95 @@
     "nameDelaySeconds": 1.2
   },
   "messages": [],
-  "contactMessages": [],
-  "events": [],
-  "pressMentions": []
+  "projectsSequence": {
+    "version": "1.0.0",
+    "lastUpdated": "2026-11-14T07:49:42.990Z",
+    "totalProjects": 8,
+    "sequence": [
+      {
+        "position": 1,
+        "cardIdNo": "{intelli-query-001}",
+        "id": "proj-1785569765444",
+        "title": "INTELLI-Query",
+        "category": "Tools",
+        "featured": true,
+        "status": "Completed"
+      },
+      {
+        "position": 2,
+        "cardIdNo": "{nexora-002}",
+        "id": "proj-1785576197261",
+        "title": "Nexora-AI",
+        "category": "College Projects",
+        "featured": true,
+        "status": "Completed"
+      },
+      {
+        "position": 3,
+        "cardIdNo": "{medlens-008}",
+        "id": "proj-1788716566911",
+        "title": "MedLens ",
+        "category": "Tools",
+        "featured": true,
+        "status": "Completed"
+      },
+      {
+        "position": 4,
+        "cardIdNo": "{cobra-007}",
+        "id": "proj-1785860179523",
+        "title": "Cobra Core & Tech",
+        "category": "Full-Stack",
+        "featured": false,
+        "status": "Completed"
+      },
+      {
+        "position": 5,
+        "cardIdNo": "{foodflow-003}",
+        "id": "proj-1785858907457",
+        "title": "FoodFlow Connect",
+        "category": "Web Apps",
+        "featured": false,
+        "status": "Completed"
+      },
+      {
+        "position": 6,
+        "cardIdNo": "{news-005}",
+        "id": "proj-1785859536070",
+        "title": "News Without the Noise",
+        "category": "Web Apps",
+        "featured": false,
+        "status": "Completed"
+      },
+      {
+        "position": 7,
+        "cardIdNo": "{ai-hiring-004}",
+        "id": "proj-1785859211876",
+        "title": "AI Hiring Assistant",
+        "category": "Full-Stack",
+        "featured": false,
+        "status": "Completed"
+      },
+      {
+        "position": 8,
+        "cardIdNo": "{vaultflow-006}",
+        "id": "proj-1785859703526",
+        "title": "VaultFlow",
+        "category": "Personal",
+        "featured": false,
+        "status": "Completed"
+      }
+    ],
+    "backupRules": {
+      "preserveSequenceOnBackup": true,
+      "autoAssignCardId": true,
+      "snapshotSequenceFile": true,
+      "dualStorageParity": true
+    },
+    "pushRules": {
+      "gitPushSequenceSection": true,
+      "gitCommitSequenceMessage": true,
+      "safeTreePush": true
+    }
+  },
+  "contactMessages": []
 }
