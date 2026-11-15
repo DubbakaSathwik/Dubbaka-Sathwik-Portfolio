@@ -27,28 +27,25 @@ My journey into technology started much earlier than I ever imagined. Back in sc
 
 ## Software & AI Projects by Dubbaka Sathwik
 ### 1. INTELLI-Query
-- **URL:** https://dubbakasathwik.in/projects/intelli-query-conversational-bi
+- **URL:** https://dubbakasathwik.in/projects/intelli-query
 - **Category:** Tools (2026)
 - **Tech Stack:** Tools, HTML/CSS/JS, Node JS, Google Gemini API, SQL.js, Chart JS
-- **Key Takeaway:** INTELLI-Query, built by full-stack and AI software engineer Dubbaka Sathwik, enables effortless CSV data exploration by converting plain English questions into executable SQL queries and interactive Chart.js visualizations. Using Node.js, vanilla JavaScript, the Google Gemini API, and an in-process SQL.js WebAssembly database, it delivers fast, zero-dependency, and secure business intelligence without external database setup.
 - **Live Demo:** https://intelli-query.onrender.com
 - **GitHub:** https://github.com/DubbakaSathwik/INTELLI-Query.git
 - **Overview:** INTELLI Query is a zero-dependency, self-contained BI dashboard built with vanilla JavaScript and Node.js. It leverages Google Gemini to translate natural language questions into SQL, executing queries locally using an in-process WebAssembly database (sql.js). Users can preview schemas, run queries, and visualize results instantly using dynamic Chart.js dashboards, making data analysis intuitive and secure.
 
 ### 2. Nexora-AI
-- **URL:** https://dubbakasathwik.in/projects/nexora-ai-multi-model-dashboard
+- **URL:** https://dubbakasathwik.in/projects/nexora-ai
 - **Category:** College Projects (2026)
 - **Tech Stack:** College Projects, React, Node.js, MongoDB, API, Express
-- **Key Takeaway:** Nexora-AI is a full-stack multi-model AI dashboard built by Dubbaka Sathwik using React, Node.js, Express, and MongoDB to solve single-model blind spots by broadcasting prompts simultaneously across multiple language models. With side-by-side response streams, diff highlights, automated consensus, performance visualizations, and local model fallbacks, it enables fast, resilient, and verifiable AI pair-programming and text workflows.
 - **Live Demo:** https://multiai-6kx9.onrender.com
 - **GitHub:** https://github.com/DubbakaSathwik/Multi-AI.git
 - **Overview:** Nexora AI is a premium pair-programming and text playground featuring side-by-side response streams from leading language models. Users can customize prompts with expert personas, compare responses with diff highlights, and build automated consensus. Supported by detailed performance charts and a responsive, multi-themed layout, it includes local model fallbacks to guarantee highly resilient, high-speed output.
 
 ### 3. MedLens 
-- **URL:** https://dubbakasathwik.in/projects/medlens-clinical-intelligence-platform
+- **URL:** https://dubbakasathwik.in/projects/medlens
 - **Category:** Tools (2026)
 - **Tech Stack:** Tools, React, Node.js, Tailwind CSS, Next.js
-- **Key Takeaway:** MedLens by Dubbaka Sathwik is an AI clinical intelligence platform built with Next.js, React, Node.js, and Tailwind CSS that converts unstructured medical reports into validated, FHIR-compliant patient records. It eliminates AI hallucinations through laboratory reference-range grounding, OCR ambiguity resolution, bidirectional source provenance, and deterministic non-diagnostic safety guardrails.
 - **Live Demo:** https://medlens-8gan.onrender.com
 - **GitHub:** https://github.com/DubbakaSathwik/medlens-prompt_wars.git
 - **Overview:** MedLens is an AI clinical intelligence platform that transforms fragmented medical documents into structured, FHIR-compliant records. It prevents hallucinations through strict laboratory reference-range grounding, bidirectional document provenance, OCR ambiguity resolution, and deterministic non-diagnostic medical safety guardrails.
@@ -57,7 +54,6 @@ My journey into technology started much earlier than I ever imagined. Back in sc
 - **URL:** https://dubbakasathwik.in/projects/cobra-core-tech
 - **Category:** Full-Stack (2026)
 - **Tech Stack:** Full-Stack, HTML5, Vanilla CSS3, Vanilla JavaScript (ES6+), Node.js & Express.js, MongoDB & Mongoose
-- **Key Takeaway:** Cobra Core & Tech is a full-stack EdTech ecosystem developed by Dubbaka Sathwik that streamlines student learning, internship matching, and assignment management via a robust Node.js and MongoDB-powered architecture.
 - **Live Demo:** cobracore.netlify.app
 - **GitHub:** https://github.com/DubbakaSathwik/COBRA-CORE-TECH-Website.git
 - **Overview:** Cobra Core & Tech is a premium SaaS-grade EdTech and career development platform that bridges classroom learning with real-world professional opportunities. The ecosystem comprises a responsive public showcase website, an interactive student learning workspace, and a comprehensive administration dashboard. Built securely with vanilla HTML, CSS, and JavaScript, it communicates with a Node.js/Express API and a MongoDB database. It facilitates structured course curriculums, internship matches, assignment tracking with feedback, and manual certification, serving as a unified system for ed-tech startups.
@@ -66,7 +62,6 @@ My journey into technology started much earlier than I ever imagined. Back in sc
 - **URL:** https://dubbakasathwik.in/projects/foodflow-connect
 - **Category:** Web Apps (2026)
 - **Tech Stack:** Web Apps, React, Node.js, HTML/CSS, JavaScript
-- **Key Takeaway:** FoodFlow Connect, built by full-stack developer Dubbaka Sathwik, is a role-based food rescue web application connecting surplus food providers, NGOs, and consumers via interactive React dashboards to reduce community waste.
 - **Live Demo:** https://udayprakashchamakuri-beep.github.io/foodflow/
 - **GitHub:** https://github.com/DubbakaSathwik/FoodFlow-Connect.git
 - **Overview:** FoodFlow Connect is a role-based food rescue and redistribution MVP designed to reduce waste and support local communities. The application features specialized, interactive dashboards for providers to manage inventory, NGOs to discover and claim surplus listings, and consumers to browse and reserve items. The project supports two execution paths: a standard Node.js server backed by SQLite for robust deployments, and a browser-only static version using localStorage for lightweight staging on platforms like GitHub Pages.
@@ -75,7 +70,6 @@ My journey into technology started much earlier than I ever imagined. Back in sc
 - **URL:** https://dubbakasathwik.in/projects/news-without-the-noise
 - **Category:** Web Apps (2026)
 - **Tech Stack:** Web Apps, Node.js & Express.js, MongoDB & Mongoose, HTML5 / Vanilla CSS3 / Modern JavaScript (ES6+), Google Gemini & OpenAI APIs
-- **Key Takeaway:** News Without the Noise is an AI-driven dashboard built by Dubbaka Sathwik using Node.js and LLMs to autonomously filter clickbait and synthesize trustworthy, personalized news updates.
 - **Live Demo:** https://news-without-the-noise.onrender.com
 - **GitHub:** https://github.com/DubbakaSathwik/AA-Hackthon-online-.git
 - **Overview:** News Without the Noise is an intelligent, AI-driven news dashboard that combats digital noise, clickbait, and misinformation. Featuring a personalized recommendation engine, it dynamically learns user preferences from actions like reading behavior. The platform integrates Google Gemini and OpenAI to analyze articles for bias, sensationalism, and source trust, while providing customized summaries. Built with Node.js, Express, MongoDB, and standard HTML/CSS/JS, it also features location-based weather, local headlines, and a deepfake media scanner, ensuring a clean, reliable, and secure information experience.
@@ -84,7 +78,6 @@ My journey into technology started much earlier than I ever imagined. Back in sc
 - **URL:** https://dubbakasathwik.in/projects/ai-hiring-assistant
 - **Category:** Full-Stack (2026)
 - **Tech Stack:** Full-Stack, Node.js & Express.js, Tesseract.js, LLaMA 3.1, Multer
-- **Key Takeaway:** Built by Dubbaka Sathwik, AI Hiring Assistant is a full-stack Node.js and Express application that automates candidate credential screening using Tesseract.js OCR and LLaMA 3.1, combining text extraction, fraud risk analysis, and score-based candidate ranking.
 - **Live Demo:** https://ai-hiring-assistant-85kv.onrender.com
 - **GitHub:** https://github.com/DubbakaSathwik/AI-Hiring-Assistant.git
 - **Overview:** AI Hiring Assistant is a modular full-stack application designed to streamline recruiting. The backend is built with Node.js and Express, while the frontend is constructed using clean, responsive HTML, CSS, and Vanilla JavaScript. The system utilizes Tesseract.js to extract text from candidate certificates, executes simulated academic institution validation, and leverages LLaMA 3.1 via the Featherless API to analyze fraud risk. Finally, a ranking service computes score metrics to provide automated, reliable recommendations for hiring teams.
@@ -93,7 +86,6 @@ My journey into technology started much earlier than I ever imagined. Back in sc
 - **URL:** https://dubbakasathwik.in/projects/vaultflow
 - **Category:** Personal (2026)
 - **Tech Stack:** Personal, React, Node.js, MongoDB
-- **Key Takeaway:** VaultFlow is a privacy-first Android finance application developed by Dubbaka Sathwik using Jetpack Compose and Gemini API to provide intelligent budget tracking with complete offline local storage.
 - **Live Demo:** N/A
 - **GitHub:** https://github.com/DubbakaSathwik/vaultFlow-by-Wilder.git
 - **Overview:** VaultFlow is a comprehensive personal finance manager designed for Android with privacy and offline capabilities at its core. Developed in Kotlin using Jetpack Compose, the application allows users to manage multiple bank accounts, track recurring transactions, monitor savings goals, and track debts. The app integrates Google ML Kit for scanning receipts via OCR and leverages the Gemini API to deliver personalized financial insights directly on the device. All data is stored locally in a Room database, ensuring complete user privacy.

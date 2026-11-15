@@ -109,6 +109,24 @@ export const TIMING_CONFIGS: Record<TimingMode, TimingConfig> = {
   },
 };
 
+function shouldBypassIntroLoader(): boolean {
+  if (typeof window === 'undefined') return true;
+  const cleanPath = (window.location.pathname || '/').replace(/\/+$/, '') || '/';
+  if (cleanPath !== '/') return true;
+  if (typeof navigator !== 'undefined') {
+    if ((navigator as any).webdriver) return true;
+    const ua = navigator.userAgent || '';
+    if (
+      /bot|crawl|spider|googlebot|google-inspectiontool|bingbot|slurp|duckduckbot|baiduspider|yandex|gptbot|oai-searchbot|chatgpt|claudebot|perplexitybot|applebot|lighthouse|headlesschrome/i.test(
+        ua
+      )
+    ) {
+      return true;
+    }
+  }
+  return false;
+}
+
 export function CinematicLoadingScreen() {
   const { data } = useCMS();
   const intro = data?.intro || initialIntroData;
@@ -116,9 +134,10 @@ export function CinematicLoadingScreen() {
   // Active timing preset: 'mode_10s' by default
   const timing = TIMING_CONFIGS[ACTIVE_TIMING_MODE];
 
-  const [phase, setPhase] = useState<AnimationPhase>('phase1_sathwik');
+  const [bypassed] = useState<boolean>(() => shouldBypassIntroLoader());
+  const [phase, setPhase] = useState<AnimationPhase>(() => (shouldBypassIntroLoader() ? 'phase7_complete' : 'phase1_sathwik'));
   const [showDubbaka, setShowDubbaka] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
+  const [isVisible, setIsVisible] = useState(() => !shouldBypassIntroLoader());
   const [isMobile, setIsMobile] = useState(false);
   const [prefersReducedMotion, setPrefersReducedMotion] = useState(false);
 
@@ -228,7 +247,7 @@ export function CinematicLoadingScreen() {
 
   // Guaranteed Sequence Controller
   useEffect(() => {
-    if (intro.enabled === false) {
+    if (bypassed || intro.enabled === false) {
       setIsVisible(false);
       return;
     }
@@ -312,11 +331,7 @@ export function CinematicLoadingScreen() {
       if (t6) clearTimeout(t6);
       if (t7) clearTimeout(t7);
     };
-  }, [prefersReducedMotion, intro.enabled, totalWordsDurationMs, timing]);
-
-  if (intro.enabled === false) {
-    return null;
-  }
+  }, [prefersReducedMotion, intro.enabled, totalWordsDurationMs, timing, bypassed]);
 
   const handleSkip = () => {
     setIsVisible(false);
@@ -332,6 +347,10 @@ export function CinematicLoadingScreen() {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  if (bypassed || intro.enabled === false) {
+    return null;
+  }
 
   const isNameVisible =
     phase === 'phase1_sathwik' ||

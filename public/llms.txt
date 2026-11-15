@@ -13,14 +13,14 @@ Official personal portfolio of **Dubbaka Sathwik** (also known as Sathwik Dubbak
 - LinkedIn: https://linkedin.com/in/dubbakasathwik
 
 ## Technical Projects Built by Dubbaka Sathwik
-- [INTELLI-Query](https://dubbakasathwik.in/projects/intelli-query-conversational-bi): Explore INTELLI-Query by Dubbaka Sathwik: a conversational BI app using Google Gemini, SQL.js, Node.js, and Chart.js to turn CSV prompts into SQL charts.
-- [Nexora-AI](https://dubbakasathwik.in/projects/nexora-ai-multi-model-dashboard): Explore Nexora-AI by Dubbaka Sathwik: a React, Node.js, and MongoDB multi-model AI dashboard for side-by-side LLM comparison, consensus, and analytics.
-- [MedLens](https://dubbakasathwik.in/projects/medlens-clinical-intelligence-platform): Explore MedLens by Dubbaka Sathwik: a Next.js and Node.js AI platform turning unstructured medical reports into FHIR-compliant records with provenance.
-- [Cobra Core & Tech](https://dubbakasathwik.in/projects/cobra-core-tech): Explore Cobra Core & Tech, an AI-powered EdTech SaaS built by Dubbaka Sathwik using Node.js, MongoDB, and modern web tech for seamless student career growth.
-- [FoodFlow Connect](https://dubbakasathwik.in/projects/foodflow-connect): FoodFlow Connect by Dubbaka Sathwik is a role-based React and Node.js food rescue web app connecting providers, NGOs, and consumers to minimize waste.
-- [News Without the Noise](https://dubbakasathwik.in/projects/news-without-the-noise): Explore News Without the Noise, an AI-powered news dashboard by Dubbaka Sathwik that filters misinformation using Node.js, Gemini, and OpenAI technologies.
-- [AI Hiring Assistant](https://dubbakasathwik.in/projects/ai-hiring-assistant): Explore Dubbaka Sathwik's AI Hiring Assistant: a full-stack Node.js app using Tesseract.js OCR and LLaMA 3.1 for certificate fraud detection and ranking.
-- [VaultFlow](https://dubbakasathwik.in/projects/vaultflow): VaultFlow by Dubbaka Sathwik is a secure Android personal finance manager using Jetpack Compose, Gemini API, and Room database for local, private insights.
+- [INTELLI-Query](https://dubbakasathwik.in/projects/intelli-query): A conversational BI web application that lets users upload CSV files, ask questions in plain English, and receive instant AI-generated SQL queries, interactive charts, and data…
+- [Nexora-AI](https://dubbakasathwik.in/projects/nexora-ai): Nexora AI is a modern multi-model dashboard that lets users simultaneously broadcast prompts to multiple AI models, compare responses side-by-side, analyze consensus, and view…
+- [MedLens](https://dubbakasathwik.in/projects/medlens): MedLens transforms unstructured medical reports into grounded, validated patient records with source traceability and safety.
+- [Cobra Core & Tech](https://dubbakasathwik.in/projects/cobra-core-tech): Cobra Core & Tech is a modern, AI-powered EdTech ecosystem that enables student learning, assignment evaluation, and internship tracking, managed seamlessly through a multi-level…
+- [FoodFlow Connect](https://dubbakasathwik.in/projects/foodflow-connect): FoodFlow Connect is a role-based food rescue web application connecting surplus food providers, NGOs, and consumers to streamline food redistribution, minimize community waste…
+- [News Without the Noise](https://dubbakasathwik.in/projects/news-without-the-noise): News Without the Noise is an AI-powered personalized news ecosystem that dynamically filters misinformation, rage-bait, and sensationalism to deliver clean, trustworthy, and…
+- [AI Hiring Assistant](https://dubbakasathwik.in/projects/ai-hiring-assistant): AI Hiring Assistant is a full-stack web application that uses OCR to extract text from candidate certificates and leverages LLaMA 3.1 to perform fraud analysis and ranking.
+- [VaultFlow](https://dubbakasathwik.in/projects/vaultflow): VaultFlow is a local Android personal finance application built using Jetpack Compose. The app features secure offline database storage, receipt scanning, and smart budgeting…
 
 ## Extended Context
 - Full technical details, articles & skills: https://dubbakasathwik.in/llms-full.txt

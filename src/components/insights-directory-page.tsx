@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { ArrowLeft, ArrowUpRight, Search, Calendar, BookOpen, MapPin } from 'lucide-react';
+import { ArrowLeft, ArrowUpRight, Search, Calendar, BookOpen, MapPin, FolderGit2, Award } from 'lucide-react';
 import { useCMS } from '../context/CMSContext';
 import { BlogPost, EventItem } from '../types';
 import {
@@ -7,7 +7,9 @@ import {
   applyDynamicDocumentMeta,
   getBlogPath,
   getEventSlug,
+  getProjectSlug,
   isItemPublished,
+  stripFormattingMarkers,
 } from '../config/seo';
 
 interface InsightsDirectoryPageProps {
@@ -24,17 +26,20 @@ export function InsightsDirectoryPage({ onNavigate }: InsightsDirectoryPageProps
 
   const publishedBlogs = useMemo(() => (data.blogs || []).filter(isItemPublished), [data.blogs]);
   const publishedEvents = useMemo(() => (data.events || []).filter(isItemPublished), [data.events]);
+  const publishedProjects = useMemo(() => (data.projects || []).filter(isItemPublished), [data.projects]);
+  const publishedJourney = useMemo(() => (data.journey || []).filter(isItemPublished), [data.journey]);
 
   useEffect(() => {
     window.scrollTo(0, 0);
     applyDynamicDocumentMeta({
       title: `Insights, Articles & Events | ${SITE_CONFIG.siteName}`,
       description:
-        'Technical engineering articles, developer blogs, hackathons, IEEE workshops, and NSS campus initiatives by Dubbaka Sathwik.',
+        'Technical engineering articles, developer blogs, hackathons, IEEE workshops, and featured software case studies by Dubbaka Sathwik.',
       keywords: [
         'Dubbaka Sathwik blog',
         'Dubbaka Sathwik articles',
         'Dubbaka Sathwik events',
+        'Dubbaka Sathwik projects',
         'MVSR Engineering College',
         'Full-Stack Developer notes',
       ],
@@ -92,9 +97,16 @@ export function InsightsDirectoryPage({ onNavigate }: InsightsDirectoryPageProps
         <div className="space-y-4">
           <div className="flex flex-wrap items-center justify-between gap-3">
             <nav aria-label="Breadcrumb" className="flex items-center gap-2 text-xs font-mono text-zinc-400">
-              <button type="button" onClick={() => onNavigate('/')} className="hover:text-emerald-400 cursor-pointer">
+              <a
+                href="/"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate('/');
+                }}
+                className="hover:text-emerald-400 cursor-pointer"
+              >
                 Home
-              </button>
+              </a>
               <span aria-hidden="true">/</span>
               <span className="text-emerald-400 font-semibold">Insights &amp; Events</span>
             </nav>
@@ -117,67 +129,196 @@ export function InsightsDirectoryPage({ onNavigate }: InsightsDirectoryPageProps
               </span>
             </h1>
             <p className="text-sm sm:text-base text-zinc-400 leading-relaxed">
-              Full archive of technical deep dives, campus leadership experiences, hackathons, and design notes by{' '}
-              <span className="text-white font-semibold">Dubbaka Sathwik</span>.
+              Archive of technical deep dives, software case studies, campus leadership experiences, hackathons, and design notes by{' '}
+              <span className="text-white font-semibold">Dubbaka Sathwik</span> at MVSR Engineering College, Hyderabad.
             </p>
           </div>
         </div>
 
-        {/* Search + Filter Controls */}
-        <div className="p-4 sm:p-5 rounded-2xl bg-[#0c0c0e] border border-zinc-800 space-y-4">
-          <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-            <div className="relative flex-1 max-w-md">
-              <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
-              <input
-                type="search"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="Search articles, blogs, events, or topics..."
-                className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/60"
-              />
+        {/* Search + Filter Controls when Journal / Event items exist */}
+        {combinedItems.length > 0 && (
+          <div className="p-4 sm:p-5 rounded-2xl bg-[#0c0c0e] border border-zinc-800 space-y-4">
+            <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
+              <div className="relative flex-1 max-w-md">
+                <Search className="w-4 h-4 text-zinc-500 absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+                <input
+                  type="search"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search articles, blogs, events, or topics..."
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl bg-zinc-950 border border-zinc-800 text-sm text-white placeholder:text-zinc-500 focus:outline-none focus:border-emerald-500/60"
+                />
+              </div>
+
+              <div className="flex items-center gap-1 p-1 bg-zinc-950 border border-zinc-800 rounded-xl overflow-x-auto">
+                {(['All', 'Blogs', 'Articles', 'Events'] as TypeFilter[]).map((tab) => (
+                  <button
+                    key={tab}
+                    type="button"
+                    onClick={() => setTypeFilter(tab)}
+                    className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
+                      typeFilter === tab
+                        ? 'bg-emerald-600 text-white font-semibold'
+                        : 'text-zinc-400 hover:text-white'
+                    }`}
+                  >
+                    {tab}
+                  </button>
+                ))}
+              </div>
             </div>
 
-            <div className="flex items-center gap-1 p-1 bg-zinc-950 border border-zinc-800 rounded-xl overflow-x-auto">
-              {(['All', 'Blogs', 'Articles', 'Events'] as TypeFilter[]).map((tab) => (
+            <div className="flex items-center gap-2 overflow-x-auto pb-1">
+              {allTopics.map((topic) => (
                 <button
-                  key={tab}
+                  key={topic}
                   type="button"
-                  onClick={() => setTypeFilter(tab)}
-                  className={`px-3.5 py-2 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 cursor-pointer ${
-                    typeFilter === tab
-                      ? 'bg-emerald-600 text-white font-semibold'
-                      : 'text-zinc-400 hover:text-white'
+                  onClick={() => setTopicFilter(topic)}
+                  className={`px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 cursor-pointer border ${
+                    topicFilter === topic
+                      ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 font-semibold'
+                      : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white'
                   }`}
                 >
-                  {tab}
+                  {topic}
                 </button>
               ))}
             </div>
           </div>
+        )}
 
-          <div className="flex items-center gap-2 overflow-x-auto pb-1">
-            {allTopics.map((topic) => (
-              <button
-                key={topic}
-                type="button"
-                onClick={() => setTopicFilter(topic)}
-                className={`px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 cursor-pointer border ${
-                  topicFilter === topic
-                    ? 'bg-emerald-950/70 border-emerald-500/50 text-emerald-300 font-semibold'
-                    : 'bg-zinc-950 border-zinc-800 text-zinc-400 hover:text-white'
-                }`}
+        {/* Content Directory */}
+        {combinedItems.length === 0 ? (
+          <div className="space-y-12">
+            {/* Editorial Note */}
+            <div className="p-6 sm:p-8 rounded-2xl bg-[#0c0c0e] border border-zinc-800 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="space-y-1.5 max-w-2xl">
+                <div className="inline-flex items-center gap-2 text-xs font-mono text-emerald-400">
+                  <BookOpen className="w-4 h-4" />
+                  <span>Published Case Studies &amp; Campus Leadership</span>
+                </div>
+                <h2 className="text-lg sm:text-xl font-bold text-white">
+                  Upcoming Writing &amp; Verified Engineering Work
+                </h2>
+                <p className="text-sm text-zinc-400 leading-relaxed">
+                  Standalone essays and event recaps are updated here as new events conclude. Explore all {publishedProjects.length} documented engineering builds and {publishedJourney.length} campus and hackathon milestones below.
+                </p>
+              </div>
+              <a
+                href="/#projects"
+                onClick={(e) => {
+                  e.preventDefault();
+                  onNavigate('/', { scrollToId: 'projects' });
+                }}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-semibold transition-colors whitespace-nowrap shrink-0"
               >
-                {topic}
-              </button>
-            ))}
-          </div>
-        </div>
+                <span>Explore Full Portfolio</span>
+                <ArrowUpRight className="w-3.5 h-3.5" />
+              </a>
+            </div>
 
-        {/* Grid */}
-        {filteredItems.length === 0 ? (
+            {/* Technical Case Studies Grid */}
+            {publishedProjects.length > 0 && (
+              <div className="space-y-5">
+                <div className="flex items-center gap-2.5">
+                  <FolderGit2 className="w-5 h-5 text-emerald-400" />
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                    Technical Case Studies by Dubbaka Sathwik
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  {publishedProjects.map((proj) => {
+                    const slug = getProjectSlug(proj);
+                    const href = `/projects/${slug}`;
+                    const summary = stripFormattingMarkers(proj.description || proj.summary || '');
+                    return (
+                      <article
+                        key={proj.id}
+                        className="group rounded-2xl bg-[#0c0c0e] border border-zinc-800/90 hover:border-emerald-500/40 overflow-hidden flex flex-col justify-between transition-all"
+                      >
+                        <a
+                          href={href}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            onNavigate(href);
+                          }}
+                          className="flex flex-col flex-1 justify-between"
+                        >
+                          <div>
+                            {proj.thumbnail && (
+                              <div className="aspect-[16/10] w-full bg-zinc-950 overflow-hidden">
+                                <img
+                                  src={proj.thumbnail}
+                                  alt={proj.title}
+                                  referrerPolicy="no-referrer"
+                                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                                />
+                              </div>
+                            )}
+                            <div className="p-5 space-y-2">
+                              <div className="flex items-center gap-2 text-xs text-zinc-400 font-mono">
+                                <span className="text-emerald-400 font-semibold">{proj.category}</span>
+                                <span aria-hidden="true">·</span>
+                                <span>{proj.year || '2026'}</span>
+                              </div>
+                              <h3 className="text-lg font-bold text-white group-hover:text-emerald-400 transition-colors">
+                                {proj.title}
+                              </h3>
+                              <p className="text-sm text-zinc-400 line-clamp-3 leading-relaxed">{summary}</p>
+                            </div>
+                          </div>
+                          <div className="px-5 py-3.5 border-t border-zinc-800 flex items-center justify-between gap-2 text-xs text-zinc-400">
+                            <span className="truncate">
+                              {(proj.technologies || proj.tags || []).slice(0, 3).join(' · ')}
+                            </span>
+                            <span className="text-emerald-400 font-semibold inline-flex items-center gap-1 whitespace-nowrap shrink-0">
+                              Read Case Study <ArrowUpRight className="w-3.5 h-3.5" />
+                            </span>
+                          </div>
+                        </a>
+                      </article>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            {/* Hackathons, NSS & IEEE Journey Highlights */}
+            {publishedJourney.length > 0 && (
+              <div className="space-y-5">
+                <div className="flex items-center gap-2.5">
+                  <Award className="w-5 h-5 text-emerald-400" />
+                  <h2 className="text-xl sm:text-2xl font-extrabold text-white">
+                    Hackathons, NSS Leadership &amp; Milestones
+                  </h2>
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {publishedJourney.map((item) => (
+                    <div
+                      key={item.id}
+                      className="p-5 rounded-2xl bg-[#0c0c0e] border border-zinc-800/90 space-y-2"
+                    >
+                      <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-mono">
+                        <span className="text-emerald-400 font-semibold">{item.category || 'Milestone'}</span>
+                        <span className="text-zinc-500">{item.year}</span>
+                      </div>
+                      <h3 className="text-base font-bold text-white">{item.title}</h3>
+                      <p className="text-xs text-zinc-400 font-medium">
+                        {item.role} · {item.organization}
+                      </p>
+                      <p className="text-sm text-zinc-400 leading-relaxed">
+                        {stripFormattingMarkers(item.detailedDescription || item.description || '')}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+          </div>
+        ) : filteredItems.length === 0 ? (
           <div className="p-12 rounded-2xl bg-[#0c0c0e] border border-zinc-800 text-center space-y-3">
             <BookOpen className="w-10 h-10 text-emerald-400/70 mx-auto" />
-            <h2 className="text-lg font-bold text-white">No Matching Insights Found</h2>
+            <h2 className="text-lg font-bold text-white">No Entries Match This Filter</h2>
             <p className="text-sm text-zinc-400">Try clearing the search query or selecting another filter tab.</p>
             <button
               type="button"
