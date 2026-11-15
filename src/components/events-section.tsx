@@ -19,7 +19,7 @@ import {
 } from 'lucide-react';
 import { useCMS } from '../context/CMSContext';
 import { EventItem } from '../types';
-import { getEventSlug, getProjectSlug, isItemPublished } from '../config/seo';
+import { getEventSlug, getProjectSlug, isItemPublished, SITE_CONFIG } from '../config/seo';
 import { FormattedText } from '../lib/text-formatter';
 import { JourneyImageSlideshow } from './ui/journey-image-slideshow';
 import { StackedCardDeck } from './ui/stacked-card-deck';
@@ -34,7 +34,7 @@ function buildGoogleCalendarUrl(ev: EventItem): string {
     action: 'TEMPLATE',
     text: `${ev.title} (${ev.role})`,
     dates: `${start}/${end}`,
-    details: `${ev.summary}\n\nMore details: https://dubbakasathwik.netlify.app/events/${getEventSlug(ev)}`,
+    details: `${ev.summary}\n\nMore details: ${SITE_CONFIG.baseUrl}/events/${getEventSlug(ev)}`,
     location: ev.venue || 'MVSR Engineering College, Hyderabad',
   });
   return `https://calendar.google.com/calendar/render?${params.toString()}`;

@@ -79,17 +79,6 @@ export const handler = async (event: NetlifyEvent) => {
     });
   }
 
-  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
-  if (!apiKey) {
-    return jsonResponse(503, {
-      success: false,
-      error: {
-        code: 'GEMINI_KEY_MISSING',
-        message: 'GEMINI_API_KEY is not configured in Netlify Environment Variables.',
-      },
-    });
-  }
-
   let body: Record<string, any> = {};
   try {
     const raw =
@@ -99,6 +88,50 @@ export const handler = async (event: NetlifyEvent) => {
     body = JSON.parse(raw);
   } catch {
     body = {};
+  }
+
+  const reqPath = (event.path || '').toLowerCase().replace(/\/+$/, '');
+  if (reqPath.endsWith('/ping-indexnow')) {
+    try {
+      const defaultKey = (process.env.INDEXNOW_KEY || 'f8a3c9e2b71d405aa91c2e8d4f3b6a12').trim();
+      const host = String(body.host || 'dubbakasathwik.in').trim();
+      const key = String(body.key || defaultKey).trim();
+      const validUrls = Array.isArray(body.urls) && body.urls.length > 0
+        ? body.urls.slice(0, 50)
+        : [`https://${host}/`, `https://${host}/insights`, `https://${host}/llms.txt`];
+
+      const indexRes = await fetch('https://api.indexnow.org/indexnow', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          host,
+          key,
+          keyLocation: `https://${host}/${key}.txt`,
+          urlList: validUrls,
+        }),
+      });
+      return jsonResponse(200, {
+        success: indexRes.ok,
+        status: indexRes.status,
+        urlsSubmitted: validUrls.length,
+      });
+    } catch (err: any) {
+      return jsonResponse(500, {
+        success: false,
+        error: { message: err?.message || 'IndexNow ping error' },
+      });
+    }
+  }
+
+  const apiKey = (process.env.GEMINI_API_KEY || '').trim();
+  if (!apiKey) {
+    return jsonResponse(503, {
+      success: false,
+      error: {
+        code: 'GEMINI_KEY_MISSING',
+        message: 'GEMINI_API_KEY is not configured in Netlify Environment Variables.',
+      },
+    });
   }
 
   const {
@@ -142,7 +175,7 @@ export const handler = async (event: NetlifyEvent) => {
       .filter(Boolean)
       .join(' | ');
 
-    const prompt = `Generate search engine optimization (Google Search) and AI-assistant discovery (ChatGPT, Gemini, Claude) metadata for an item on Dubbaka Sathwik's official portfolio website (https://dubbakasathwik.netlify.app).
+    const prompt = `Generate search engine optimization (Google Search) and AI-assistant discovery (ChatGPT, Gemini, Claude) metadata for an item on Dubbaka Sathwik's official portfolio website (https://dubbakasathwik.in).
 
 Item Type: ${type}
 Title: ${title}

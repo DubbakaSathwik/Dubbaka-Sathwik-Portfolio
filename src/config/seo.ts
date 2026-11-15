@@ -1,7 +1,7 @@
 import { BlogPost, EventItem, PressMention, Project } from '../types';
 
 export const SITE_CONFIG = {
-  baseUrl: 'https://dubbakasathwik.netlify.app',
+  baseUrl: 'https://dubbakasathwik.in',
   siteName: 'Dubbaka Sathwik',
   defaultTitle: 'Dubbaka Sathwik | Full-Stack Developer & AI Software Engineer',
   defaultDescription:

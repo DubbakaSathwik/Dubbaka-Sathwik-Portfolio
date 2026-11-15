@@ -35,6 +35,6 @@ Allow: /
 User-agent: Applebot-Extended
 Allow: /
 
-Sitemap: https://dubbakasathwik.netlify.app/sitemap.xml
-# LLMs Knowledge Base: https://dubbakasathwik.netlify.app/llms.txt
-# Full LLMs Context: https://dubbakasathwik.netlify.app/llms-full.txt
+Sitemap: https://dubbakasathwik.in/sitemap.xml
+# LLMs Knowledge Base: https://dubbakasathwik.in/llms.txt
+# Full LLMs Context: https://dubbakasathwik.in/llms-full.txt

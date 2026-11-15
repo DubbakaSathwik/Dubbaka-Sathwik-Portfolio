@@ -128,7 +128,7 @@ router.post('/generate-metadata', async (req: Request, res: Response): Promise<v
       .filter(Boolean)
       .join(' | ');
 
-    const prompt = `Generate search engine optimization (Google Search) and AI-assistant discovery (ChatGPT, Gemini, Claude) metadata for an item on Dubbaka Sathwik's official portfolio website (https://dubbakasathwik.netlify.app).
+    const prompt = `Generate search engine optimization (Google Search) and AI-assistant discovery (ChatGPT, Gemini, Claude) metadata for an item on Dubbaka Sathwik's official portfolio website (https://dubbakasathwik.in).
 
 Item Type: ${type}
 Title: ${title}
@@ -179,18 +179,18 @@ Requirements:
 // POST /api/seo/ping-indexnow - Notify Bing / ChatGPT IndexNow endpoints of updated portfolio URLs
 router.post('/ping-indexnow', async (req: Request, res: Response): Promise<void> => {
   try {
-    const { urls = [], host = 'dubbakasathwik.netlify.app', key = '' } = req.body || {};
+    const defaultKey = (process.env.INDEXNOW_KEY || 'f8a3c9e2b71d405aa91c2e8d4f3b6a12').trim();
+    const { urls = [], host = 'dubbakasathwik.in', key = defaultKey } = req.body || {};
     const validUrls = Array.isArray(urls) && urls.length > 0
       ? urls.slice(0, 50)
       : [`https://${host}/`, `https://${host}/insights`, `https://${host}/llms.txt`];
 
-    // Ping IndexNow API if key is configured or requested
     if (!key) {
       res.json({
         success: true,
         skippedExternal: true,
         urlsQueued: validUrls.length,
-        message: 'Sitemap & llms.txt URLs prepared. Add an IndexNow verification file to enable direct Bing/ChatGPT push.',
+        message: 'Sitemap & llms.txt URLs prepared.',
       });
       return;
     }

@@ -54,6 +54,13 @@
   status = 200
   force = true
 
+# Consolidate search authority from default Netlify subdomain onto dubbakasathwik.in
+[[redirects]]
+  from = "https://dubbakasathwik.netlify.app/*"
+  to = "https://dubbakasathwik.in/:splat"
+  status = 301
+  force = true
+
 # Single-Page Application (SPA) Client-Side Route Resolution
 [[redirects]]
   from = "/*"
