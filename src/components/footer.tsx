@@ -16,7 +16,15 @@ export function Footer() {
     <footer className="bg-[#030303] border-t border-zinc-900 py-10 text-zinc-400 text-xs">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex flex-col lg:flex-row items-center justify-between gap-6 text-center lg:text-left">
         {/* Brand */}
-        <div className="flex flex-col items-center gap-1.5 text-center lg:flex-row lg:text-left lg:gap-3">
+        <div className="flex flex-col items-center gap-2 text-center lg:flex-row lg:text-left lg:gap-3">
+          <img
+            src="/brand-logo.png"
+            alt="Dubbaka Sathwik Logo"
+            width={34}
+            height={34}
+            referrerPolicy="no-referrer"
+            className="w-8 h-8 rounded-lg object-contain ring-1 ring-emerald-500/35 shadow-[0_0_12px_rgba(16,185,129,0.2)] shrink-0"
+          />
           <div>
             <p className="text-white font-bold text-sm">Dubbaka Sathwik</p>
             <p className="text-[10px] sm:text-xs text-zinc-500 font-mono mt-0.5">Full-Stack Engineer & Creative Designer</p>

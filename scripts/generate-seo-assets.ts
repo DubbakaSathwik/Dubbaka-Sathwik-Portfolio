@@ -40,6 +40,13 @@ function loadPortfolioData(): any {
   return null;
 }
 
+function ensureExternalUrl(url: string = ''): string {
+  const trimmed = String(url || '').trim();
+  if (!trimmed) return '';
+  if (/^https?:\/\//i.test(trimmed) || /^mailto:/i.test(trimmed)) return trimmed;
+  return `https://${trimmed.replace(/^\/+/, '')}`;
+}
+
 function escapeHtml(str: string = ''): string {
   return String(str || '')
     .replace(/&/g, '&amp;')
@@ -212,25 +219,55 @@ function generateLlmsTxt(data: any, projects: any[], blogs: any[], events: any[]
     })
     .join('\n');
 
+  const journeyLines = (data.journey || [])
+    .filter(isItemPublished)
+    .map(
+      (j: any) =>
+        `- **${j.title}** (${j.year}) — ${j.role} at ${j.organization}: ${truncateClean(
+          stripFormattingMarkers(j.detailedDescription || j.description || ''),
+          180
+        )}`
+    )
+    .join('\n');
+
+  const creativeLines = (data.creativePortfolio || [])
+    .filter(isItemPublished)
+    .map(
+      (c: any) =>
+        `- **${c.title}** [${c.category}, ${c.completionDate}]: ${truncateClean(
+          stripFormattingMarkers(c.shortDescription || c.detailedDescription || ''),
+          160
+        )}`
+    )
+    .join('\n');
+
   return `# ${SITE_CONFIG.author.name}
 
 > ${hero.subtitle || SITE_CONFIG.author.jobTitle} | ${about.department || 'CSIT'} at ${formatCollegeLocation(about)}.
 
-Official personal portfolio of **${SITE_CONFIG.author.name}** (also known as ${SITE_CONFIG.author.alternateNames.join(', ')}).
+${base}/ is the **official personal portfolio website of ${SITE_CONFIG.author.name}** (also known as ${SITE_CONFIG.author.alternateNames.join(', ')}).
 
 ## Identity & Quick Facts
-- Website: ${base}/
+- Official Website: ${base}/
 - Email: ${data.contactInfo?.email || SITE_CONFIG.author.email}
-- Education: ${about.degree || 'B.E. CSE / CSIT'} at ${about.college || 'MVSR Engineering College'} (${about.yearOfStudy || ''})
-- Roles: Full-Stack Developer, AI Software Engineer, Cinematic Video Editor, NSS Co-Lead
+- Education: ${about.degree || 'B.E. Computer Science & Information Technology'} at ${about.college || 'MVSR Engineering College'} (${about.yearOfStudy || ''})
+- Organizations & Leadership: NSS UNIT MVSREC (Digital Co-Lead), IEEE Computer Society (Student Member), Computer Society of India (CSI Logo Design Winner), MVSR Engineering College (CSIT)
+- Roles: Full-Stack Developer, AI Software Engineer, Cinematic Video Editor, NSS Digital Co-Lead
 - GitHub: https://github.com/DubbakaSathwik
-- LinkedIn: https://linkedin.com/in/dubbakasathwik
+- LinkedIn: https://www.linkedin.com/in/dubbakasathwik
+- devSemble: https://devsemble.com/dubbakasathwikio
 
 ## Technical Projects Built by ${SITE_CONFIG.author.name}
 ${projectLines}
 
+## Creative Works, Reels & Design
+${creativeLines}
+
+## Experience, Hackathons & Organizations
+${journeyLines}
+
 ${blogs.length > 0 ? `## Blogs & Journal by ${SITE_CONFIG.author.name}\n${blogLines}\n\n` : ''}${events.length > 0 ? `## Events, Hackathons & Workshops\n${eventLines}\n\n` : ''}${pressMentions.length > 0 ? `## Features, Press & External Spotlights\n${pressLines}\n\n` : ''}## Extended Context
-- Full technical details, articles & skills: ${base}/llms-full.txt
+- Full technical details, creative works, certificates, experience & network: ${base}/llms-full.txt
 - Sitemap: ${base}/sitemap.xml
 `;
 }
@@ -373,14 +410,34 @@ ${Array.from(
 function buildHomepageSchema(
   data: any,
   projects: any[],
+  creative: any[],
+  journey: any[],
+  gallery: any[],
   blogs: any[],
   events: any[],
   pressMentions: any[]
 ): Record<string, any> {
   const base = SITE_CONFIG.baseUrl.replace(/\/+$/, '');
   const skills = Array.isArray(data.skills)
-    ? data.skills.flatMap((c: any) => c.skills || []).slice(0, 30)
+    ? data.skills.flatMap((c: any) => c.skills || []).slice(0, 35)
     : [];
+
+  const socialUrls = Array.isArray(data.contactInfo?.socials)
+    ? data.contactInfo.socials
+        .map((s: any) => s?.url)
+        .filter((u: string) => typeof u === 'string' && /^https?:\/\//i.test(u) && !u.includes('wa.me'))
+    : [];
+
+  const awards = Array.from(
+    new Set([
+      ...journey
+        .filter((j: any) => /winner|finalist|1st|place|captain/i.test(`${j.title} ${j.role}`))
+        .map((j: any) => `${j.title} (${j.organization}, ${j.year})`),
+      ...gallery
+        .filter((g: any) => /winner|finalist|1st|captain|qualifier/i.test(g.title))
+        .map((g: any) => `${g.title} (${g.date})`),
+    ])
+  );
 
   return {
     '@context': 'https://schema.org',
@@ -400,7 +457,8 @@ function buildHomepageSchema(
         name: SITE_CONFIG.author.name,
         alternateName: SITE_CONFIG.author.alternateNames,
         url: `${base}/`,
-        jobTitle: SITE_CONFIG.author.jobTitle,
+        mainEntityOfPage: `${base}/`,
+        jobTitle: 'Full-Stack Developer, AI Software Engineer & NSS Digital Co-Lead',
         description: SITE_CONFIG.defaultDescription,
         email: data.contactInfo?.email || SITE_CONFIG.author.email,
         image: resolveAbsoluteUrl(data.about?.avatarUrl || SITE_CONFIG.defaultImage, base),
@@ -408,6 +466,13 @@ function buildHomepageSchema(
           '@type': 'EducationalOrganization',
           name: data.about?.college || SITE_CONFIG.author.college,
         },
+        memberOf: [
+          { '@type': 'Organization', name: 'NSS UNIT MVSREC (National Service Scheme)' },
+          { '@type': 'Organization', name: 'IEEE Computer Society' },
+          { '@type': 'Organization', name: 'Computer Society of India (CSI)' },
+          { '@type': 'Organization', name: 'MVSR Engineering College — CSIT Department' },
+        ],
+        ...(awards.length > 0 ? { award: awards } : {}),
         knowsAbout: Array.from(
           new Set([
             'Full-Stack Web Development',
@@ -420,6 +485,7 @@ function buildHomepageSchema(
         sameAs: Array.from(
           new Set([
             ...SITE_CONFIG.author.sameAs,
+            ...socialUrls,
             ...pressMentions.map((m: any) => m.externalUrl).filter(Boolean),
           ])
         ),
@@ -431,12 +497,14 @@ function buildHomepageSchema(
         name: SITE_CONFIG.siteName,
         alternateName: SITE_CONFIG.author.alternateNames,
         description: SITE_CONFIG.defaultDescription,
+        image: resolveAbsoluteUrl(SITE_CONFIG.brandLogo, base),
         author: { '@id': `${base}/#dubbaka-sathwik` },
+        publisher: { '@id': `${base}/#dubbaka-sathwik` },
       },
       {
         '@type': 'ItemList',
         '@id': `${base}/#projects-list`,
-        name: 'Technical Projects by Dubbaka Sathwik',
+        name: 'Technical Projects Built by Dubbaka Sathwik',
         numberOfItems: projects.length,
         itemListElement: projects.map((p: any, idx: number) => ({
           '@type': 'ListItem',
@@ -451,9 +519,53 @@ function buildHomepageSchema(
               p.seo?.metaDescription ||
               stripFormattingMarkers(p.description || p.summary || '').slice(0, 160),
             author: { '@id': `${base}/#dubbaka-sathwik` },
+            ...(p.githubUrl ? { codeRepository: p.githubUrl } : {}),
           },
         })),
       },
+      ...(creative.length > 0
+        ? [
+            {
+              '@type': 'ItemList',
+              '@id': `${base}/#creative-works-list`,
+              name: 'Creative Works, Video Editing & Graphic Design by Dubbaka Sathwik',
+              numberOfItems: creative.length,
+              itemListElement: creative.map((c: any, idx: number) => ({
+                '@type': 'ListItem',
+                position: idx + 1,
+                item: {
+                  '@type': 'CreativeWork',
+                  name: c.title,
+                  genre: c.category,
+                  dateCreated: c.completionDate || '2026',
+                  description: stripFormattingMarkers(c.shortDescription || c.detailedDescription || '').slice(0, 180),
+                  creator: { '@id': `${base}/#dubbaka-sathwik` },
+                },
+              })),
+            },
+          ]
+        : []),
+      ...(journey.length > 0
+        ? [
+            {
+              '@type': 'ItemList',
+              '@id': `${base}/#experience-list`,
+              name: 'Experience, Organizations & Leadership Roles of Dubbaka Sathwik',
+              numberOfItems: journey.length,
+              itemListElement: journey.map((j: any, idx: number) => ({
+                '@type': 'ListItem',
+                position: idx + 1,
+                item: {
+                  '@type': 'Role',
+                  roleName: j.role || j.title,
+                  name: `${j.title} — ${j.organization}`,
+                  startDate: j.year,
+                  description: stripFormattingMarkers(j.detailedDescription || j.description || '').slice(0, 180),
+                },
+              })),
+            },
+          ]
+        : []),
       ...(blogs.length + events.length + pressMentions.length > 0
         ? [
             {
@@ -488,28 +600,66 @@ function buildHomepageSchema(
   };
 }
 
-function buildHomepageNoscript(
+function buildHomepagePreRenderHtml(
   data: any,
   projects: any[],
+  creative: any[],
   journey: any[],
+  gallery: any[],
   blogs: any[],
   events: any[],
   pressMentions: any[]
 ): string {
   const base = SITE_CONFIG.baseUrl.replace(/\/+$/, '');
+  const hero = data.hero || {};
   const about = data.about || {};
   const skills = Array.isArray(data.skills) ? data.skills : [];
 
   const projectItems = projects
     .map((p: any) => {
       const slug = getProjectSlug(p);
-      const desc = escapeHtml(stripFormattingMarkers(p.description || p.summary || ''));
+      const desc = escapeHtml(stripFormattingMarkers(p.longDescription || p.description || p.summary || ''));
       const tech = escapeHtml((p.technologies || p.tags || []).join(', '));
       const title = String(p.title || '').trim();
+      const repoLink = p.githubUrl
+        ? ` | <a href="${escapeHtml(ensureExternalUrl(p.githubUrl))}" rel="noopener noreferrer">GitHub</a>`
+        : '';
+      const demoLink = p.demoUrl
+        ? ` | <a href="${escapeHtml(ensureExternalUrl(p.demoUrl))}" rel="noopener noreferrer">Live Demo</a>`
+        : '';
       return `<li><a href="${base}/projects/${escapeHtml(slug)}"><strong>${escapeHtml(
         title
-      )}</strong></a> (${escapeHtml(p.category)}): ${desc}${tech ? ` — Technologies: ${tech}` : ''}</li>`;
+      )}</strong></a> (${escapeHtml(p.category)}, ${escapeHtml(p.year || '2026')}): ${desc}${tech ? ` — Stack: ${tech}` : ''}${repoLink}${demoLink}</li>`;
     })
+    .join('\n          ');
+
+  const creativeItems = creative
+    .map(
+      (c: any) =>
+        `<li><strong>${escapeHtml(c.title)}</strong> [${escapeHtml(c.category)}, ${escapeHtml(
+          c.completionDate || ''
+        )}]: ${escapeHtml(stripFormattingMarkers(c.shortDescription || c.detailedDescription || ''))}</li>`
+    )
+    .join('\n          ');
+
+  const journeyItems = journey
+    .map(
+      (j: any) =>
+        `<li><strong>${escapeHtml(j.title)}</strong> (${escapeHtml(j.year)}) — ${escapeHtml(
+          j.role
+        )} at ${escapeHtml(j.organization)}: ${escapeHtml(
+          stripFormattingMarkers(j.detailedDescription || j.description || '')
+        )}</li>`
+    )
+    .join('\n          ');
+
+  const galleryItems = gallery
+    .map(
+      (g: any) =>
+        `<li><strong>${escapeHtml(g.title)}</strong> (${escapeHtml(g.category)}, ${escapeHtml(
+          g.date || ''
+        )}): ${escapeHtml(stripFormattingMarkers(g.description || ''))}</li>`
+    )
     .join('\n          ');
 
   const blogItems = blogs
@@ -532,27 +682,49 @@ function buildHomepageNoscript(
     })
     .join('\n          ');
 
-  const journeyItems = journey
-    .slice(0, 10)
-    .map(
-      (j: any) =>
-        `<li><strong>${escapeHtml(j.title)}</strong> (${escapeHtml(j.year)}) — ${escapeHtml(
-          j.role
-        )} at ${escapeHtml(j.organization)}: ${escapeHtml(stripFormattingMarkers(j.description || ''))}</li>`
-    )
-    .join('\n          ');
+  const socialUrls = Array.from(
+    new Set([
+      ...SITE_CONFIG.author.sameAs,
+      ...((data.contactInfo?.socials || [])
+        .map((s: any) => s?.url)
+        .filter((u: string) => typeof u === 'string' && /^https?:\/\//i.test(u) && !u.includes('wa.me'))),
+    ])
+  );
 
-  return `<noscript>
-      <main>
-        <h1>${escapeHtml(SITE_CONFIG.author.name)} — Official Personal Portfolio</h1>
-        <p>${escapeHtml(SITE_CONFIG.defaultDescription)}</p>
-        <p>${escapeHtml(about.degree || 'CSIT')} at ${escapeHtml(formatCollegeLocation(about))}.</p>
+  return `<main style="background:#050505;color:#f4f4f5;max-width:1120px;margin:0 auto;padding:96px 24px 64px;font-family:system-ui,-apple-system,sans-serif;line-height:1.6;">
+        <header>
+          <h1>${escapeHtml(SITE_CONFIG.author.name)} — Official Personal Portfolio Website</h1>
+          <p><strong>${escapeHtml(hero.subtitle || SITE_CONFIG.author.jobTitle)}</strong> · ${escapeHtml(
+            about.degree || 'B.E. Computer Science & Information Technology'
+          )} at ${escapeHtml(formatCollegeLocation(about))}.</p>
+          <p>${escapeHtml(stripFormattingMarkers(hero.description || SITE_CONFIG.defaultDescription))}</p>
+          <p>${escapeHtml(stripFormattingMarkers(about.bioParagraph1 || ''))}</p>
+        </header>
         <section>
-          <h2>Technical Projects &amp; AI Systems by ${escapeHtml(SITE_CONFIG.author.name)}</h2>
+          <h2>Projects &amp; AI Systems Built by ${escapeHtml(SITE_CONFIG.author.name)}</h2>
           <ul>
           ${projectItems}
           </ul>
-        </section>${blogs.length > 0 ? `
+        </section>${creative.length > 0 ? `
+        <section>
+          <h2>Creative Works, Video Production &amp; Graphic Design</h2>
+          <ul>
+          ${creativeItems}
+          </ul>
+        </section>` : ''}
+        <section>
+          <h2>Experience, Organizations &amp; Leadership (NSS, IEEE, CSI, Hackathons)</h2>
+          <p>Affiliated Organizations: MVSR Engineering College (CSIT), NSS UNIT MVSREC (National Service Scheme Digital Co-Lead), IEEE Computer Society Student Member, Computer Society of India (CSI Logo Design Winner).</p>
+          <ul>
+          ${journeyItems}
+          </ul>
+        </section>${gallery.length > 0 ? `
+        <section>
+          <h2>Awards, Certificates &amp; Hackathon Recognition</h2>
+          <ul>
+          ${galleryItems}
+          </ul>
+        </section>` : ''}${blogs.length > 0 ? `
         <section>
           <h2>Blogs &amp; Journal</h2>
           <ul>
@@ -581,7 +753,7 @@ function buildHomepageNoscript(
           </ul>
         </section>` : ''}
         <section>
-          <h2>Skills &amp; Stack</h2>
+          <h2>Technical Skills &amp; Stack</h2>
           <ul>
           ${skills
             .map(
@@ -592,13 +764,17 @@ function buildHomepageNoscript(
           </ul>
         </section>
         <section>
-          <h2>Experience, NSS &amp; Leadership</h2>
+          <h2>Official Network, Profiles &amp; Contact</h2>
+          <p>Email: <a href="mailto:${escapeHtml(data.contactInfo?.email || SITE_CONFIG.author.email)}">${escapeHtml(
+            data.contactInfo?.email || SITE_CONFIG.author.email
+          )}</a> | Official Portfolio: <a href="${base}/">${base}/</a></p>
           <ul>
-          ${journeyItems}
+          ${socialUrls
+            .map((u) => `<li><a href="${escapeHtml(u)}" rel="me noopener noreferrer">${escapeHtml(u)}</a></li>`)
+            .join('\n          ')}
           </ul>
         </section>
-      </main>
-    </noscript>`;
+      </main>`;
 }
 
 function injectPageMeta(
@@ -664,7 +840,10 @@ function injectPageMeta(
     /<script\s+type="application\/ld\+json">[\s\S]*?<\/script>/i,
     `<script type="application/ld+json">${JSON.stringify(options.schema)}</script>`
   );
-  html = html.replace(/<div id="root">[\s\S]*?<\/div>/i, `<div id="root">${options.noscriptBody}</div>`);
+  html = html.replace(
+    /<div id="root">[\s\S]*?<\/div>(?=\s*<\/body>)/i,
+    `<div id="root">${options.noscriptBody}</div>`
+  );
   return html;
 }
 
@@ -705,8 +884,26 @@ function run() {
 
   if (fs.existsSync(distIndexPath)) {
     let distIndexHtml = fs.readFileSync(distIndexPath, 'utf-8');
-    const homepageSchema = buildHomepageSchema(data, projects, blogs, events, pressMentions);
-    const homepageNoscript = buildHomepageNoscript(data, projects, journey, blogs, events, pressMentions);
+    const homepageSchema = buildHomepageSchema(
+      data,
+      projects,
+      creative,
+      journey,
+      gallery,
+      blogs,
+      events,
+      pressMentions
+    );
+    const homepagePreRender = buildHomepagePreRenderHtml(
+      data,
+      projects,
+      creative,
+      journey,
+      gallery,
+      blogs,
+      events,
+      pressMentions
+    );
 
     const homepageImage = resolveAbsoluteUrl(data.about?.avatarUrl || SITE_CONFIG.defaultImage, base);
 
@@ -723,8 +920,8 @@ function run() {
       `<script type="application/ld+json">${JSON.stringify(homepageSchema)}</script>`
     );
     distIndexHtml = distIndexHtml.replace(
-      /<div id="root">[\s\S]*?<\/div>/i,
-      `<div id="root">${homepageNoscript}</div>`
+      /<div id="root">[\s\S]*?<\/div>(?=\s*<\/body>)/i,
+      `<div id="root">${homepagePreRender}</div>`
     );
     fs.writeFileSync(distIndexPath, distIndexHtml, 'utf-8');
 
@@ -742,7 +939,9 @@ function run() {
           ? p.seo.keywords
           : [p.title, `${p.title} Dubbaka Sathwik`, 'Dubbaka Sathwik', p.category, ...(p.technologies || p.tags || [])];
       const image = resolveAbsoluteUrl(p.thumbnail || p.images?.[0] || SITE_CONFIG.defaultImage, base);
-      const noscriptBody = `<noscript><main><h1>${escapeHtml(p.title)} — Built by ${escapeHtml(SITE_CONFIG.author.name)}</h1><p>${escapeHtml(stripFormattingMarkers(p.description || p.summary || ''))}</p><p><a href="${base}/">Back to Portfolio</a></p></main></noscript>`;
+      const techStack = escapeHtml((p.technologies || p.tags || []).join(', '));
+      const fullOverview = escapeHtml(stripFormattingMarkers(p.longDescription || p.description || p.summary || ''));
+      const projectPreRender = `<main style="background:#050505;color:#f4f4f5;max-width:960px;margin:0 auto;padding:96px 24px 64px;font-family:system-ui,-apple-system,sans-serif;line-height:1.6;"><h1>${escapeHtml(p.title)} — Built by ${escapeHtml(SITE_CONFIG.author.name)}</h1><p>${escapeHtml(stripFormattingMarkers(p.description || p.summary || ''))}</p><p>${fullOverview}</p>${techStack ? `<p><strong>Technologies:</strong> ${techStack}</p>` : ''}${p.demoUrl ? `<p><a href="${escapeHtml(ensureExternalUrl(p.demoUrl))}" rel="noopener noreferrer">Live Demo</a></p>` : ''}${p.githubUrl ? `<p><a href="${escapeHtml(ensureExternalUrl(p.githubUrl))}" rel="noopener noreferrer">GitHub Repository</a></p>` : ''}<p><a href="${base}/">Back to Dubbaka Sathwik Official Portfolio</a></p></main>`;
 
       const html = injectPageMeta(distIndexHtml, {
         title,
@@ -752,7 +951,7 @@ function run() {
         image,
         ogType: 'article',
         schema: buildProjectStructuredData(p, base),
-        noscriptBody,
+        noscriptBody: projectPreRender,
       });
       fs.writeFileSync(path.join(slugDir, 'index.html'), html, 'utf-8');
     }
@@ -761,15 +960,15 @@ function run() {
     const insightsDir = path.join(DIST_DIR, 'insights');
     fs.mkdirSync(insightsDir, { recursive: true });
     const insightsHtml = injectPageMeta(distIndexHtml, {
-      title: `Insights, Articles & Events | ${SITE_CONFIG.siteName}`,
+      title: `Insights, Case Studies & Events | ${SITE_CONFIG.siteName}`,
       description:
-        'Technical engineering articles, developer blogs, hackathons, IEEE workshops, and NSS campus initiatives by Dubbaka Sathwik.',
-      keywords: ['Dubbaka Sathwik blog', 'Dubbaka Sathwik articles', 'Dubbaka Sathwik events', 'MVSR Engineering College'],
+        'Technical engineering case studies, developer notes, hackathons, IEEE workshops, and NSS campus initiatives by Dubbaka Sathwik.',
+      keywords: ['Dubbaka Sathwik blog', 'Dubbaka Sathwik articles', 'Dubbaka Sathwik events', 'Dubbaka Sathwik projects', 'MVSR Engineering College'],
       pageUrl: `${base}/insights`,
       image: resolveAbsoluteUrl(SITE_CONFIG.defaultImage, base),
       ogType: 'website',
       schema: homepageSchema,
-      noscriptBody: homepageNoscript,
+      noscriptBody: homepagePreRender,
     });
     fs.writeFileSync(path.join(insightsDir, 'index.html'), insightsHtml, 'utf-8');
 
@@ -787,7 +986,7 @@ function run() {
           ? b.seo.keywords
           : [b.title, b.category, SITE_CONFIG.author.name, ...(b.tags || [])];
       const image = resolveAbsoluteUrl(b.coverImage || SITE_CONFIG.defaultImage, base);
-      const noscriptBody = `<noscript><main><h1>${escapeHtml(b.title)}</h1><p>${escapeHtml(stripFormattingMarkers(b.snippet || ''))}</p><p>${escapeHtml(stripFormattingMarkers(b.content || ''))}</p><p><a href="${base}/insights">All Insights</a></p></main></noscript>`;
+      const preRender = `<main style="background:#050505;color:#f4f4f5;max-width:960px;margin:0 auto;padding:96px 24px 64px;font-family:system-ui,-apple-system,sans-serif;line-height:1.6;"><h1>${escapeHtml(b.title)}</h1><p>${escapeHtml(stripFormattingMarkers(b.snippet || ''))}</p><p>${escapeHtml(stripFormattingMarkers(b.content || ''))}</p><p><a href="${base}/insights">All Insights</a> | <a href="${base}/">Portfolio Home</a></p></main>`;
 
       const html = injectPageMeta(distIndexHtml, {
         title,
@@ -797,7 +996,7 @@ function run() {
         image,
         ogType: 'article',
         schema: buildBlogStructuredData(b, base),
-        noscriptBody,
+        noscriptBody: preRender,
       });
       fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf-8');
     }
@@ -815,7 +1014,7 @@ function run() {
           ? ev.seo.keywords
           : [ev.title, ev.category, ev.venue, SITE_CONFIG.author.name];
       const image = resolveAbsoluteUrl(ev.coverImage || SITE_CONFIG.defaultImage, base);
-      const noscriptBody = `<noscript><main><h1>${escapeHtml(ev.title)}</h1><p>${escapeHtml(ev.venue)} (${escapeHtml(ev.displayDate || ev.date)})</p><p>${escapeHtml(stripFormattingMarkers(ev.detailedDescription || ev.summary || ''))}</p><p><a href="${base}/insights">All Events</a></p></main></noscript>`;
+      const preRender = `<main style="background:#050505;color:#f4f4f5;max-width:960px;margin:0 auto;padding:96px 24px 64px;font-family:system-ui,-apple-system,sans-serif;line-height:1.6;"><h1>${escapeHtml(ev.title)}</h1><p>${escapeHtml(ev.venue)} (${escapeHtml(ev.displayDate || ev.date)})</p><p>${escapeHtml(stripFormattingMarkers(ev.detailedDescription || ev.summary || ''))}</p><p><a href="${base}/insights">All Events</a> | <a href="${base}/">Portfolio Home</a></p></main>`;
 
       const html = injectPageMeta(distIndexHtml, {
         title,
@@ -825,7 +1024,7 @@ function run() {
         image,
         ogType: 'article',
         schema: buildEventStructuredData(ev, base),
-        noscriptBody,
+        noscriptBody: preRender,
       });
       fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf-8');
     }
@@ -843,7 +1042,7 @@ function run() {
           ? m.seo.keywords
           : [m.title, m.sourceName, m.category, SITE_CONFIG.author.name];
       const image = resolveAbsoluteUrl(m.coverImage || SITE_CONFIG.defaultImage, base);
-      const noscriptBody = `<noscript><main><h1>${escapeHtml(m.title)}</h1><p>${escapeHtml(m.sourceName)} (${escapeHtml(m.date)})</p><p>${escapeHtml(stripFormattingMarkers(m.detailedNotes || m.summary || ''))}</p>${m.externalUrl ? `<p><a href="${escapeHtml(m.externalUrl)}" rel="noopener noreferrer">Original Source</a></p>` : ''}<p><a href="${base}/">Back to Portfolio</a></p></main></noscript>`;
+      const preRender = `<main style="background:#050505;color:#f4f4f5;max-width:960px;margin:0 auto;padding:96px 24px 64px;font-family:system-ui,-apple-system,sans-serif;line-height:1.6;"><h1>${escapeHtml(m.title)}</h1><p>${escapeHtml(m.sourceName)} (${escapeHtml(m.date)})</p><p>${escapeHtml(stripFormattingMarkers(m.detailedNotes || m.summary || ''))}</p>${m.externalUrl ? `<p><a href="${escapeHtml(m.externalUrl)}" rel="noopener noreferrer">Original Source</a></p>` : ''}<p><a href="${base}/">Back to Portfolio</a></p></main>`;
 
       const html = injectPageMeta(distIndexHtml, {
         title,
@@ -853,7 +1052,7 @@ function run() {
         image,
         ogType: 'article',
         schema: buildPressStructuredData(m, base),
-        noscriptBody,
+        noscriptBody: preRender,
       });
       fs.writeFileSync(path.join(dir, 'index.html'), html, 'utf-8');
     }

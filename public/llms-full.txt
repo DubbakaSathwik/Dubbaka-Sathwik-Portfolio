@@ -1,7 +1,7 @@
 # Dubbaka Sathwik — Complete Portfolio & Engineering Knowledge Base
 
 **Official Portfolio:** https://dubbakasathwik.in/
-**Name:** Dubbaka Sathwik (Sathwik Dubbaka / Dubbaka Sathwik Portfolio / DubbakaSathwik / Sathwik)
+**Name:** Dubbaka Sathwik (Sathwik Dubbaka / Dubbaka Sathwik Portfolio / DubbakaSathwik / dubbakasathwikio / Sathwik)
 **Title:** Student • Full-Stack Developer • Creative Designer
 **Email:** dubbakasathwik@gmail.com
 **Location:** Hyderabad, Telangana, India
@@ -124,7 +124,10 @@ My journey into technology started much earlier than I ever imagined. Back in sc
 
 ## Official Profiles
 - https://github.com/DubbakaSathwik
+- https://github.com/dubbakasathwik
+- https://www.linkedin.com/in/dubbakasathwik
 - https://linkedin.com/in/dubbakasathwik
+- https://devsemble.com/dubbakasathwikio
 - https://instagram.com/wilder_sathwik
 - https://twitter.com/dubbakasathwik
 - https://youtube.com/@dubbakasathwik

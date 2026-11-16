@@ -3,13 +3,14 @@ import { BlogPost, EventItem, PressMention, Project } from '../types';
 export const SITE_CONFIG = {
   baseUrl: 'https://dubbakasathwik.in',
   siteName: 'Dubbaka Sathwik',
+  brandLogo: '/brand-logo.png',
   defaultTitle: 'Dubbaka Sathwik | Full-Stack Developer & AI Software Engineer',
   defaultDescription:
     'Official portfolio of Dubbaka Sathwik. Full-Stack Developer, AI Software Engineer & Cinematic Video Editor specializing in React, Node.js, Next.js, and GenAI.',
   defaultImage: '/uploads/assets/static_asset_about_avatarUrl_s74ow4t7.jpg',
   author: {
     name: 'Dubbaka Sathwik',
-    alternateNames: ['Sathwik Dubbaka', 'Dubbaka Sathwik Portfolio', 'DubbakaSathwik', 'Sathwik'],
+    alternateNames: ['Sathwik Dubbaka', 'Dubbaka Sathwik Portfolio', 'DubbakaSathwik', 'dubbakasathwikio', 'Sathwik'],
     jobTitle: 'Full-Stack Developer & AI Software Engineer',
     email: 'dubbakasathwik@gmail.com',
     college: 'MVSR Engineering College',
@@ -17,7 +18,10 @@ export const SITE_CONFIG = {
     location: 'Hyderabad, Telangana, India',
     sameAs: [
       'https://github.com/DubbakaSathwik',
+      'https://github.com/dubbakasathwik',
+      'https://www.linkedin.com/in/dubbakasathwik',
       'https://linkedin.com/in/dubbakasathwik',
+      'https://devsemble.com/dubbakasathwikio',
       'https://instagram.com/wilder_sathwik',
       'https://twitter.com/dubbakasathwik',
       'https://youtube.com/@dubbakasathwik',
@@ -212,8 +216,8 @@ export function buildProjectStructuredData(project: Project, origin?: string) {
           name: SITE_CONFIG.author.name,
           url: `${base}/`,
         },
-        ...(project.demoUrl ? { sameAs: project.demoUrl } : {}),
-        ...(project.githubUrl ? { codeRepository: project.githubUrl } : {}),
+        ...(project.demoUrl ? { sameAs: /^https?:\/\//i.test(project.demoUrl) ? project.demoUrl : `https://${project.demoUrl}` } : {}),
+        ...(project.githubUrl ? { codeRepository: /^https?:\/\//i.test(project.githubUrl) ? project.githubUrl : `https://${project.githubUrl}` } : {}),
         offers: {
           '@type': 'Offer',
           price: '0',

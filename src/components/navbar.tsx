@@ -94,7 +94,7 @@ export function Navbar() {
       }`}
     >
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-20 flex items-center justify-between gap-2">
-        {/* Left: Brand Name */}
+        {/* Left: Brand Logo & Name */}
         <div className="flex-1 lg:flex-initial flex justify-start shrink-0">
           <a
             href="/"
@@ -102,9 +102,17 @@ export function Navbar() {
               handleNavClick(e, '#home');
               loadStaticBackup();
             }}
-            className="flex items-center gap-3 group cursor-pointer"
+            className="flex items-center gap-2.5 sm:gap-3 group cursor-pointer"
             title="Dubbaka Sathwik Portfolio (Click to load Static Backup)"
           >
+            <img
+              src="/brand-logo.png"
+              alt="Dubbaka Sathwik DS Logo"
+              width={38}
+              height={38}
+              referrerPolicy="no-referrer"
+              className="w-9 h-9 rounded-xl object-contain ring-1 ring-emerald-500/40 shadow-[0_0_16px_rgba(16,185,129,0.28)] group-hover:scale-105 group-hover:ring-emerald-400/75 transition-all shrink-0"
+            />
             <div className="flex flex-col">
               <span className="text-white font-bold text-base sm:text-lg tracking-tight group-hover:text-emerald-400 transition-colors whitespace-nowrap">
                 Dubbaka Sathwik
