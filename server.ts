@@ -39,13 +39,14 @@ async function startServer() {
     res.removeHeader('X-Frame-Options');
     res.removeHeader('Origin-Agent-Cluster');
     res.setHeader('Access-Control-Allow-Origin', '*');
-    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, PATCH, DELETE, OPTIONS');
     res.setHeader('Access-Control-Allow-Headers', '*');
     next();
   });
 
   app.use(cookieParser());
   app.use(express.json({ limit: '25mb' }));
+  app.use(express.text({ limit: '32kb', type: 'text/plain' }));
   app.use(express.urlencoded({ extended: true, limit: '25mb' }));
 
   // Ensure public, profile, and uploads directories exist

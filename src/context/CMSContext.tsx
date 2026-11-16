@@ -18,9 +18,12 @@ import {
   BackupRulesConfig,
   PushRulesConfig,
   SequenceSectionData,
+  VisitorRecord,
+  VisitorLabel,
 } from '../types';
 import { initialCMSData } from '../data';
 import { sendTelegramConsoleLog } from '../utils/telegram';
+import { getCurrentVisitorId } from '../utils/telemetry';
 import {
   getProjectCardId,
   getItemCardId,
@@ -209,6 +212,21 @@ interface CMSContextType {
   lastGitCommit: string | null;
   gitCardOrderPending: boolean;
   setGitCardOrderPending: (val: boolean) => void;
+
+  // Visitors & Security Tracking (Super Admin Only)
+  visitors: VisitorRecord[];
+  visitorStats: {
+    totalUniqueVisitors: number;
+    totalVisits: number;
+    totalWatchTimeSeconds: number;
+    humanCount: number;
+    botCount: number;
+    systemCount: number;
+    suspiciousCount: number;
+  };
+  refreshVisitors: () => Promise<void>;
+  updateVisitorLabel: (visitorId: string, label: VisitorLabel, adminNotes?: string) => Promise<boolean>;
+  deleteVisitorRecord: (visitorId: string) => Promise<boolean>;
 }
 
 const CMSContext = createContext<CMSContextType | undefined>(undefined);
@@ -438,6 +456,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   });
 
   const [firestoreMessages, setFirestoreMessages] = useState<ContactMessage[]>([]);
+  const [firestoreVisitors, setFirestoreVisitors] = useState<VisitorRecord[]>([]);
+  const [backendVisitors, setBackendVisitors] = useState<VisitorRecord[]>([]);
 
   // Track Firebase Auth state changes
   useEffect(() => {
@@ -456,6 +476,8 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
       } else {
         setAuthToken(null);
         setFirestoreMessages([]);
+        setFirestoreVisitors([]);
+        setBackendVisitors([]);
         try {
           localStorage.removeItem(AUTH_STORAGE_KEY);
         } catch (e) {}
@@ -502,6 +524,84 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
 
     return () => unsubscribe();
   }, [isAdmin, firebaseUser]);
+
+  // Real-time Firestore listener for tracked visitors (Super Admin only)
+  useEffect(() => {
+    if (!isAdmin || !firebaseUser) {
+      return;
+    }
+
+    const path = 'visitors';
+    const q = query(collection(db, path), orderBy('updatedAt', 'desc'));
+    const unsubscribe = onSnapshot(
+      q,
+      (snapshot) => {
+        const list: VisitorRecord[] = snapshot.docs.map((d) => {
+          const raw = d.data() as any;
+          // Explicitly omit visitorSecret from admin UI state
+          return {
+            visitorId: String(raw.visitorId || d.id),
+            visitCount: Number(raw.visitCount || 1),
+            watchTimeSeconds: Number(raw.watchTimeSeconds || 0),
+            classification: raw.classification || 'Human',
+            safetyStatus: raw.safetyStatus || 'Safe',
+            riskScore: Number(raw.riskScore || 0),
+            securitySignals: Array.isArray(raw.securitySignals) ? raw.securitySignals : [],
+            challengeStatus: raw.challengeStatus || 'none',
+            humanVerified: Boolean(raw.humanVerified),
+            label: (raw.label as VisitorLabel) || 'unlabeled',
+            adminNotes: String(raw.adminNotes || ''),
+            deviceType: String(raw.deviceType || 'Desktop'),
+            browser: String(raw.browser || 'Unknown'),
+            os: String(raw.os || 'Unknown'),
+            screenRes: String(raw.screenRes || 'Unknown'),
+            language: String(raw.language || 'en-US'),
+            timezone: String(raw.timezone || 'Asia/Kolkata'),
+            clientIp: String(raw.clientIp || 'Unknown'),
+            country: String(raw.country || 'Unknown'),
+            pageUrl: String(raw.pageUrl || '/'),
+            referrer: String(raw.referrer || 'Direct Visit'),
+            userAgent: String(raw.userAgent || ''),
+            pagesVisited: Array.isArray(raw.pagesVisited) ? raw.pagesVisited : ['/'],
+            firstSeenAt: String(raw.firstSeenAt || ''),
+            lastSeenAt: String(raw.lastSeenAt || ''),
+          };
+        });
+        setFirestoreVisitors(list);
+      },
+      (error) => {
+        try {
+          handleFirestoreError(error, OperationType.LIST, path);
+        } catch (err) {
+          console.warn('[Firestore Visitors Listener Warning]:', err);
+        }
+      }
+    );
+
+    return () => unsubscribe();
+  }, [isAdmin, firebaseUser]);
+
+  const refreshVisitors = useCallback(async () => {
+    if (!isAdmin || !authToken) return;
+    try {
+      const res = await fetch('/api/telemetry/visitors', {
+        headers: { Authorization: `Bearer ${authToken}` },
+      });
+      const contentType = res.headers.get('content-type') || '';
+      if (res.ok && contentType.includes('application/json')) {
+        const json = await res.json();
+        if (json.success && Array.isArray(json.visitors)) {
+          setBackendVisitors(json.visitors);
+        }
+      }
+    } catch {}
+  }, [isAdmin, authToken]);
+
+  useEffect(() => {
+    if (isAdmin && authToken) {
+      refreshVisitors();
+    }
+  }, [isAdmin, authToken, refreshVisitors]);
 
   // Modals state
   const [isResumeModalOpen, setIsResumeModalOpenState] = useState(false);
@@ -2002,6 +2102,7 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         email: cleanEmail,
         subject: cleanSubject,
         message: cleanMessage,
+        visitorId: getCurrentVisitorId(),
       }),
     })
       .then(async (res) => {
@@ -2103,6 +2204,129 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     }
     return Array.from(map.values());
   }, [firestoreMessages, data.messages]);
+
+  // Merge Firestore visitors + Express/Mongo visitors cleanly
+  const mergedVisitors = React.useMemo(() => {
+    const map = new Map<string, VisitorRecord>();
+    for (const v of backendVisitors) {
+      if (v?.visitorId) map.set(v.visitorId, v);
+    }
+    for (const fv of firestoreVisitors) {
+      if (!fv?.visitorId) continue;
+      const existing = map.get(fv.visitorId);
+      if (!existing) {
+        map.set(fv.visitorId, fv);
+      } else {
+        map.set(fv.visitorId, {
+          ...existing,
+          ...fv,
+          visitCount: Math.max(existing.visitCount || 1, fv.visitCount || 1),
+          watchTimeSeconds: Math.max(existing.watchTimeSeconds || 0, fv.watchTimeSeconds || 0),
+          clientIp: existing.clientIp !== 'Unknown' && existing.clientIp !== 'Client-Edge' ? existing.clientIp : fv.clientIp,
+          country: existing.country !== 'Unknown' ? existing.country : fv.country,
+          label: fv.label && fv.label !== 'unlabeled' ? fv.label : existing.label || 'unlabeled',
+          adminNotes: fv.adminNotes || existing.adminNotes || '',
+          pagesVisited: Array.from(new Set([...(existing.pagesVisited || []), ...(fv.pagesVisited || [])])).slice(0, 50),
+        });
+      }
+    }
+    return Array.from(map.values()).sort(
+      (a, b) => new Date(b.lastSeenAt).getTime() - new Date(a.lastSeenAt).getTime()
+    );
+  }, [backendVisitors, firestoreVisitors]);
+
+  const visitorStats = React.useMemo(() => ({
+    totalUniqueVisitors: mergedVisitors.length,
+    totalVisits: mergedVisitors.reduce((sum, v) => sum + (v.visitCount || 1), 0),
+    totalWatchTimeSeconds: mergedVisitors.reduce((sum, v) => sum + (v.watchTimeSeconds || 0), 0),
+    humanCount: mergedVisitors.filter((v) => v.classification === 'Human').length,
+    botCount: mergedVisitors.filter((v) => v.classification === 'Bot').length,
+    systemCount: mergedVisitors.filter((v) => v.classification === 'System').length,
+    suspiciousCount: mergedVisitors.filter((v) => v.classification === 'Suspicious').length,
+  }), [mergedVisitors]);
+
+  const updateVisitorLabel = async (
+    visitorId: string,
+    label: VisitorLabel,
+    adminNotes?: string
+  ): Promise<boolean> => {
+    setBackendVisitors((prev) =>
+      prev.map((v) =>
+        v.visitorId === visitorId
+          ? { ...v, label, adminNotes: typeof adminNotes === 'string' ? adminNotes : v.adminNotes }
+          : v
+      )
+    );
+    setFirestoreVisitors((prev) =>
+      prev.map((v) =>
+        v.visitorId === visitorId
+          ? { ...v, label, adminNotes: typeof adminNotes === 'string' ? adminNotes : v.adminNotes }
+          : v
+      )
+    );
+
+    let anyOk = false;
+    if (authToken) {
+      try {
+        const res = await fetch(`/api/telemetry/visitors/${encodeURIComponent(visitorId)}/label`, {
+          method: 'PATCH',
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${authToken}`,
+          },
+          body: JSON.stringify({ label, adminNotes }),
+        });
+        if (res.ok) anyOk = true;
+      } catch {}
+    }
+
+    if (isAdmin && firebaseUser) {
+      try {
+        const payload: Record<string, any> = {
+          label,
+          updatedAt: serverTimestamp(),
+        };
+        if (typeof adminNotes === 'string') {
+          payload.adminNotes = adminNotes.slice(0, 500);
+        }
+        await updateDoc(doc(db, 'visitors', visitorId), payload);
+        anyOk = true;
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.UPDATE, `visitors/${visitorId}`);
+        } catch {}
+      }
+    }
+    return anyOk;
+  };
+
+  const deleteVisitorRecord = async (visitorId: string): Promise<boolean> => {
+    setBackendVisitors((prev) => prev.filter((v) => v.visitorId !== visitorId));
+    setFirestoreVisitors((prev) => prev.filter((v) => v.visitorId !== visitorId));
+
+    let anyOk = false;
+    if (authToken) {
+      try {
+        const res = await fetch(`/api/telemetry/visitors/${encodeURIComponent(visitorId)}`, {
+          method: 'DELETE',
+          headers: { Authorization: `Bearer ${authToken}` },
+        });
+        if (res.ok) anyOk = true;
+      } catch {}
+    }
+
+    if (isAdmin && firebaseUser) {
+      try {
+        await deleteDoc(doc(db, 'visitors', visitorId));
+        anyOk = true;
+      } catch (err) {
+        try {
+          handleFirestoreError(err, OperationType.DELETE, `visitors/${visitorId}`);
+        } catch {}
+      }
+    }
+    return anyOk;
+  };
 
   const safeData = {
     ...data,
@@ -2223,6 +2447,11 @@ export const CMSProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         lastGitCommit,
         gitCardOrderPending,
         setGitCardOrderPending,
+        visitors: mergedVisitors,
+        visitorStats,
+        refreshVisitors,
+        updateVisitorLabel,
+        deleteVisitorRecord,
       }}
     >
       {children}

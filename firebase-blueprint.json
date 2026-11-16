@@ -84,6 +84,48 @@
         }
       },
       "required": ["id", "name", "email", "subject", "message", "date", "time", "status", "createdAt"]
+    },
+    "visitor": {
+      "title": "Visitor",
+      "description": "Tracked portfolio visitor session, watch time, security classification, and admin label",
+      "type": "object",
+      "properties": {
+        "visitorId": { "type": "string", "minLength": 7, "maxLength": 68, "pattern": "^VIS-[a-zA-Z0-9_\\-]+$" },
+        "visitorSecret": { "type": "string", "minLength": 16, "maxLength": 128 },
+        "visitCount": { "type": "integer", "minimum": 1, "maximum": 100000 },
+        "watchTimeSeconds": { "type": "integer", "minimum": 0, "maximum": 2592000 },
+        "classification": { "type": "string", "enum": ["Human", "Bot", "System", "Suspicious"] },
+        "safetyStatus": { "type": "string", "enum": ["Safe", "Crawler", "Challenged", "Verified"] },
+        "riskScore": { "type": "integer", "minimum": 0, "maximum": 100 },
+        "securitySignals": { "type": "array", "items": { "type": "string" } },
+        "challengeStatus": { "type": "string", "enum": ["none", "triggered", "passed", "failed"] },
+        "humanVerified": { "type": "boolean" },
+        "label": { "type": "string", "enum": ["unlabeled", "test", "myself", "company", "friends", "other"] },
+        "adminNotes": { "type": "string", "maxLength": 500 },
+        "deviceType": { "type": "string", "maxLength": 40 },
+        "browser": { "type": "string", "maxLength": 80 },
+        "os": { "type": "string", "maxLength": 80 },
+        "screenRes": { "type": "string", "maxLength": 80 },
+        "language": { "type": "string", "maxLength": 32 },
+        "timezone": { "type": "string", "maxLength": 64 },
+        "clientIp": { "type": "string", "maxLength": 64 },
+        "country": { "type": "string", "maxLength": 64 },
+        "pageUrl": { "type": "string", "maxLength": 300 },
+        "referrer": { "type": "string", "maxLength": 300 },
+        "userAgent": { "type": "string", "maxLength": 400 },
+        "pagesVisited": { "type": "array", "items": { "type": "string" } },
+        "firstSeenAt": { "type": "string", "format": "date-time" },
+        "lastSeenAt": { "type": "string", "format": "date-time" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": [
+        "visitorId", "visitorSecret", "visitCount", "watchTimeSeconds", "classification",
+        "safetyStatus", "riskScore", "securitySignals", "challengeStatus", "humanVerified",
+        "label", "adminNotes", "deviceType", "browser", "os", "screenRes", "language",
+        "timezone", "clientIp", "country", "pageUrl", "referrer", "userAgent",
+        "pagesVisited", "firstSeenAt", "lastSeenAt", "createdAt", "updatedAt"
+      ]
     }
   },
   "firestore": {
@@ -98,6 +140,10 @@
     "/contact_messages/{messageId}": {
       "schema": "contactMessage",
       "description": "Visitor contact form messages stored for admin inbox"
+    },
+    "/visitors/{visitorId}": {
+      "schema": "visitor",
+      "description": "Tracked portfolio visitors with unique IDs, watch time, security classification, and admin labels"
     }
   }
 }

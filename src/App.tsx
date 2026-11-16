@@ -21,7 +21,8 @@ import { InsightsDirectoryPage } from '@/components/insights-directory-page';
 import { ArticleDetailPage } from '@/components/article-detail-page';
 import { EventDetailPage } from '@/components/event-detail-page';
 import { PressDetailPage } from '@/components/press-detail-page';
-import { trackVisitorTelemetry } from '@/utils/telemetry';
+import { HumanVerificationGate } from '@/components/security/human-verification-gate';
+import { trackVisitorTelemetry, trackPageNavigation } from '@/utils/telemetry';
 import { SITE_CONFIG, applyDynamicDocumentMeta } from '@/config/seo';
 
 function normalizePathname(p: string): string {
@@ -42,6 +43,7 @@ export default function App() {
           window.history.pushState({}, '', normalized);
         }
         setPathname(normalized);
+        trackPageNavigation(normalized);
 
         if (normalized === '/') {
           applyDynamicDocumentMeta({
@@ -115,6 +117,7 @@ export default function App() {
     const handlePopState = () => {
       const next = normalizePathname(window.location.pathname);
       setPathname(next);
+      trackPageNavigation(next);
       if (next === '/') {
         applyDynamicDocumentMeta({
           title: SITE_CONFIG.defaultTitle,
@@ -209,6 +212,7 @@ export default function App() {
         {/* Global Modals */}
         <ResumeModal />
         <AdminPortalModal />
+        <HumanVerificationGate />
 
         {/* Premium Cinematic Loading Screen */}
         <CinematicLoadingScreen />

@@ -255,7 +255,7 @@ setInterval(() => {
       flushConsoleLogBuffer().catch((e) => console.warn('[Telegram] Interval flush error:', e));
     }
   }
-}, 5000);
+}, 5000).unref();
 
 export function getConsoleTimerStatus() {
   return {
@@ -326,18 +326,27 @@ export function formatInboxNotificationMessage(msg: {
   message: string;
   date: string;
   time: string;
+  visitorId?: string;
+  classification?: string;
+  visitorLabel?: string;
 }): string {
+  const visitorLine = msg.visitorId
+    ? `\n<b>🪪 Visitor ID:</b> <code>${escapeHtml(msg.visitorId)}</code>${
+        msg.classification ? ` (${escapeHtml(msg.classification)})` : ''
+      }${msg.visitorLabel && msg.visitorLabel !== 'unlabeled' ? ` • Label: <b>${escapeHtml(msg.visitorLabel.toUpperCase())}</b>` : ''}`
+    : '';
+
   return `<b>🟢 NEW PORTFOLIO INBOX MESSAGE</b>
 ━━━━━━━━━━━━━━━━━━━━
 <b>👤 Name:</b> <i>${escapeHtml(msg.name)}</i>
 <b>✉️ Email:</b> <code>${escapeHtml(msg.email)}</code>
-<b>📌 Subject:</b> <i>${escapeHtml(msg.subject)}</i>
+<b>📌 Subject:</b> <i>${escapeHtml(msg.subject)}</i>${visitorLine}
 
 <b>💬 Message:</b>
 <blockquote>${escapeHtml(msg.message)}</blockquote>
 
 <b>🕒 Received:</b> ${msg.date} at ${msg.time}
-<b>🆔 ID:</b> <code>${msg.id}</code>
+<b>🆔 ID:</b> <code>${escapeHtml(msg.id)}</code>
 ━━━━━━━━━━━━━━━━━━━━
 🟢 <i>Sathwik Portfolio Inbox Bot</i>`;
 }
@@ -388,6 +397,16 @@ ${colorBadge} <i>Sathwik Portfolio Console Monitor</i>`;
 }
 
 export function formatVisitorTelemetryMessage(meta: {
+  visitorId?: string;
+  visitCount?: number;
+  isNewVisitor?: boolean;
+  classification?: string;
+  safetyStatus?: string;
+  riskScore?: number;
+  securitySignals?: string[];
+  challengeStatus?: string;
+  label?: string;
+  watchTimeSeconds?: number;
   deviceType: string;
   browser: string;
   os: string;
@@ -397,22 +416,107 @@ export function formatVisitorTelemetryMessage(meta: {
   pageUrl: string;
   referrer: string;
   clientIp: string;
+  country?: string;
+  userAgent?: string;
 }): string {
   const timeStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+  const cls = meta.classification || 'Human';
+  const safety = meta.safetyStatus || 'Safe';
+  const risk = typeof meta.riskScore === 'number' ? meta.riskScore : 0;
+  const visitBadge = meta.isNewVisitor
+    ? '🆕 First Visit (#1)'
+    : `🔁 Returning (#${meta.visitCount || 1})`;
 
-  return `<b>🔵 NEW WEBSITE VISIT / RELOAD</b>
+  const headerEmoji =
+    cls === 'Suspicious'
+      ? '🚨'
+      : cls === 'System'
+      ? '⚙️'
+      : cls === 'Bot'
+      ? '🤖'
+      : '🟢';
+
+  const typeLabel =
+    cls === 'Human'
+      ? '👤 Human Visitor'
+      : cls === 'Bot'
+      ? '🤖 Search / AI Crawler Bot'
+      : cls === 'System'
+      ? '⚙️ Automated System / Headless'
+      : '🚨 Suspicious Visitor';
+
+  const safetyLine =
+    safety === 'Safe'
+      ? '✅ Safe & Trusted'
+      : safety === 'Verified'
+      ? '🛡️ Verified Human (CAPTCHA Passed)'
+      : safety === 'Crawler'
+      ? '🔎 Verified Allowlisted Crawler'
+      : '⚠️ Challenged ("I am not a bot" Gate)';
+
+  const signalsText =
+    Array.isArray(meta.securitySignals) && meta.securitySignals.length > 0
+      ? meta.securitySignals.map((s) => escapeHtml(s)).join(', ')
+      : 'Normal Browser Behavior';
+
+  const adminLabelBadge =
+    meta.label && meta.label !== 'unlabeled'
+      ? `<b>🏷️ Admin Label:</b> <code>${escapeHtml(meta.label.toUpperCase())}</code>\n`
+      : '';
+
+  const uaSnippet = meta.userAgent
+    ? `\n<b>🧬 User-Agent:</b> <code>${escapeHtml(meta.userAgent.slice(0, 140))}</code>`
+    : '';
+
+  return `<b>${headerEmoji} PORTFOLIO VISITOR &amp; SECURITY REPORT</b>
 ━━━━━━━━━━━━━━━━━━━━
-<b>📱 Device Type:</b> ${escapeHtml(meta.deviceType)}
-<b>💻 Browser & OS:</b> ${escapeHtml(meta.browser)} on ${escapeHtml(meta.os)}
-<b>📐 Resolution:</b> <code>${escapeHtml(meta.screenRes)}</code>
-<b>🌐 Location / IP:</b> <code>${escapeHtml(meta.clientIp)}</code>
+<b>🪪 Visitor ID:</b> <code>${escapeHtml(meta.visitorId || 'VIS-UNKNOWN')}</code> • ${visitBadge}
+${adminLabelBadge}<b>🧭 Visitor Type:</b> ${typeLabel}
+<b>🛡️ Website Safety:</b> ${safetyLine}
+<b>📊 Risk Score:</b> <code>${risk}/100</code>
+<b>🧪 Security Signals:</b> <i>${signalsText}</i>
+<b>🔒 Challenge Gate:</b> <code>${escapeHtml(meta.challengeStatus || 'none')}</code>
+
+<b>📱 Device:</b> ${escapeHtml(meta.deviceType)} • ${escapeHtml(meta.browser)} on ${escapeHtml(meta.os)}
+<b>📐 Viewport/Screen:</b> <code>${escapeHtml(meta.screenRes)}</code>
+<b>🌍 IP &amp; Region:</b> <code>${escapeHtml(meta.clientIp)}</code>${meta.country && meta.country !== 'Unknown' ? ` (${escapeHtml(meta.country)})` : ''}
 <b>🕒 Timezone:</b> ${escapeHtml(meta.timezone)} (${escapeHtml(meta.language)})
 <b>🔗 Page URL:</b> <code>${escapeHtml(meta.pageUrl)}</code>
-<b>🧭 Referrer:</b> <i>${escapeHtml(meta.referrer)}</i>
+<b>🧭 Referrer:</b> <i>${escapeHtml(meta.referrer)}</i>${uaSnippet}
 
 <b>🕒 Time (IST):</b> ${timeStr}
 ━━━━━━━━━━━━━━━━━━━━
-🔵 <i>Sathwik Portfolio Live Telemetry</i>`;
+${headerEmoji} <i>Sathwik Portfolio Security Shield</i>`;
+}
+
+export function formatHumanVerificationMessage(meta: {
+  visitorId: string;
+  outcome: 'triggered' | 'passed' | 'failed';
+  classification: string;
+  riskScore: number;
+  clientIp: string;
+  reason?: string;
+  pageUrl?: string;
+}): string {
+  const timeStr = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+  const badge =
+    meta.outcome === 'passed' ? '🛡️' : meta.outcome === 'failed' ? '🔴' : '⚠️';
+  const headline =
+    meta.outcome === 'passed'
+      ? 'HUMAN VERIFICATION PASSED ("I AM NOT A BOT")'
+      : meta.outcome === 'failed'
+      ? 'BOT / CAPTCHA VERIFICATION FAILED'
+      : 'SUSPICIOUS VISITOR CHALLENGED BY CAPTCHA';
+
+  return `<b>${badge} ${headline}</b>
+━━━━━━━━━━━━━━━━━━━━
+<b>🪪 Visitor ID:</b> <code>${escapeHtml(meta.visitorId)}</code>
+<b>🧭 Classification:</b> ${escapeHtml(meta.classification)}
+<b>📊 Risk Score:</b> <code>${meta.riskScore}/100</code>
+<b>🌐 Client IP:</b> <code>${escapeHtml(meta.clientIp)}</code>
+${meta.pageUrl ? `<b>🔗 Page:</b> <code>${escapeHtml(meta.pageUrl)}</code>\n` : ''}${meta.reason ? `<b>📝 Status Detail:</b> <i>${escapeHtml(meta.reason)}</i>\n` : ''}<b>🕒 Time (IST):</b> ${timeStr}
+━━━━━━━━━━━━━━━━━━━━
+${badge} <i>Sathwik Portfolio Human Gate</i>`;
 }
 
 export function computeCMSDiff(oldData: any, newData: any): string[] {

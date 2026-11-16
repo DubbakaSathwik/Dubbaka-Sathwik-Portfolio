@@ -8,12 +8,14 @@ import {
   sendTelegramNotification,
 } from '../services/telegram';
 
+import { getPublicVisitorById } from '../services/visitorSecurity';
+
 const router = Router();
 
 // POST /api/contact - Submit visitor inquiry
 router.post('/', contactRateLimiter, async (req: Request, res: Response): Promise<void> => {
   try {
-    const { id, name, email, subject, message } = req.body || {};
+    const { id, name, email, subject, message, visitorId } = req.body || {};
 
     if (!name || !email || !message) {
       res.status(400).json({
@@ -53,12 +55,21 @@ router.post('/', contactRateLimiter, async (req: Request, res: Response): Promis
         day: 'numeric',
         year: 'numeric',
       }),
-      time: new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }),
+      time: new Date().toTimeString()
+        ? new Date().toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        : '00:00',
       status: 'unread',
     };
 
+    const visitorRecord = getPublicVisitorById(typeof visitorId === 'string' ? visitorId : undefined);
+
     // 1. Send Telegram Notification (instant delivery)
-    const telegramHtml = formatInboxNotificationMessage(newMessage);
+    const telegramHtml = formatInboxNotificationMessage({
+      ...newMessage,
+      visitorId: visitorRecord?.visitorId || (typeof visitorId === 'string' ? visitorId.slice(0, 64) : undefined),
+      classification: visitorRecord?.classification,
+      visitorLabel: visitorRecord?.label,
+    });
     let telegramSent = false;
     try {
       const tgResult = await sendTelegramNotification(telegramHtml, 'contactInbox', {

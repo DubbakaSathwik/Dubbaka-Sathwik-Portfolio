@@ -81,6 +81,101 @@ service cloud.firestore {
       allow delete: if isSuperAdmin() && isValidId(messageId);
     }
 
+    function isValidVisitorId(id) {
+      return id is string &&
+        id.size() >= 7 &&
+        id.size() <= 68 &&
+        id.matches('^VIS-[a-zA-Z0-9_\\-]+$');
+    }
+
+    function isValidVisitor(data) {
+      return data.keys().hasAll([
+          'visitorId', 'visitorSecret', 'visitCount', 'watchTimeSeconds', 'classification',
+          'safetyStatus', 'riskScore', 'securitySignals', 'challengeStatus', 'humanVerified',
+          'label', 'adminNotes', 'deviceType', 'browser', 'os', 'screenRes', 'language',
+          'timezone', 'clientIp', 'country', 'pageUrl', 'referrer', 'userAgent',
+          'pagesVisited', 'firstSeenAt', 'lastSeenAt', 'createdAt', 'updatedAt'
+        ]) &&
+        data.keys().hasOnly([
+          'visitorId', 'visitorSecret', 'visitCount', 'watchTimeSeconds', 'classification',
+          'safetyStatus', 'riskScore', 'securitySignals', 'challengeStatus', 'humanVerified',
+          'label', 'adminNotes', 'deviceType', 'browser', 'os', 'screenRes', 'language',
+          'timezone', 'clientIp', 'country', 'pageUrl', 'referrer', 'userAgent',
+          'pagesVisited', 'firstSeenAt', 'lastSeenAt', 'createdAt', 'updatedAt'
+        ]) &&
+        isValidVisitorId(data.visitorId) &&
+        data.visitorSecret is string && data.visitorSecret.size() >= 16 && data.visitorSecret.size() <= 128 &&
+        data.visitCount is int && data.visitCount >= 1 && data.visitCount <= 100000 &&
+        data.watchTimeSeconds is int && data.watchTimeSeconds >= 0 && data.watchTimeSeconds <= 2592000 &&
+        data.classification is string && data.classification in ['Human', 'Bot', 'System', 'Suspicious'] &&
+        data.safetyStatus is string && data.safetyStatus in ['Safe', 'Crawler', 'Challenged', 'Verified'] &&
+        data.riskScore is int && data.riskScore >= 0 && data.riskScore <= 100 &&
+        data.securitySignals is list && data.securitySignals.size() <= 15 &&
+        data.challengeStatus is string && data.challengeStatus in ['none', 'triggered', 'passed', 'failed'] &&
+        data.humanVerified is bool &&
+        data.label is string && data.label in ['unlabeled', 'test', 'myself', 'company', 'friends', 'other'] &&
+        data.adminNotes is string && data.adminNotes.size() <= 500 &&
+        data.deviceType is string && data.deviceType.size() <= 40 &&
+        data.browser is string && data.browser.size() <= 80 &&
+        data.os is string && data.os.size() <= 80 &&
+        data.screenRes is string && data.screenRes.size() <= 80 &&
+        data.language is string && data.language.size() <= 32 &&
+        data.timezone is string && data.timezone.size() <= 64 &&
+        data.clientIp is string && data.clientIp.size() <= 64 &&
+        data.country is string && data.country.size() <= 64 &&
+        data.pageUrl is string && data.pageUrl.size() <= 300 &&
+        data.referrer is string && data.referrer.size() <= 300 &&
+        data.userAgent is string && data.userAgent.size() <= 400 &&
+        data.pagesVisited is list && data.pagesVisited.size() <= 50 &&
+        data.firstSeenAt is string && data.firstSeenAt.size() <= 40 &&
+        data.lastSeenAt is string && data.lastSeenAt.size() <= 40 &&
+        data.createdAt is timestamp &&
+        data.updatedAt is timestamp;
+    }
+
+    // Visitors telemetry & security:
+    // - Only Super Admin can read, list, delete, or label visitors
+    // - Public visitors can silently create their own visitor session record and update their own watchTimeSeconds/visitCount using matching visitorSecret
+    match /visitors/{visitorId} {
+      allow get: if isSuperAdmin() && isValidVisitorId(visitorId);
+      allow list: if isSuperAdmin();
+      allow create: if isValidVisitorId(visitorId) &&
+        isValidVisitor(incoming()) &&
+        incoming().visitorId == visitorId &&
+        incoming().label == 'unlabeled' &&
+        incoming().adminNotes == '' &&
+        incoming().visitCount == 1 &&
+        incoming().watchTimeSeconds >= 0 &&
+        incoming().watchTimeSeconds <= 300 &&
+        incoming().createdAt == request.time &&
+        incoming().updatedAt == request.time;
+      allow update: if isValidVisitorId(visitorId) &&
+        isValidVisitor(incoming()) &&
+        incoming().visitorId == existing().visitorId &&
+        incoming().visitorSecret == existing().visitorSecret &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().updatedAt == request.time &&
+        (
+          (isSuperAdmin() &&
+            incoming().diff(existing()).affectedKeys().hasOnly(['label', 'adminNotes', 'updatedAt']))
+          ||
+          (incoming().visitorSecret == existing().visitorSecret &&
+            incoming().label == existing().label &&
+            incoming().adminNotes == existing().adminNotes &&
+            incoming().visitCount >= existing().visitCount &&
+            incoming().visitCount <= existing().visitCount + 1 &&
+            incoming().watchTimeSeconds >= existing().watchTimeSeconds &&
+            incoming().watchTimeSeconds <= existing().watchTimeSeconds + 3600 &&
+            incoming().diff(existing()).affectedKeys().hasOnly([
+              'visitCount', 'watchTimeSeconds', 'classification', 'safetyStatus', 'riskScore',
+              'securitySignals', 'challengeStatus', 'humanVerified', 'deviceType', 'browser',
+              'os', 'screenRes', 'language', 'timezone', 'clientIp', 'country', 'pageUrl',
+              'referrer', 'userAgent', 'pagesVisited', 'lastSeenAt', 'updatedAt'
+            ]))
+        );
+      allow delete: if isSuperAdmin() && isValidVisitorId(visitorId);
+    }
+
     // Test connection doc
     match /test/connection {
       allow read: if true;

@@ -55,6 +55,7 @@ import {
   Globe,
   Wand2,
   Newspaper,
+  Users,
 } from 'lucide-react';
 import { useCMS } from '../../context/CMSContext';
 import { initialIntroData } from '../../data';
@@ -73,6 +74,7 @@ import { ActivityLogsTab } from './tabs/activity-logs-tab';
 import { BlogsTab } from './tabs/blogs-tab';
 import { EventsTab } from './tabs/events-tab';
 import { PressTab } from './tabs/press-tab';
+import { VisitorsTab } from './tabs/visitors-tab';
 
 function PdfDropzoneSelector({
   pdfUrl,
@@ -268,13 +270,14 @@ export function AdminPortalModal() {
     isGitSyncing,
     lastGitCommit,
     gitCardOrderPending,
+    visitorStats,
   } = useCMS();
 
   const isOpen = isAdminModalOpen;
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [errorMsg, setErrorMsg] = useState('');
   const [activeTab, setActiveTab] = useState<
-    'journey' | 'projects' | 'creative' | 'gallery' | 'blogs' | 'events' | 'press' | 'resumes' | 'hero' | 'about' | 'intro' | 'contact' | 'inbox' | 'backup' | 'json-backup' | 'logs'
+    'journey' | 'projects' | 'creative' | 'gallery' | 'blogs' | 'events' | 'press' | 'resumes' | 'hero' | 'about' | 'intro' | 'contact' | 'inbox' | 'visitors' | 'backup' | 'json-backup' | 'logs'
   >('journey');
   const [backupSubTab, setBackupSubTab] = useState<'github' | 'history' | 'export' | 'repo-info'>('github');
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
@@ -1693,6 +1696,12 @@ export function AdminPortalModal() {
                     </div>
                     {[
                       {
+                        id: 'visitors',
+                        label: 'Visitors & Security',
+                        icon: Users,
+                        badge: visitorStats.totalUniqueVisitors,
+                      },
+                      {
                         id: 'inbox',
                         label: 'Inbox Messages',
                         icon: Inbox,
@@ -1735,7 +1744,13 @@ export function AdminPortalModal() {
                             <span className="truncate">{tab.label}</span>
                           </div>
                           {tab.badge !== undefined && tab.badge > 0 && (
-                            <span className="text-[10px] font-mono font-bold px-1.5 py-0.5 rounded bg-amber-500 text-zinc-950">
+                            <span
+                              className={`text-[10px] font-mono font-bold px-1.5 py-0.5 rounded tabular-nums ${
+                                tab.id === 'visitors'
+                                  ? 'bg-emerald-950 text-emerald-300 border border-emerald-500/30'
+                                  : 'bg-amber-500 text-zinc-950'
+                              }`}
+                            >
                               {tab.badge}
                             </span>
                           )}
@@ -1769,6 +1784,7 @@ export function AdminPortalModal() {
                               { id: 'about', label: 'About Details', icon: User },
                               { id: 'intro', label: 'Intro & Loader', icon: Film },
                               { id: 'contact', label: 'Contact Details', icon: Mail },
+                              { id: 'visitors', label: `Visitors (${visitorStats.totalUniqueVisitors})`, icon: Users },
                               { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
                               { id: 'backup', label: 'GitHub & Backups', icon: Github },
                               { id: 'logs', label: 'Activity Logs', icon: Terminal },
@@ -1791,6 +1807,7 @@ export function AdminPortalModal() {
                             { id: 'about', label: 'About Details', icon: User },
                             { id: 'intro', label: 'Intro & Loader', icon: Film },
                             { id: 'contact', label: 'Contact Details', icon: Mail },
+                            { id: 'visitors', label: `Visitors (${visitorStats.totalUniqueVisitors})`, icon: Users },
                             { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
                             { id: 'backup', label: 'GitHub & Backups', icon: Github },
                             { id: 'logs', label: 'Activity Logs', icon: Terminal },
@@ -1820,7 +1837,7 @@ export function AdminPortalModal() {
                         >
                           <div className="px-3 py-1.5 text-[10px] font-mono font-bold text-zinc-500 uppercase tracking-wider border-b border-zinc-800 flex items-center justify-between">
                             <span>Select CMS Section</span>
-                            <span className="text-emerald-400 font-normal">12 Sections</span>
+                            <span className="text-emerald-400 font-normal">16 Sections</span>
                           </div>
                           {[
                             { id: 'journey', label: `Journey (${(data.journey || []).length})`, icon: Calendar },
@@ -1835,6 +1852,7 @@ export function AdminPortalModal() {
                             { id: 'about', label: 'About Details', icon: User },
                             { id: 'intro', label: 'Intro & Loader', icon: Film },
                             { id: 'contact', label: 'Contact Details', icon: Mail },
+                            { id: 'visitors', label: `Visitors & Security (${visitorStats.totalUniqueVisitors})`, icon: Users },
                             { id: 'inbox', label: `Inbox (${(data.contactMessages || data.messages || []).filter((m: any) => m.status === 'unread' || (!m.read && m.status !== 'read')).length})`, icon: Inbox },
                             { id: 'backup', label: 'GitHub & Backups', icon: Github },
                             { id: 'logs', label: 'Activity Logs', icon: Terminal },
@@ -1881,6 +1899,7 @@ export function AdminPortalModal() {
                       { id: 'about', label: 'About', icon: User },
                       { id: 'intro', label: 'Intro', icon: Film },
                       { id: 'contact', label: 'Contact', icon: Mail },
+                      { id: 'visitors', label: 'Visitors', icon: Users },
                       { id: 'inbox', label: 'Inbox', icon: Inbox },
                       { id: 'backup', label: 'GitHub', icon: Github },
                       { id: 'json-backup', label: 'JSON Backup', icon: FileJson },
@@ -5561,6 +5580,15 @@ export function AdminPortalModal() {
                   {/* Features & Press Tab */}
                   {activeTab === 'press' && (
                     <PressTab onShowToast={(label) => showSaveToast(label)} />
+                  )}
+
+                  {/* Visitors & Security Tab */}
+                  {activeTab === 'visitors' && (
+                    <VisitorsTab
+                      showToast={(sec, msg, db) =>
+                        setToast({ visible: true, sectionName: sec, message: msg, database: db })
+                      }
+                    />
                   )}
 
                   {/* Activity Console Log Tab */}

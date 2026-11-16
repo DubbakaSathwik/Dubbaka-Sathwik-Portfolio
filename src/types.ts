@@ -351,3 +351,37 @@ export interface CMSData {
   intro?: IntroData;
   messages: ContactMessage[];
 }
+
+export type VisitorClassification = 'Human' | 'Bot' | 'System' | 'Suspicious';
+export type VisitorSafetyStatus = 'Safe' | 'Crawler' | 'Challenged' | 'Verified';
+export type VisitorChallengeStatus = 'none' | 'triggered' | 'passed' | 'failed';
+export type VisitorLabel = 'unlabeled' | 'test' | 'myself' | 'company' | 'friends' | 'other';
+
+export interface VisitorRecord {
+  visitorId: string;
+  visitCount: number;
+  watchTimeSeconds: number;
+  classification: VisitorClassification;
+  safetyStatus: VisitorSafetyStatus;
+  riskScore: number;
+  securitySignals: string[];
+  challengeStatus: VisitorChallengeStatus;
+  humanVerified: boolean;
+  label: VisitorLabel;
+  adminNotes: string;
+  deviceType: string;
+  browser: string;
+  os: string;
+  screenRes: string;
+  language: string;
+  timezone: string;
+  clientIp: string;
+  country: string;
+  pageUrl: string;
+  referrer: string;
+  userAgent: string;
+  pagesVisited: string[];
+  firstSeenAt: string;
+  lastSeenAt: string;
+}
+

@@ -13,35 +13,108 @@ export interface AuthRequest extends Request {
   };
 }
 
+const FIREBASE_PROJECT_ID = 'potent-box-hs6r9';
+const ADMIN_EMAIL = 'dubbakasathwik@gmail.com';
+const GOOGLE_CERTS_URL =
+  'https://www.googleapis.com/robot/v1/metadata/x509/securetoken@system.gserviceaccount.com';
+
+let cachedGoogleCerts: { certs: Record<string, string>; expiresAt: number } | null = null;
+
+async function getGooglePublicCerts(): Promise<Record<string, string>> {
+  if (cachedGoogleCerts && Date.now() < cachedGoogleCerts.expiresAt) {
+    return cachedGoogleCerts.certs;
+  }
+
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 5000);
+  try {
+    const res = await fetch(GOOGLE_CERTS_URL, { signal: controller.signal });
+    clearTimeout(timeoutId);
+    if (!res.ok) {
+      throw new Error(`HTTP ${res.status} fetching Google x509 certs`);
+    }
+    const certs = (await res.json()) as Record<string, string>;
+    const cacheControl = res.headers.get('cache-control') || '';
+    const maxAgeMatch = cacheControl.match(/max-age=(\d+)/i);
+    const maxAgeSec = maxAgeMatch ? Math.min(86400, parseInt(maxAgeMatch[1], 10)) : 3600;
+    cachedGoogleCerts = {
+      certs,
+      expiresAt: Date.now() + maxAgeSec * 1000,
+    };
+    return certs;
+  } catch (err) {
+    clearTimeout(timeoutId);
+    if (cachedGoogleCerts) {
+      return cachedGoogleCerts.certs;
+    }
+    throw err;
+  }
+}
+
 export function generateToken(payload: { role: string; username: string }): string {
-  return jwt.sign(payload, config.JWT_SECRET, { expiresIn: '7d' });
+  return jwt.sign(payload, config.JWT_SECRET, { algorithm: 'HS256', expiresIn: '7d' });
 }
 
 export function verifyToken(token: string): { role: string; username: string } | null {
   try {
-    const decoded = jwt.verify(token, config.JWT_SECRET) as { role: string; username: string };
+    const decoded = jwt.verify(token, config.JWT_SECRET, {
+      algorithms: ['HS256'],
+    }) as { role: string; username: string };
     return decoded;
-  } catch (err) {
-    // Check if token is a Firebase Google Auth ID token for the verified admin
-    try {
-      const decodedComplete = jwt.decode(token, { complete: true }) as any;
-      const payload = decodedComplete?.payload;
-      if (
-        payload &&
-        typeof payload === 'object' &&
-        payload.exp &&
-        payload.exp * 1000 > Date.now() &&
-        payload.iss &&
-        payload.iss.includes('securetoken.google.com') &&
-        payload.email &&
-        payload.email.toLowerCase() === 'dubbakasathwik@gmail.com' &&
-        payload.email_verified === true
-      ) {
-        return { role: 'admin', username: 'dubbakasathwik' };
-      }
-    } catch (e) {}
+  } catch {
     return null;
   }
+}
+
+export async function verifyTokenAsync(
+  token: string
+): Promise<{ role: string; username: string } | null> {
+  // 1. Try internal HS256 server-signed admin JWT
+  const localDecoded = verifyToken(token);
+  if (localDecoded) {
+    return localDecoded;
+  }
+
+  // 2. Try Firebase RS256 Google Auth ID token verified strictly against Google public certs
+  try {
+    const decodedComplete = jwt.decode(token, { complete: true }) as {
+      header?: { alg?: string; kid?: string };
+    } | null;
+
+    const alg = decodedComplete?.header?.alg;
+    const kid = decodedComplete?.header?.kid;
+    if (alg !== 'RS256' || !kid) {
+      return null;
+    }
+
+    const certs = await getGooglePublicCerts();
+    const cert = certs[kid];
+    if (!cert) {
+      return null;
+    }
+
+    const verified = jwt.verify(token, cert, {
+      algorithms: ['RS256'],
+      audience: FIREBASE_PROJECT_ID,
+      issuer: `https://securetoken.google.com/${FIREBASE_PROJECT_ID}`,
+    }) as jwt.JwtPayload;
+
+    if (
+      verified &&
+      typeof verified === 'object' &&
+      typeof verified.sub === 'string' &&
+      verified.sub.length > 0 &&
+      typeof verified.email === 'string' &&
+      verified.email.toLowerCase() === ADMIN_EMAIL &&
+      verified.email_verified === true
+    ) {
+      return { role: 'admin', username: 'dubbakasathwik' };
+    }
+  } catch {
+    return null;
+  }
+
+  return null;
 }
 
 export async function verifyAdminPassword(candidatePassword: string): Promise<boolean> {
@@ -58,7 +131,11 @@ export async function verifyAdminPassword(candidatePassword: string): Promise<bo
   return false;
 }
 
-export function requireAuth(req: AuthRequest, res: Response, next: NextFunction): void {
+export async function requireAuth(
+  req: AuthRequest,
+  res: Response,
+  next: NextFunction
+): Promise<void> {
   const authHeader = req.headers.authorization;
   let token: string | undefined;
 
@@ -79,7 +156,7 @@ export function requireAuth(req: AuthRequest, res: Response, next: NextFunction)
     return;
   }
 
-  const decoded = verifyToken(token);
+  const decoded = await verifyTokenAsync(token);
   if (!decoded) {
     res.status(403).json({
       success: false,

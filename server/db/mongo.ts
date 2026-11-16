@@ -106,6 +106,92 @@ export const TelegramSettingsModel: Model<ITelegramSettingsDoc> =
   (mongoose.models.TelegramSettings as Model<ITelegramSettingsDoc>) ||
   mongoose.model<ITelegramSettingsDoc>('TelegramSettings', TelegramSettingsSchema);
 
+export interface IVisitorDoc extends Document {
+  visitorId: string;
+  visitorSecret: string;
+  visitCount: number;
+  watchTimeSeconds: number;
+  classification: 'Human' | 'Bot' | 'System' | 'Suspicious';
+  safetyStatus: 'Safe' | 'Crawler' | 'Challenged' | 'Verified';
+  riskScore: number;
+  securitySignals: string[];
+  challengeStatus: 'none' | 'triggered' | 'passed' | 'failed';
+  humanVerified: boolean;
+  label: 'unlabeled' | 'test' | 'myself' | 'company' | 'friends' | 'other';
+  adminNotes: string;
+  deviceType: string;
+  browser: string;
+  os: string;
+  screenRes: string;
+  language: string;
+  timezone: string;
+  clientIp: string;
+  country: string;
+  pageUrl: string;
+  referrer: string;
+  userAgent: string;
+  pagesVisited: string[];
+  firstSeenAt: Date;
+  lastSeenAt: Date;
+}
+
+const VisitorSchema = new Schema<IVisitorDoc>(
+  {
+    visitorId: { type: String, required: true, unique: true, index: true },
+    visitorSecret: { type: String, required: true },
+    visitCount: { type: Number, default: 1 },
+    watchTimeSeconds: { type: Number, default: 0 },
+    classification: {
+      type: String,
+      enum: ['Human', 'Bot', 'System', 'Suspicious'],
+      default: 'Human',
+      index: true,
+    },
+    safetyStatus: {
+      type: String,
+      enum: ['Safe', 'Crawler', 'Challenged', 'Verified'],
+      default: 'Safe',
+    },
+    riskScore: { type: Number, default: 0 },
+    securitySignals: { type: [String], default: [] },
+    challengeStatus: {
+      type: String,
+      enum: ['none', 'triggered', 'passed', 'failed'],
+      default: 'none',
+    },
+    humanVerified: { type: Boolean, default: false },
+    label: {
+      type: String,
+      enum: ['unlabeled', 'test', 'myself', 'company', 'friends', 'other'],
+      default: 'unlabeled',
+      index: true,
+    },
+    adminNotes: { type: String, default: '' },
+    deviceType: { type: String, default: 'Desktop' },
+    browser: { type: String, default: 'Unknown' },
+    os: { type: String, default: 'Unknown' },
+    screenRes: { type: String, default: 'Unknown' },
+    language: { type: String, default: 'en-US' },
+    timezone: { type: String, default: 'Asia/Kolkata' },
+    clientIp: { type: String, default: 'Unknown' },
+    country: { type: String, default: 'Unknown' },
+    pageUrl: { type: String, default: '/' },
+    referrer: { type: String, default: 'Direct Visit' },
+    userAgent: { type: String, default: '' },
+    pagesVisited: { type: [String], default: ['/'] },
+    firstSeenAt: { type: Date, default: Date.now },
+    lastSeenAt: { type: Date, default: Date.now, index: true },
+  },
+  {
+    timestamps: true,
+    bufferCommands: false,
+  }
+);
+
+export const VisitorModel: Model<IVisitorDoc> =
+  (mongoose.models.Visitor as Model<IVisitorDoc>) ||
+  mongoose.model<IVisitorDoc>('Visitor', VisitorSchema);
+
 let isConnected = false;
 
 export async function connectMongoDB(): Promise<boolean> {
